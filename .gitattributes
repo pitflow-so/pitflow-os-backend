@@ -1,0 +1,23 @@
+* text=auto eol=lf
+
+# Binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mov binary
+*.mp4 binary
+*.mp3 binary
+*.pdf binary
+*.jar binary
+*.war binary
+*.ear binary
+*.class binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.7z binary
+
+/mvnw text eol=lf
+*.cmd text eol=crlf
