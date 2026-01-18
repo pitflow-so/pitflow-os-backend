@@ -1,7 +1,7 @@
 --liquibase formatted sql
 
 --changeset rafael:001-create-table-customer
-CREATE TABLE customer (
+CREATE TABLE IF NOT EXISTS customer (
     id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,
     document VARCHAR(14) NOT NULL,

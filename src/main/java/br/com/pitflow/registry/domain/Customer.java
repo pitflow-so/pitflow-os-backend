@@ -17,6 +17,7 @@ public class Customer {
 
     public Customer(String name, CpfCnpj document, String phone) {
         validateName(name);
+        this.id = UUID.randomUUID();
         this.name = name;
         this.document = document;
         this.phone = phone;
@@ -38,12 +39,22 @@ public class Customer {
     public CpfCnpj getDocument() { return document; }
     public String getPhone() { return phone; }
 
-    // Returns an unmodifiable list to protect the aggregate state
+    // Ensure immutability of the vehicles list
     public List<Vehicle> getVehicles() {
         return Collections.unmodifiableList(vehicles);
     }
 
-    // Setter for ID (usually handled by the database later)
     public void setId(UUID id) { this.id = id; }
+    public void setName(String name) {
+        validateName(name);
+        this.name = name;
+    }
 
+    public void setDocument(CpfCnpj newDocument) {
+        this.document = newDocument;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 }

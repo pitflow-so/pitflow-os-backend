@@ -13,15 +13,15 @@ public class CpfCnpjTest {
     @Test
     @DisplayName("Should create a valid CPF and remove formatting")
     void shouldCreateValidCpfAndSanitize() {
-        var cpf = new CpfCnpj("123.456.789-00");
-        assertThat(cpf.value()).isEqualTo("12345678900");
+        var cpf = new CpfCnpj("192.810.920-93");
+        assertThat(cpf.value()).isEqualTo("19281092093");
     }
 
     @Test
     @DisplayName("Should create a valid CNPJ")
     void shouldCreateValidCnpj() {
-        var cnpj = new CpfCnpj("12.345.678/0001-99");
-        assertThat(cnpj.value()).isEqualTo("12345678000199");
+        var cnpj = new CpfCnpj("56.602.931/0001-14");
+        assertThat(cnpj.value()).isEqualTo("56602931000114");
     }
 
     @ParameterizedTest
@@ -43,14 +43,14 @@ public class CpfCnpjTest {
     @Test
     @DisplayName("Should format CPF correctly")
     void shouldFormatCpf() {
-        var cpf = new CpfCnpj("12345678900");
-        assertThat(cpf.getFormatted()).isEqualTo("123.456.789-00");
+        var cpf = new CpfCnpj("06678477073");
+        assertThat(cpf.getFormatted()).isEqualTo("066.784.770-73");
     }
 
     @Test
     @DisplayName("Should format CNPJ correctly")
     void shouldFormatCnpj() {
-        var cnpj = new CpfCnpj("12345678000199");
-        assertThat(cnpj.getFormatted()).isEqualTo("12.345.678/0001-99");
+        var cnpj = new CpfCnpj("56602931000114");
+        assertThat(cnpj.getFormatted()).isEqualTo("56.602.931/0001-14");
     }
 }

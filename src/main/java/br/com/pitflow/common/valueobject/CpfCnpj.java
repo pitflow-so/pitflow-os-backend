@@ -1,8 +1,14 @@
 package br.com.pitflow.common.valueobject;
 
+import br.com.caelum.stella.validation.CNPJValidator;
+import br.com.caelum.stella.validation.CPFValidator;
+import br.com.caelum.stella.validation.InvalidStateException;
+
 import java.util.Objects;
 
 public record CpfCnpj(String value) {
+    private static final CPFValidator cpfValidator = new CPFValidator();
+    private static final CNPJValidator cnpjValidator = new CNPJValidator();
 
     public CpfCnpj {
         Objects.requireNonNull(value, "O documento não pode ser nulo.");
@@ -26,8 +32,18 @@ public record CpfCnpj(String value) {
         if (doc.matches("(\\d)\\1{10,13}")) {
             return false;
         }
-        //TODO: In feature future, implement proper CPF/CNPJ validation algorithms
-        return true;
+
+        var isCPF = doc.length() == 11;
+        try {
+            if (isCPF) {
+                cpfValidator.assertValid(doc);
+                return true;
+            }
+            cnpjValidator.assertValid(doc);
+            return true;
+        } catch (InvalidStateException e) {
+            return false;
+        }
     }
 
 
