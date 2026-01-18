@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/migrations/001-create-table-customer.sql
+  - include:
+      file: db/changelog/migrations/002-create-table-vehicle.sql
+  - include:
+      file: db/changelog/migrations/003-create-inventory-tables.sql

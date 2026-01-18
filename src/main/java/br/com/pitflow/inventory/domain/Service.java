@@ -17,6 +17,7 @@ public class Service {
         validateName(name);
         validatePrice(price);
 
+        this.id = UUID.randomUUID();
         this.name = name;
         this.description = description;
         this.price = price;
@@ -40,4 +41,16 @@ public class Service {
     public BigDecimal getPrice() { return price; }
 
     public void setId(UUID id) { this.id = id; }
+    public void setName(String name) {
+        validateName(name);
+        this.name = name;
+    }
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setPrice(BigDecimal price) {
+        validatePrice(price);
+        this.price = price;
+    }
 }

@@ -16,12 +16,12 @@ public class CustomerTest {
     @DisplayName("Should create a customer with a vehicle successfully")
     void shouldCreateCustomerWithVehicle() {
         // Arrange
-        var document = new CpfCnpj("123.456.789-00");
+        var document = new CpfCnpj("066.784.770-73");
         var customer = new Customer("Jão Santos", document, "11999999999");
         customer.setId(UUID.randomUUID());
 
         var plate = new LicensePlate("ABC1D23");
-        var vehicle = new Vehicle(plate, "Chevrolet", "Chevette", 1973);
+        var vehicle = new Vehicle(customer.getId(), plate, "Chevrolet", "Chevette", 1973);
         vehicle.setId(UUID.randomUUID());
 
         // Act
@@ -36,7 +36,7 @@ public class CustomerTest {
     @Test
     @DisplayName("Should throw exception when creating customer with empty name")
     void shouldThrowExceptionForEmptyName() {
-        var document = new CpfCnpj("123.456.789-00");
+        var document = new CpfCnpj("066.784.770-73");
 
         assertThatThrownBy(() -> new Customer("", document, "11999999999"))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -47,8 +47,8 @@ public class CustomerTest {
     @DisplayName("Should not allow external modification of vehicle list")
     void shouldProtectVehicleListFromExternalModification() {
         // Arrange
-        var customer = new Customer("Jose Maria", new CpfCnpj("12345678900"), "11999999999");
-        var vehicle = new Vehicle(new LicensePlate("ABC1234"), "Ford", "Ka", 2020);
+        var customer = new Customer("Jose Maria", new CpfCnpj("06678477073"), "11999999999");
+        var vehicle = new Vehicle(customer.getId() ,new LicensePlate("ABC1234"), "Ford", "Ka", 2020);
 
         // Act & Assert
         // returns an unmodifiable list
