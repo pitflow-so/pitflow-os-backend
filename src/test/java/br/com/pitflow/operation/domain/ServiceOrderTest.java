@@ -1,116 +1,147 @@
 package br.com.pitflow.operation.domain;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
-public class ServiceOrderTest {
+class ServiceOrderTest {
+
+    private final UUID customerId = UUID.randomUUID();
+    private final UUID vehicleId = UUID.randomUUID();
+    private final String description = "Dummy problem";
+
     @Test
-    @DisplayName("Should create a service order with RECEIVED status and calculate amount correctly")
-    void shouldCreateOrderAndCalculateTotal() {
-        // Arrange
-        var customerId = UUID.randomUUID();
-        var vehicleId = UUID.randomUUID();
-        var order = new ServiceOrder(customerId, vehicleId);
-
-        var partId = UUID.randomUUID();
-        var serviceId = UUID.randomUUID();
-
-        // Act
-        order.addPart(partId, "Filtro de Ar", new BigDecimal("100.00"), 2); // 200.00
-        order.addService(serviceId, "Troca de Filtro", new BigDecimal("50.00")); // 50.00
+    @DisplayName("Should initialize correctly")
+    void shouldInitializeCorrectly() {
+        // Arrange & Act
+        var os = new ServiceOrder(customerId, vehicleId, description);
 
         // Assert
-        assertThat(order.getStatus()).isEqualTo(ServiceOrder.Status.RECEIVED);
-        assertThat(order.getItems()).hasSize(2);
-        assertThat(order.getTotalAmount()).isEqualByComparingTo(new BigDecimal("250.00"));
+        assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.RECEIVED);
+        assertThat(os.getCreatedAt()).isBeforeOrEqualTo(java.time.LocalDateTime.now());
+        assertThat(os.getItems()).isEmpty();
     }
 
     @Test
-    @DisplayName("Should transit status correctly and set timestamps")
-    void shouldTransitStatusCorrectly() {
-        // Arrange
-        var order = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID());
-
-        // Act
-        order.startDiagnosis(); // RECEIVED -> IN_DIAGNOSIS
-        assertThat(order.getStatus()).isEqualTo(ServiceOrder.Status.IN_DIAGNOSIS);
-
-        order.addService(UUID.randomUUID(), "General Checkup", new BigDecimal("100.00"));
-
-        order.completeDiagnosis(); // IN_DIAGNOSIS -> AWAITING_APPROVAL
-        assertThat(order.getStatus()).isEqualTo(ServiceOrder.Status.AWAITING_APPROVAL);
-
-        order.approve(); // AWAITING_APPROVAL -> IN_EXECUTION
-
-        // Assert
-        assertThat(order.getStatus()).isEqualTo(ServiceOrder.Status.IN_EXECUTION);
-        assertThat(order.getStartedAt()).isNotNull();
+    @DisplayName("Should not create order if no description")
+    void shouldNotCreateOrderIfNoProblemDescription(){
+        assertThatThrownBy(() -> new ServiceOrder(customerId, vehicleId, ""))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Service order description cannot be empty.");
     }
 
-    @Test
-    @DisplayName("Should cancel order successfully if not finished")
-    void shouldCancelOrder() {
-        var order = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID());
+    @Nested
+    @DisplayName("Testes de Itens e Orçamento")
+    class ItemTests {
+        @Test
+        @DisplayName("Should add parts and services correctly")
+        void shouldCalculateTotalAmount() {
+            // Arrange
+            var os = new ServiceOrder(customerId, vehicleId, description);
 
-        order.cancel();
+            os.addPart(UUID.randomUUID(), "Óleo", new BigDecimal("50.00"), 4);
+            os.addService(UUID.randomUUID(), "Troca de Óleo", new BigDecimal("100.00"));
 
-        assertThat(order.getStatus()).isEqualTo(ServiceOrder.Status.CANCELLED);
+            // Act & Assert
+            assertThat(os.getTotalAmount()).isEqualByComparingTo(new BigDecimal("300.00"));
+        }
+
+        @Test
+        @DisplayName("Should fail to add item in invalid state")
+        void shouldFailToAddItemInInvalidState() {
+            // Arrange
+            var os = new ServiceOrder(customerId, vehicleId, description);
+            os.startDiagnosis();
+            os.addPart(UUID.randomUUID(), "Peça", new BigDecimal("10.00"), 1);
+            os.completeDiagnosis(); // Status agora é AWAITING_APPROVAL
+
+            // Act & Assert
+            assertThatThrownBy(() -> os.addPart(UUID.randomUUID(), "Outra", new BigDecimal("10.00"), 1))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("Items can only be added during RECEIVED or IN_DIAGNOSIS stages.");
+        }
     }
 
-    @Test
-    @DisplayName("Should throw exception when adding items after diagnosis stage")
-    void shouldThrowExceptionWhenAddingItemsInWrongStage() {
-        // Arrange
-        var order = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID());
-        order.startDiagnosis();
-        order.addService(UUID.randomUUID(), "Service", new BigDecimal("100.00"));
-        order.completeDiagnosis();
+    @Nested
+    @DisplayName("Testes de Transição de Status e Timestamps")
+    class StatusTransitionTests {
 
-        assertThatThrownBy(() -> order.addService(UUID.randomUUID(), "Sneaky Service", new BigDecimal("10.00")))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Items can only be added during RECEIVED or IN_DIAGNOSIS stages.");
+        @Test
+        @DisplayName("Should follow full lifecycle successfully")
+        void shouldFollowFullLifecycleSuccessfully() {
+            // Arrange
+            var os = new ServiceOrder(customerId, vehicleId, description);
+
+            // 1. Diagnosis
+            os.startDiagnosis();
+            assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.IN_DIAGNOSIS);
+            assertThat(os.getDiagnosisStartedAt()).isNotNull();
+
+            // 2. Add item and Complete Diagnosis
+            os.addService(UUID.randomUUID(), "Revisão", new BigDecimal("200.00"));
+            os.completeDiagnosis();
+            assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.AWAITING_APPROVAL);
+
+            // 3. Approve
+            os.approve();
+            assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.IN_EXECUTION);
+            assertThat(os.getExecutionStartedAt()).isNotNull();
+
+            // 4. Finish
+            os.finish();
+            assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.FINISHED);
+
+            // 5. Deliver
+            os.deliver();
+            assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.DELIVERED);
+        }
+
+        @Test
+        @DisplayName("Should not complete diagnosis without items added")
+        void shouldFailToCompleteDiagnosisWithoutItems() {
+            // Arrange
+            var os = new ServiceOrder(customerId, vehicleId, description);
+            os.startDiagnosis();
+
+            // Act & Assert
+            assertThatThrownBy(os::completeDiagnosis)
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Cannot complete diagnosis without adding at least one item.");
+        }
+
+        @Test
+        @DisplayName("Should cancel successfully when in valid state")
+        void shouldCancelSuccessfully() {
+            // Arrange
+            var os = new ServiceOrder(customerId, vehicleId, description);
+
+            // Act
+            os.cancel("Dummy reason");
+
+            // Assert
+            assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.CANCELLED);
+        }
+
+        @Test
+        @DisplayName("Should not allow cancellation if already finished")
+        void shouldNotCancelIfFinished() {
+            // Arrange
+            var os = new ServiceOrder(customerId, vehicleId, description);
+            os.addService(UUID.randomUUID(), "S", new BigDecimal("10"));
+            os.startDiagnosis();
+            os.completeDiagnosis();
+            os.approve();
+            os.finish();
+
+            // Act & Assert
+            assertThatThrownBy(() -> os.cancel("Dummy reason"))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("Cannot cancel an order that is already finished or delivered.");
+        }
+
     }
-
-    @Test
-    @DisplayName("Should prevent cancellation of finished orders")
-    void shouldPreventCancellationOfFinishedOrders() {
-        // Arrange
-        var order = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID());
-        order.startDiagnosis();
-        order.addService(UUID.randomUUID(), "Service", new BigDecimal("100.00"));
-        order.completeDiagnosis();
-        order.approve();
-        order.finish();
-
-        // Act & Assert
-        assertThatThrownBy(order::cancel)
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Cannot cancel an order that is already finished or delivered.");
-    }
-
-    @Test
-    @DisplayName("Should prevent cancellation of delivered Orders")
-    void shouldPreventCancellationOfDeliveredOrders() {
-        // Arrange
-        var order = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID());
-        order.startDiagnosis();
-        order.addService(UUID.randomUUID(), "Service", new BigDecimal("100.00"));
-        order.completeDiagnosis();
-        order.approve();
-        order.finish();
-        order.deliver();
-
-        // Act & Assert
-        assertThatThrownBy(order::cancel)
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Cannot cancel an order that is already finished or delivered.");
-    }
-
-
 }

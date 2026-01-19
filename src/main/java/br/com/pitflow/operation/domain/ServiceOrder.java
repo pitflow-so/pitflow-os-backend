@@ -9,25 +9,43 @@ import java.util.List;
 import java.util.UUID;
 
 public class ServiceOrder {
-    private final UUID id;
+    private UUID id;
     private final UUID customerId;
     private final UUID vehicleId;
-    private final List<Item> items;
-    private final LocalDateTime createdAt;
     private Status status;
-    private LocalDateTime startedAt;
+    private final List<Item> items;
+    private final String description;
+
+    private final LocalDateTime createdAt;
+    private LocalDateTime executionStartedAt;
+    private LocalDateTime diagnosisStartedAt;
     private LocalDateTime finishedAt;
     private LocalDateTime cancelledAt;
     private LocalDateTime deliveredAt;
 
-    public ServiceOrder(UUID customerId, UUID vehicleId) {
+    private String cancellationDescription;
+
+
+    public ServiceOrder(UUID customerId, UUID vehicleId, String description) {
+
+        descriptionValidate(description);
+
         this.id = UUID.randomUUID();
         this.customerId = customerId;
         this.vehicleId = vehicleId;
         this.status = Status.RECEIVED;
         this.items = new ArrayList<>();
+        this.description = description;
+
         this.createdAt = LocalDateTime.now();
     }
+
+    private void descriptionValidate(String description) {
+        if (description == null || description.isBlank()) {
+            throw new IllegalArgumentException("Service order description cannot be empty.");
+        }
+    }
+
 
     public enum Status {
         RECEIVED, IN_DIAGNOSIS, AWAITING_APPROVAL, IN_EXECUTION, FINISHED, DELIVERED, CANCELLED
@@ -63,13 +81,14 @@ public class ServiceOrder {
             throw new IllegalStateException("Order must be AWAITING_APPROVAL to be approved.");
         }
         this.status = Status.IN_EXECUTION;
-        this.startedAt = LocalDateTime.now();
+        this.executionStartedAt = LocalDateTime.now();
     }
 
-    public void cancel() {
+    public void cancel(String cancellationMessage) {
         if (EnumSet.of(Status.FINISHED, Status.DELIVERED).contains(this.status)) {
             throw new IllegalStateException("Cannot cancel an order that is already finished or delivered.");
         }
+        this.cancellationDescription = cancellationMessage;
         this.status = Status.CANCELLED;
         this.cancelledAt = LocalDateTime.now();
     }
@@ -79,6 +98,7 @@ public class ServiceOrder {
             throw new IllegalStateException("Order must be RECEIVED to start diagnosis.");
         }
         this.status = Status.IN_DIAGNOSIS;
+        this.diagnosisStartedAt = LocalDateTime.now();
     }
 
     public void completeDiagnosis() {
@@ -118,6 +138,51 @@ public class ServiceOrder {
     public UUID getId() { return id; }
     public Status getStatus() { return status; }
     public List<Item> getItems() { return Collections.unmodifiableList(items); }
+    public String getDescription() { return description; }
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getStartedAt() { return startedAt; }
+    public LocalDateTime getExecutionStartedAt() { return executionStartedAt; }
+    public LocalDateTime getDiagnosisStartedAt() { return diagnosisStartedAt; }
+    public LocalDateTime getFinishedAt() { return finishedAt; }
+    public LocalDateTime getDeliveredAt() { return deliveredAt; }
+    public LocalDateTime getCancelledAt() { return cancelledAt; }
+    public String getCancellationDescription() { return cancellationDescription; }
+    public UUID getCustomerId() { return customerId; }
+    public UUID getVehicleId() { return vehicleId; }
+
+   // Setters used by reconstitution entity (Infrastructure and mappers)
+    public void setId(UUID id){
+        this.id = id;
+    }
+    public void reconstituteStatus(Status status) {
+        this.status = status;
+    }
+
+    public void reconstituteItems(List<Item> items) {
+        this.items.clear();
+        this.items.addAll(items);
+    }
+
+    public void reconstituteDiagnosisStartedAt(LocalDateTime diagnosisStartedAt) {
+        this.diagnosisStartedAt = diagnosisStartedAt;
+    }
+
+    public void reconstituteExecutionStartedAt(LocalDateTime executionStartedAt) {
+        this.executionStartedAt = executionStartedAt;
+    }
+
+    public void reconstituteFinishedAt(LocalDateTime finishedAt) {
+        this.finishedAt = finishedAt;
+    }
+
+    public void reconstituteDeliveredAt(LocalDateTime deliveredAt) {
+        this.deliveredAt = deliveredAt;
+    }
+
+    public void reconstituteCancelledAt(LocalDateTime cancelledAt) {
+        this.cancelledAt = cancelledAt;
+    }
+
+    public void reconstituteCancellationDescription(String description) {
+        this.cancellationDescription = description;
+    }
 }
