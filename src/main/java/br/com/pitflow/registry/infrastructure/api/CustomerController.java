@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/customers")
+@RequestMapping("/registry/customers")
 @Tag(name = "Registry - Customers", description = "Gerenciamento de clientes")
 public class CustomerController {
 

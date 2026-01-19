@@ -5,18 +5,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.UUID;
 @Schema(description = "Dados para adicionar veículo")
 public record AddVehicleDto(
-        @Schema(example = "3521a4f1-fa29-4386-8105-f5ae83282410", description = "Identificador do cliente")
+        @Schema(description = "Identificador do cliente", example = "UUID")
         UUID customerId,
 
-        @Schema(example = "ABC1234", description = "Placa do veículo")
+        @Schema(description = "Placa do veículo", example = "ABC1234")
         String licensePlate,
 
-        @Schema(example = "Toyota", description = "Marca do veículo")
+        @Schema(description = "Marca do veículo", example = "Toyota")
         String brand,
 
-        @Schema(example = "Corolla", description = "Modelo do veículo")
+        @Schema(description = "Modelo do veículo", example = "Corolla")
         String model,
 
-        @Schema(example = "2024", description = "Ano do veículo")
+        @Schema(description = "Ano do veículo", example = "2024")
         int year
 ) {}

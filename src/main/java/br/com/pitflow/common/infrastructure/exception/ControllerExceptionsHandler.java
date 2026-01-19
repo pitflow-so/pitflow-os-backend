@@ -1,8 +1,9 @@
-package br.com.pitflow.registry.infrastructure.api.exception;
+package br.com.pitflow.common.infrastructure.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -19,6 +20,14 @@ public class ControllerExceptionsHandler {
     @ExceptionHandler(IllegalArgumentException.class) // Ex: CPF inválido
     public ResponseEntity<ProblemDetail> handleBadRequest(IllegalArgumentException ex) {
         return buildProblemDetail(HttpStatus.BAD_REQUEST, "Dados Inválidos", ex.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ProblemDetail> handleGenericException(Exception ex) {
+        return buildProblemDetail(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Erro interno no servidor: ",
+                ex.getMessage());
     }
 
     private ResponseEntity<ProblemDetail> buildProblemDetail(HttpStatus status, String title, String detail) {
