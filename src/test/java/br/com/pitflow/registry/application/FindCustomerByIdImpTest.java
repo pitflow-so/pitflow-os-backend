@@ -1,7 +1,6 @@
 package br.com.pitflow.registry.application;
 
 import br.com.pitflow.common.valueobject.CpfCnpj;
-import br.com.pitflow.registry.aplication.FindCustomerByIdImp;
 import br.com.pitflow.registry.domain.Customer;
 import br.com.pitflow.registry.domain.repository.CustomerRepository;
 import org.junit.jupiter.api.BeforeEach;

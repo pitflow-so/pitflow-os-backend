@@ -1,6 +1,5 @@
 package br.com.pitflow.registry.application;
 
-import br.com.pitflow.registry.aplication.DeleteVehicleImp;
 import br.com.pitflow.registry.domain.Vehicle;
 import br.com.pitflow.registry.domain.repository.VehicleRepository;
 import org.junit.jupiter.api.DisplayName;

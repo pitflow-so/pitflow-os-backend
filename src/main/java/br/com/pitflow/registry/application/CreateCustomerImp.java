@@ -1,8 +1,8 @@
-package br.com.pitflow.registry.aplication;
+package br.com.pitflow.registry.application;
 
 import br.com.pitflow.common.valueobject.CpfCnpj;
-import br.com.pitflow.registry.aplication.dto.CreateCustomerDto;
-import br.com.pitflow.registry.aplication.usecases.CreateCustomer;
+import br.com.pitflow.registry.application.dto.CreateCustomerDto;
+import br.com.pitflow.registry.application.usecases.CreateCustomer;
 import br.com.pitflow.registry.domain.Customer;
 import br.com.pitflow.registry.domain.repository.CustomerRepository;
 

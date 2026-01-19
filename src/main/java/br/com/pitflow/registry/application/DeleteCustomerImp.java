@@ -1,6 +1,6 @@
-package br.com.pitflow.registry.aplication;
+package br.com.pitflow.registry.application;
 
-import br.com.pitflow.registry.aplication.usecases.DeleteCustomer;
+import br.com.pitflow.registry.application.usecases.DeleteCustomer;
 import br.com.pitflow.registry.domain.repository.CustomerRepository;
 
 import java.util.UUID;

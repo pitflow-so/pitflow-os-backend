@@ -2,8 +2,7 @@ package br.com.pitflow.registry.application;
 
 import br.com.pitflow.common.valueobject.CpfCnpj;
 import br.com.pitflow.common.valueobject.LicensePlate;
-import br.com.pitflow.registry.aplication.AddVehicleImp;
-import br.com.pitflow.registry.aplication.dto.AddVehicleDto;
+import br.com.pitflow.registry.application.dto.AddVehicleDto;
 import br.com.pitflow.registry.domain.Customer;
 import br.com.pitflow.registry.domain.Vehicle;
 import br.com.pitflow.registry.domain.repository.CustomerRepository;

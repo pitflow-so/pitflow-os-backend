@@ -1,6 +1,5 @@
 package br.com.pitflow.registry.application;
 
-import br.com.pitflow.registry.aplication.DeleteCustomerImp;
 import br.com.pitflow.registry.domain.Customer;
 import br.com.pitflow.registry.domain.repository.CustomerRepository;
 import org.junit.jupiter.api.BeforeEach;

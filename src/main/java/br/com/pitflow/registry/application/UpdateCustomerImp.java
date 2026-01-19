@@ -1,8 +1,8 @@
-package br.com.pitflow.registry.aplication;
+package br.com.pitflow.registry.application;
 
 import br.com.pitflow.common.valueobject.CpfCnpj;
-import br.com.pitflow.registry.aplication.dto.UpdateCustomerDto;
-import br.com.pitflow.registry.aplication.usecases.UpdateCustomer;
+import br.com.pitflow.registry.application.dto.UpdateCustomerDto;
+import br.com.pitflow.registry.application.usecases.UpdateCustomer;
 import br.com.pitflow.registry.domain.repository.CustomerRepository;
 
 import java.util.UUID;

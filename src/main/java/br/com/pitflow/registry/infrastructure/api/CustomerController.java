@@ -1,13 +1,13 @@
 package br.com.pitflow.registry.infrastructure.api;
 
-import br.com.pitflow.registry.aplication.dto.CreateCustomerDto;
-import br.com.pitflow.registry.aplication.dto.UpdateCustomerDto;
-import br.com.pitflow.registry.aplication.usecases.CreateCustomer;
-import br.com.pitflow.registry.aplication.usecases.DeleteCustomer;
-import br.com.pitflow.registry.aplication.usecases.FindCustomerByDocument;
-import br.com.pitflow.registry.aplication.usecases.FindCustomerById;
-import br.com.pitflow.registry.aplication.usecases.ListCustomers;
-import br.com.pitflow.registry.aplication.usecases.UpdateCustomer;
+import br.com.pitflow.registry.application.dto.CreateCustomerDto;
+import br.com.pitflow.registry.application.dto.UpdateCustomerDto;
+import br.com.pitflow.registry.application.usecases.CreateCustomer;
+import br.com.pitflow.registry.application.usecases.DeleteCustomer;
+import br.com.pitflow.registry.application.usecases.FindCustomerByDocument;
+import br.com.pitflow.registry.application.usecases.FindCustomerById;
+import br.com.pitflow.registry.application.usecases.ListCustomers;
+import br.com.pitflow.registry.application.usecases.UpdateCustomer;
 import br.com.pitflow.registry.domain.Customer;
 import br.com.pitflow.registry.infrastructure.api.dto.CustomerResponse;
 import io.swagger.v3.oas.annotations.Operation;

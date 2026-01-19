@@ -1,6 +1,6 @@
-package br.com.pitflow.registry.aplication;
+package br.com.pitflow.registry.application;
 
-import br.com.pitflow.registry.aplication.usecases.FindVehicleById;
+import br.com.pitflow.registry.application.usecases.FindVehicleById;
 import br.com.pitflow.registry.domain.Vehicle;
 import br.com.pitflow.registry.domain.repository.VehicleRepository;
 

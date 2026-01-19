@@ -1,8 +1,8 @@
-package br.com.pitflow.registry.aplication;
+package br.com.pitflow.registry.application;
 
 import br.com.pitflow.common.valueobject.LicensePlate;
-import br.com.pitflow.registry.aplication.dto.UpdateVehicleDto;
-import br.com.pitflow.registry.aplication.usecases.UpdateVehicle;
+import br.com.pitflow.registry.application.dto.UpdateVehicleDto;
+import br.com.pitflow.registry.application.usecases.UpdateVehicle;
 import br.com.pitflow.registry.domain.repository.VehicleRepository;
 
 import java.util.UUID;

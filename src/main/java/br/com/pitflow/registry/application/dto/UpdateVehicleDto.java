@@ -1,4 +1,4 @@
-package br.com.pitflow.registry.aplication.dto;
+package br.com.pitflow.registry.application.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

@@ -1,6 +1,6 @@
-package br.com.pitflow.registry.aplication.usecases;
+package br.com.pitflow.registry.application.usecases;
 
-import br.com.pitflow.registry.aplication.dto.UpdateVehicleDto;
+import br.com.pitflow.registry.application.dto.UpdateVehicleDto;
 
 import java.util.UUID;
 

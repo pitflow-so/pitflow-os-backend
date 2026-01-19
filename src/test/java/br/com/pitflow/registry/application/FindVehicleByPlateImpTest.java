@@ -1,7 +1,6 @@
 package br.com.pitflow.registry.application;
 
 import br.com.pitflow.common.valueobject.LicensePlate;
-import br.com.pitflow.registry.aplication.FindVehicleByPlateImp;
 import br.com.pitflow.registry.domain.Vehicle;
 import br.com.pitflow.registry.domain.repository.VehicleRepository;
 import org.junit.jupiter.api.BeforeEach;

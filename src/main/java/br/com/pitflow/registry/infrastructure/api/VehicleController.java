@@ -1,14 +1,14 @@
 package br.com.pitflow.registry.infrastructure.api;
 
-import br.com.pitflow.registry.aplication.dto.AddVehicleDto;
-import br.com.pitflow.registry.aplication.dto.UpdateVehicleDto;
-import br.com.pitflow.registry.aplication.usecases.AddVehicle;
-import br.com.pitflow.registry.aplication.usecases.DeleteVehicle;
-import br.com.pitflow.registry.aplication.usecases.FindVehicleById;
-import br.com.pitflow.registry.aplication.usecases.FindVehicleByPlate;
-import br.com.pitflow.registry.aplication.usecases.FindVehiclesByCustomerId;
-import br.com.pitflow.registry.aplication.usecases.ListVehicles;
-import br.com.pitflow.registry.aplication.usecases.UpdateVehicle;
+import br.com.pitflow.registry.application.dto.AddVehicleDto;
+import br.com.pitflow.registry.application.dto.UpdateVehicleDto;
+import br.com.pitflow.registry.application.usecases.AddVehicle;
+import br.com.pitflow.registry.application.usecases.DeleteVehicle;
+import br.com.pitflow.registry.application.usecases.FindVehicleById;
+import br.com.pitflow.registry.application.usecases.FindVehicleByPlate;
+import br.com.pitflow.registry.application.usecases.FindVehiclesByCustomerId;
+import br.com.pitflow.registry.application.usecases.ListVehicles;
+import br.com.pitflow.registry.application.usecases.UpdateVehicle;
 import br.com.pitflow.registry.domain.Vehicle;
 import br.com.pitflow.registry.infrastructure.api.dto.VehicleResponse;
 import io.swagger.v3.oas.annotations.Operation;

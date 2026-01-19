@@ -1,7 +1,7 @@
-package br.com.pitflow.registry.aplication;
+package br.com.pitflow.registry.application;
 
 import br.com.pitflow.common.valueobject.CpfCnpj;
-import br.com.pitflow.registry.aplication.usecases.FindCustomerByDocument;
+import br.com.pitflow.registry.application.usecases.FindCustomerByDocument;
 import br.com.pitflow.registry.domain.Customer;
 import br.com.pitflow.registry.domain.repository.CustomerRepository;
 

@@ -1,7 +1,7 @@
-package br.com.pitflow.registry.aplication;
+package br.com.pitflow.registry.application;
 
 import br.com.pitflow.common.valueobject.LicensePlate;
-import br.com.pitflow.registry.aplication.usecases.FindVehicleByPlate;
+import br.com.pitflow.registry.application.usecases.FindVehicleByPlate;
 import br.com.pitflow.registry.domain.Vehicle;
 import br.com.pitflow.registry.domain.repository.VehicleRepository;
 
