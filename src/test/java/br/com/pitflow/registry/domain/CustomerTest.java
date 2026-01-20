@@ -29,8 +29,10 @@ public class CustomerTest {
 
         // Assert
         assertThat(customer.getName()).isEqualTo("Jão Santos");
+        assertThat(customer.getDocument().value()).isEqualTo("06678477073");
+        assertThat(customer.getPhone()).isEqualTo("11999999999");
         assertThat(customer.getVehicles()).hasSize(1);
-        assertThat(customer.getVehicles().get(0).getLicensePlate().value()).isEqualTo("ABC1D23");
+        assertThat(customer.getVehicles().getFirst().getLicensePlate().value()).isEqualTo("ABC1D23");
     }
 
     @Test

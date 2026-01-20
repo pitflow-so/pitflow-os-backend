@@ -6,6 +6,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -19,6 +21,8 @@ public class MechanicTest {
 
         // Assert
         assertThat(mechanic.getId()).isNotNull();
+        assertThat(mechanic.getId()).isInstanceOf(UUID.class);
+        assertThat(mechanic.getName()).isEqualTo("Mestre Splinter");
         assertThat(mechanic.getRole()).isEqualTo("ROLE_MECHANIC");
         assertThat(mechanic.getUsername()).isEqualTo("splinter");
     }
