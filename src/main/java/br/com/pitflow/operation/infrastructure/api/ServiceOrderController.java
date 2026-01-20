@@ -21,6 +21,7 @@ import br.com.pitflow.operation.infrastructure.api.dto.OrderDurationResponse;
 import br.com.pitflow.operation.infrastructure.api.dto.ServiceOrderResponse;
 import br.com.pitflow.operation.infrastructure.api.mapper.ServiceOrderApiMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,21 +56,7 @@ public class ServiceOrderController {
     private final GetAverageExecutionTime getAverageExecutionTime;
     private final GetServiceOrderDuration getServiceOrderDuration;
 
-    public ServiceOrderController(
-            CreateServiceOrder createServiceOrder,
-            AddOrderItem addOrderItem,
-            StartDiagnosis startDiagnosis,
-            CompleteDiagnosis completeDiagnosis,
-            ApproveOrder approveOrder,
-            FinishOrder finishOrder,
-            DeliverOrder deliverOrder,
-            CancelOrder cancelOrder,
-            GetServiceOrderById getServiceOrderById,
-            FindAllServiceOrders findAllServiceOrders,
-            ListInExecutionOrders listInExecutionOrders,
-            GetAverageExecutionTime getAverageExecutionTime,
-            GetServiceOrderDuration getServiceOrderDuration
-    ) {
+    public ServiceOrderController(CreateServiceOrder createServiceOrder, AddOrderItem addOrderItem, StartDiagnosis startDiagnosis, CompleteDiagnosis completeDiagnosis, ApproveOrder approveOrder, FinishOrder finishOrder, DeliverOrder deliverOrder, CancelOrder cancelOrder, GetServiceOrderById getServiceOrderById, FindAllServiceOrders findAllServiceOrders, ListInExecutionOrders listInExecutionOrders, GetAverageExecutionTime getAverageExecutionTime, GetServiceOrderDuration getServiceOrderDuration) {
         this.createServiceOrder = createServiceOrder;
         this.addOrderItem = addOrderItem;
         this.startDiagnosis = startDiagnosis;
@@ -93,7 +80,7 @@ public class ServiceOrderController {
     }
 
     @PostMapping("/{id}/items")
-    @Operation(summary = "Adiciona peça ou serviço à OS", description = "Permitido apenas nos status RECEIVED ou IN_DIAGNOSIS")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Adiciona peça ou serviço à OS", description = "Permitido apenas nos status RECEIVED ou IN_DIAGNOSIS")
     public ResponseEntity<Void> addItem(@PathVariable UUID id, @RequestBody AddOrderItemDto dto) {
         var updateDto = new AddOrderItemDto(id, dto.catalogId(), dto.quantity(), dto.type());
         addOrderItem.execute(updateDto);
@@ -101,14 +88,14 @@ public class ServiceOrderController {
     }
 
     @PatchMapping("/{id}/start-diagnosis")
-    @Operation(summary = "Inicia a análise técnica, para definir serviços e peças", description = "Muda status para IN_DIAGNOSIS")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Inicia a análise técnica, para definir serviços e peças", description = "Muda status para IN_DIAGNOSIS")
     public ResponseEntity<Void> startDiagnosis(@PathVariable UUID id) {
         startDiagnosis.execute(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/complete-diagnosis")
-    @Operation(summary = "Finaliza a análise técnica e notifica o cliente", description = "Muda status para AWAITING_APPROVAL")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Finaliza a análise técnica e notifica o cliente", description = "Muda status para AWAITING_APPROVAL")
     public ResponseEntity<Void> completeDiagnosis(@PathVariable UUID id) {
         completeDiagnosis.execute(id);
         return ResponseEntity.noContent().build();
@@ -122,14 +109,14 @@ public class ServiceOrderController {
     }
 
     @PatchMapping("/{id}/finish")
-    @Operation(summary = "Finaliza a execução dos serviços (Mão de Obra)", description = "Muda status para FINISHED")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Finaliza a execução dos serviços (Mão de Obra)", description = "Muda status para FINISHED")
     public ResponseEntity<Void> finish(@PathVariable UUID id) {
         finishOrder.execute(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/deliver")
-    @Operation(summary = "Registra a entrega do veículo", description = "Muda status para DELIVERED")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Registra a entrega do veículo", description = "Muda status para DELIVERED")
     public ResponseEntity<Void> deliver(@PathVariable UUID id) {
         deliverOrder.execute(id);
         return ResponseEntity.noContent().build();
@@ -150,41 +137,28 @@ public class ServiceOrderController {
     }
 
     @GetMapping
-    @Operation(summary = "Lista todas as Ordens de Serviço da oficina, em ordem do mais antigo para o mais novo", description = "Mecânico pode vistualizar todas as ordens")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Lista todas as Ordens de Serviço da oficina, em ordem do mais antigo para o mais novo", description = "Mecânico pode vistualizar todas as ordens")
     public ResponseEntity<List<ServiceOrderResponse>> getAll() {
         //TODO: Will be implement pagination later
-        var list = findAllServiceOrders.execute().stream()
-                .map(ServiceOrderApiMapper::toResponse)
-                .collect(Collectors.toList());
+        var list = findAllServiceOrders.execute().stream().map(ServiceOrderApiMapper::toResponse).collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/in-execution")
-    @Operation(
-            summary = "Lista ordens prontas para execução",
-            description = "Retorna a fila de trabalho do mecânico (Status: IN_EXECUTION) ordenada pela data de criação mais antiga."
-    )
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Lista ordens prontas para execução", description = "Retorna a fila de trabalho do mecânico (Status: IN_EXECUTION) ordenada pela data de criação mais antiga.")
     public ResponseEntity<List<ServiceOrderResponse>> listInExecution() {
-        var list = listInExecutionOrders.execute().stream()
-                .map(ServiceOrderApiMapper::toResponse)
-                .collect(Collectors.toList());
+        var list = listInExecutionOrders.execute().stream().map(ServiceOrderApiMapper::toResponse).collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/metrics/average-execution-time")
-    @Operation(
-            summary = "Obter tempo médio de execução",
-            description = "Calcula a média de tempo que os serviços levam para serem concluídos (do início da execução até a finalização técnica)."
-    )
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Obter tempo médio de execução", description = "Calcula a média de tempo que os serviços levam para serem concluídos (do início da execução até a finalização técnica).")
     public ResponseEntity<ExecutionTimeMetricsResponse> getAverageTime() {
         return ResponseEntity.ok(getAverageExecutionTime.execute());
     }
 
     @GetMapping("/{id}/duration")
-    @Operation(
-            summary = "Obter duração da OS",
-            description = "Retorna o tempo decorrido desde o início da execução. Se a OS não foi finalizada, calcula o tempo até o momento atual."
-    )
+    @Operation(summary = "Obter duração da OS", description = "Retorna o tempo decorrido desde o início da execução. Se a OS não foi finalizada, calcula o tempo até o momento atual.")
     public ResponseEntity<OrderDurationResponse> getDuration(@PathVariable UUID id) {
         return ResponseEntity.ok(getServiceOrderDuration.execute(id));
     }

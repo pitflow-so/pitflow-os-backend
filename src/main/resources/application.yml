@@ -27,3 +27,9 @@ logging:
   level:
     org:
       liquibase: DEBUG
+
+api:
+  security:
+    token:
+      secret: ${JWT_SECRET:digimon-digimon-digitais-digimons-sao-campeoes-123456789}
+      expiration-hours: 3

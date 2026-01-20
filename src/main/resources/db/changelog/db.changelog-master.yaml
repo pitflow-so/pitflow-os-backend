@@ -7,4 +7,5 @@ databaseChangeLog:
       file: db/changelog/migrations/003-create-inventory-tables.sql
   - include:
       file: db/changelog/migrations/004-create-service-order-and-item.sql
-
+  - include:
+      file: db/changelog/migrations/005-create-mechanics-table.sql

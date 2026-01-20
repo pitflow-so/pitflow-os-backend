@@ -11,6 +11,7 @@ import br.com.pitflow.registry.application.usecases.UpdateCustomer;
 import br.com.pitflow.registry.domain.Customer;
 import br.com.pitflow.registry.infrastructure.api.dto.CustomerResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,14 +39,7 @@ public class CustomerController {
     private final FindCustomerByDocument findCustomerByDocument;
     private final ListCustomers listCustomers;
 
-    public CustomerController(
-            CreateCustomer createCustomer,
-            UpdateCustomer updateCustomer,
-            DeleteCustomer deleteCustomer,
-            FindCustomerById findCustomerById,
-            FindCustomerByDocument findCustomerByDocument,
-            ListCustomers listCustomers
-    ) {
+    public CustomerController(CreateCustomer createCustomer, UpdateCustomer updateCustomer, DeleteCustomer deleteCustomer, FindCustomerById findCustomerById, FindCustomerByDocument findCustomerByDocument, ListCustomers listCustomers) {
         this.createCustomer = createCustomer;
         this.updateCustomer = updateCustomer;
         this.deleteCustomer = deleteCustomer;
@@ -55,16 +49,14 @@ public class CustomerController {
     }
 
     @PostMapping
-    @Operation(summary = "Criar cliente",
-            description = "Cria um novo cliente com os dados fornecidos.")
+    @Operation(summary = "Criar cliente", description = "Cria um novo cliente com os dados fornecidos.")
     public ResponseEntity<CustomerResponse> create(@RequestBody CreateCustomerDto dto) {
         var customer = createCustomer.execute(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(customer));
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar cliente",
-    description = "Atualiza os dados de um cliente existente.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Atualizar cliente", description = "Atualiza os dados de um cliente existente.")
     public ResponseEntity<CustomerResponse> update(@PathVariable UUID id, @RequestBody UpdateCustomerDto dto) {
         updateCustomer.execute(id, dto);
         var updated = findCustomerById.execute(id);
@@ -72,32 +64,28 @@ public class CustomerController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Remover cliente",
-    description = "Remove um cliente existente pelo ID.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Remover cliente", description = "Remove um cliente existente pelo ID.")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         deleteCustomer.execute(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar por ID",
-    description = "Busca um cliente pelo seu ID único.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Buscar por ID", description = "Busca um cliente pelo seu ID único.")
     public ResponseEntity<CustomerResponse> getById(@PathVariable UUID id) {
         var customer = findCustomerById.execute(id);
         return ResponseEntity.ok(toResponse(customer));
     }
 
     @GetMapping("/document/{document}")
-    @Operation(summary = "Buscar por CPF/CNPJ",
-    description = "Busca um cliente pelo seu CPF ou CNPJ.")
+    @Operation(summary = "Buscar por CPF/CNPJ", description = "Busca um cliente pelo seu CPF ou CNPJ.")
     public ResponseEntity<CustomerResponse> getByDocument(@PathVariable String document) {
         var customer = findCustomerByDocument.execute(document);
         return ResponseEntity.ok(toResponse(customer));
     }
 
     @GetMapping
-    @Operation(summary = "Listar todos os clientes",
-    description = "Retorna uma lista de todos os clientes cadastrados.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Listar todos os clientes", description = "Retorna uma lista de todos os clientes cadastrados.")
     public ResponseEntity<List<CustomerResponse>> listAll() {
         var customers = listCustomers.execute();
         // TODO: Will be necessary to implement pagination in the future
@@ -106,11 +94,6 @@ public class CustomerController {
     }
 
     private CustomerResponse toResponse(Customer customer) {
-        return new CustomerResponse(
-                customer.getId(),
-                customer.getName(),
-                customer.getDocument().value(),
-                customer.getPhone()
-        );
+        return new CustomerResponse(customer.getId(), customer.getName(), customer.getDocument().value(), customer.getPhone());
     }
 }

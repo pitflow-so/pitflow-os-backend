@@ -76,4 +76,29 @@ class AddOrderItemImpTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Insufficient stock");
     }
+
+    @Test
+    @DisplayName("Should add part to order and decrement inventory successfully")
+    void shouldAddPartAndDecrementInventory() {
+        // Arrange
+        UUID osId = UUID.randomUUID();
+        UUID partId = UUID.randomUUID();
+        var os = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Reparo suspensão");
+        var part = new Part("SKU-001", "Amortecedor", "Desc", new BigDecimal("500.0"), 10);
+        part.setId(partId);
+
+        when(osRepository.findById(osId)).thenReturn(Optional.of(os));
+        when(partRepository.findById(partId)).thenReturn(Optional.of(part));
+
+        // Act
+        addOrderItem.execute(new AddOrderItemDto(osId, partId, 2, ItemType.PART));
+
+        // Assert
+        assertThat(os.getItems()).hasSize(1);
+        assertThat(part.getStockQuantity()).isEqualTo(8);
+
+        // Verify
+        verify(partRepository).save(part);
+        verify(osRepository).save(os);
+    }
 }
