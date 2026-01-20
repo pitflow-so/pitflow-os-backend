@@ -99,7 +99,12 @@ Após a mitigação dos pontos acima, uma nova análise foi realizada, não send
 
 ## 🗺️ Entregas de Design (DDD)
 
-A documentação completa contendo o **Event Storming** (Criação de OS e Gestão de Peças), o **Dicionário de Linguagem Ubíqua** e os diagramas de contexto podem ser acessados na pasta `/docs` deste repositório.
+A documentação completa contendo o **Event Storming** (Criação de OS e Gestão de Peças), o **Dicionário de Linguagem Ubíqua** e os diagramas de contexto podem ser acessados no [Miro](https://miro.com/app/board/uXjVID97lew=/).
+
+
+## ✍️ Homologação
+
+Utilizar o passo a posso do arquivo [HOMOLOGAÇÃO.md](HOMOLOGAÇÃO.md) para validar as funcionalidades implementadas no MVP.
 
 ---
 **Desenvolvido como parte do Tech Challenge - SOAT - FIAP.**
