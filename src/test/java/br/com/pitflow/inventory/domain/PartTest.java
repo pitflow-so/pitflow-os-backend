@@ -74,4 +74,66 @@ public class PartTest {
     void shouldThrowExceptionForInvalidPrice() {
         assertThatThrownBy(() -> new Part("SKU-123", "dummy", "Description", new BigDecimal("-10.00"), 10)).isInstanceOf(IllegalArgumentException.class).hasMessage("Part price must be greater than zero.");
     }
+
+    @Test
+    @DisplayName("Should throw exception for invalid names")
+    void shouldThrowExceptionForInvalidNames() {
+        // Testa nulo
+        assertThatThrownBy(() -> new Part("SKU", null, "Desc", new BigDecimal("10"), 1))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        // Testa vazio
+        assertThatThrownBy(() -> new Part("SKU", "  ", "Desc", new BigDecimal("10"), 1))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("Should throw exception for zero price")
+    void shouldThrowExceptionForZeroPrice() {
+        assertThatThrownBy(() -> new Part("SKU", "Name", "Desc", BigDecimal.ZERO, 10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Part price must be greater than zero.");
+    }
+
+    @Test
+    @DisplayName("Should throw exception for negative initial stock")
+    void shouldThrowExceptionForNegativeInitialStock() {
+        assertThatThrownBy(() -> new Part("SKU", "Name", "Desc", new BigDecimal("10"), -1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Stock quantity cannot be negative.");
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, -5})
+    @DisplayName("Should throw exception when adding non-positive quantity to stock")
+    void shouldThrowExceptionForInvalidAddStockQuantity(int invalidQuantity) {
+        var part = new Part("SKU", "Name", "Desc", new BigDecimal("10"), 5);
+        assertThatThrownBy(() -> part.addStock(invalidQuantity))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1})
+    @DisplayName("Should throw exception when removing non-positive quantity from stock")
+    void shouldThrowExceptionForInvalidRemoveStockQuantity(int invalidQuantity) {
+        var part = new Part("SKU", "Name", "Desc", new BigDecimal("10"), 5);
+        assertThatThrownBy(() -> part.removeStock(invalidQuantity))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("Should update fields through setters with validation")
+    void shouldUpdateFieldsThroughSetters() {
+        var part = new Part("SKU", "Name", "Desc", new BigDecimal("10"), 5);
+
+        part.setName("New Name");
+        part.setPrice(new BigDecimal("20"));
+
+        assertThat(part.getName()).isEqualTo("New Name");
+        assertThat(part.getPrice()).isEqualTo(new BigDecimal("20"));
+
+        // Testa se o setter de preço também valida
+        assertThatThrownBy(() -> part.setPrice(BigDecimal.ZERO))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

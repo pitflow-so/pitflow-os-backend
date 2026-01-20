@@ -44,6 +44,7 @@ public class ServiceOrderMapper {
 
         domain.setId(jpa.getId());
         domain.reconstituteStatus(jpa.getStatus());
+        domain.reconstituteCreatedAt(jpa.getCreatedAt());
         domain.reconstituteDiagnosisStartedAt(jpa.getDiagnosisStartedAt());
         domain.reconstituteExecutionStartedAt(jpa.getExecutionStartedAt());
         domain.reconstituteFinishedAt(jpa.getFinishedAt());

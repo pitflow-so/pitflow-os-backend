@@ -16,7 +16,7 @@ public class ServiceOrder {
     private final List<Item> items;
     private final String description;
 
-    private final LocalDateTime createdAt;
+    private LocalDateTime createdAt;
     private LocalDateTime executionStartedAt;
     private LocalDateTime diagnosisStartedAt;
     private LocalDateTime finishedAt;
@@ -156,20 +156,17 @@ public class ServiceOrder {
     public void reconstituteStatus(Status status) {
         this.status = status;
     }
-
     public void reconstituteItems(List<Item> items) {
         this.items.clear();
         this.items.addAll(items);
     }
-
+    public void reconstituteCreatedAt(LocalDateTime createdAt) {this.createdAt = createdAt;}
     public void reconstituteDiagnosisStartedAt(LocalDateTime diagnosisStartedAt) {
         this.diagnosisStartedAt = diagnosisStartedAt;
     }
-
     public void reconstituteExecutionStartedAt(LocalDateTime executionStartedAt) {
         this.executionStartedAt = executionStartedAt;
     }
-
     public void reconstituteFinishedAt(LocalDateTime finishedAt) {
         this.finishedAt = finishedAt;
     }
