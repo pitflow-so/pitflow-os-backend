@@ -15,6 +15,20 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  app:
+    build: .
+    container_name: pitflow-os-backend
+    ports:
+      - "8080:8080"
+    environment:
+      # TODO: Mover para variáveis de ambiente no futuro
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/pitflow_os
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - JWT_SECRET=${JWT_SECRET:-digimon-digimon-digitais-digimons-sao-campeoes-123456789}
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:

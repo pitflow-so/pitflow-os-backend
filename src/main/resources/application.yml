@@ -12,7 +12,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    #show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
     properties:
@@ -26,7 +26,7 @@ spring:
 logging:
   level:
     org:
-      liquibase: DEBUG
+      liquibase: INFO
 
 api:
   security:
