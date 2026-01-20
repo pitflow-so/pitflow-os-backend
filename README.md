@@ -62,7 +62,7 @@ Um Bounded Contexts auxiliar foi criado para gerenciar os Objetos de valor e aut
 Conforme os requisitos da Fase 1, os testes automatizados focaram nos domínios críticos (**Domain** e **Application**), atingindo coberturas superiores a **80%**.
 Abaixo um exemplo da cobertura de testes obtida pelo JaCoCo, por meio de plugin do IntelliJ:
 
-![img.png](doc/jacoco_plugin_intellij.png)
+![img.png](img/jacoco_plugin_intellij.png)
 
 Foi adicionado também a dependência do Jacoco no projeto podendo gerar o relatório de cobertura via Maven com o comando:
 ```bash
@@ -71,7 +71,7 @@ mvn clean verify
 Arquivo ficará disponível em:
 `target/site/jacoco/index.html`
 
-![jacoco_dependence_index.png](doc/jacoco_dependence_index.png)
+![jacoco_dependence_index.png](img/jacoco_dependence_index.png)
 
 No relatório gerado, temos a cobertura detalhada por pacote e classe, destacando a cobertura acima de 80% para os pacotes `domain` e `application`.
 
@@ -90,10 +90,10 @@ mvn org.owasp:dependency-check-maven:check -Dnvd.api.key=<API_KEY>
 2.  **Swagger UI (MEDIUM)**: Relacionada à biblioteca `DOMPurify` nos assets estáticos.
     * **Mitigação**: Atualização do starter `springdoc-openapi` para a versão mais recente e recomendação de desativação do endpoint em ambientes produtivos críticos.
 
-![first_owasp_execution.png](doc/first_owasp_execution.png)
+![first_owasp_execution.png](img/first_owasp_execution.png)
 
 Após a mitigação dos pontos acima, uma nova análise foi realizada, não sendo mais identificadas vulnerabilidades.
-![second_owasp_execution.png](doc/second_owasp_execution.png)
+![second_owasp_execution.png](img/second_owasp_execution.png)
 
 ---
 

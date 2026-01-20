@@ -1,6 +1,6 @@
 -- liquibase formatted sql
 
--- changeset seu_nome:create-mechanics-table
+-- changeset rafael:create-mechanics-table
 
 CREATE TABLE IF NOT EXISTS mechanics (
     id UUID PRIMARY KEY,
