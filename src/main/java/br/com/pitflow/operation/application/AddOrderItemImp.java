@@ -31,16 +31,20 @@ public class AddOrderItemImp implements AddOrderItem {
             var part = partRepository.findById(dto.catalogId())
                     .orElseThrow(() -> new IllegalArgumentException("Part not found in inventory"));
 
-            // Check inventory quantity
-            if (part.getStockQuantity() < dto.quantity()) {
-                throw new IllegalStateException("Insufficient stock for part: " + part.getName());
-            }
+            // Remove from inventory
+            part.removeStock(dto.quantity());
 
+            // Add to order
             os.addPart(part.getId(), part.getName(), part.getPrice(), dto.quantity());
+
+            // Update part stock in inventory
+            partRepository.save(part);
+
         } else {
             var service = serviceRepository.findById(dto.catalogId())
                     .orElseThrow(() -> new IllegalArgumentException("Service not found in inventory"));
 
+            // Add to order
             os.addService(service.getId(), service.getName(), service.getPrice());
         }
 

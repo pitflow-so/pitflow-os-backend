@@ -11,6 +11,7 @@ import br.com.pitflow.inventory.application.usecase.UpdatePart;
 import br.com.pitflow.inventory.domain.Part;
 import br.com.pitflow.inventory.infrastructure.api.dto.PartResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,28 +56,28 @@ public class PartController {
     }
 
     @PostMapping
-    @Operation(summary = "Cadastrar nova peça", description = "Adiciona uma peça ao inventário com SKU único.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Cadastrar nova peça", description = "Adiciona uma peça ao inventário com SKU único.")
     public ResponseEntity<PartResponse> create(@RequestBody CreatePartDto dto) {
         var part = createPart.execute(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(part));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar peça por ID")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Buscar peça por ID")
     public ResponseEntity<PartResponse> getById(@PathVariable UUID id) {
         var part = findPartById.execute(id);
         return ResponseEntity.ok(toResponse(part));
     }
 
     @GetMapping("/sku/{sku}")
-    @Operation(summary = "Buscar peça po SKU")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Buscar peça po SKU")
     public ResponseEntity<PartResponse> getBySku(@PathVariable String sku) {
         var part = findPartBySku.execute(sku);
         return ResponseEntity.ok(toResponse(part));
     }
 
     @GetMapping
-    @Operation(summary = "Listar todas as peças")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Listar todas as peças")
     public ResponseEntity<List<PartResponse>> listAll() {
         var parts = listParts.execute();
         var response = parts.stream().map(this::toResponse).toList();
@@ -85,7 +86,7 @@ public class PartController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar peça", description = "Atualiza os dados de uma peça existente. Se o SKU for alterado, valida a unicidade.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Atualizar peça", description = "Atualiza os dados de uma peça existente. Se o SKU for alterado, valida a unicidade.")
     public ResponseEntity<PartResponse> update(@PathVariable UUID id, @RequestBody UpdatePartDto dto) {
         updatePart.execute(id, dto);
         var updatedPart = findPartById.execute(id);
@@ -93,7 +94,7 @@ public class PartController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Excluir peça", description = "Remove permanentemente uma peça do inventário.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Excluir peça", description = "Remove permanentemente uma peça do inventário.")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         deletePart.execute(id);
         return ResponseEntity.noContent().build();

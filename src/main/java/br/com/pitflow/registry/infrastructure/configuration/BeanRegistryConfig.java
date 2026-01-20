@@ -1,7 +1,10 @@
 package br.com.pitflow.registry.infrastructure.configuration;
 
+import br.com.pitflow.common.infrastructure.security.JwtService;
 import br.com.pitflow.registry.application.AddVehicleImp;
+import br.com.pitflow.registry.application.AuthenticateMechanicImp;
 import br.com.pitflow.registry.application.CreateCustomerImp;
+import br.com.pitflow.registry.application.CreateMechanicImp;
 import br.com.pitflow.registry.application.DeleteCustomerImp;
 import br.com.pitflow.registry.application.DeleteVehicleImp;
 import br.com.pitflow.registry.application.FindCustomerByDocumentImp;
@@ -14,7 +17,9 @@ import br.com.pitflow.registry.application.ListVehiclesImp;
 import br.com.pitflow.registry.application.UpdateCustomerImp;
 import br.com.pitflow.registry.application.UpdateVehicleImp;
 import br.com.pitflow.registry.application.usecases.AddVehicle;
+import br.com.pitflow.registry.application.usecases.AuthenticateMechanic;
 import br.com.pitflow.registry.application.usecases.CreateCustomer;
+import br.com.pitflow.registry.application.usecases.CreateMechanic;
 import br.com.pitflow.registry.application.usecases.DeleteCustomer;
 import br.com.pitflow.registry.application.usecases.DeleteVehicle;
 import br.com.pitflow.registry.application.usecases.FindCustomerByDocument;
@@ -27,13 +32,17 @@ import br.com.pitflow.registry.application.usecases.ListVehicles;
 import br.com.pitflow.registry.application.usecases.UpdateCustomer;
 import br.com.pitflow.registry.application.usecases.UpdateVehicle;
 import br.com.pitflow.registry.domain.repository.CustomerRepository;
+import br.com.pitflow.registry.domain.repository.MechanicRepository;
 import br.com.pitflow.registry.domain.repository.VehicleRepository;
 import br.com.pitflow.registry.infrastructure.persistence.adapter.JpaCustomerRepositoryAdapter;
+import br.com.pitflow.registry.infrastructure.persistence.adapter.JpaMechanicRepositoryAdapter;
 import br.com.pitflow.registry.infrastructure.persistence.adapter.JpaVehicleRepositoryAdapter;
 import br.com.pitflow.registry.infrastructure.persistence.repository.SpringCustomerRepository;
+import br.com.pitflow.registry.infrastructure.persistence.repository.SpringMechanicRepository;
 import br.com.pitflow.registry.infrastructure.persistence.repository.SpringVehicleRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class BeanRegistryConfig {
@@ -111,5 +120,23 @@ public class BeanRegistryConfig {
     @Bean
     public ListVehicles listVehicles(VehicleRepository repository) {
         return new ListVehiclesImp(repository);
+    }
+
+    @Bean
+    public MechanicRepository mechanicRepository(SpringMechanicRepository springMechanicRepository) {
+        return new JpaMechanicRepositoryAdapter(springMechanicRepository);
+    }
+
+    @Bean
+    public CreateMechanic createMechanic(MechanicRepository mechanicRepository, PasswordEncoder passwordEncoder) {
+        return new CreateMechanicImp(mechanicRepository, passwordEncoder);
+    }
+
+    @Bean
+    public AuthenticateMechanic authenticateMechanic(
+            MechanicRepository mechanicRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService) {
+        return new AuthenticateMechanicImp(mechanicRepository, passwordEncoder, jwtService);
     }
 }

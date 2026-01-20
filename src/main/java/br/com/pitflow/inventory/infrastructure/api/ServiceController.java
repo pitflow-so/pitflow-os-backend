@@ -10,6 +10,7 @@ import br.com.pitflow.inventory.application.usecase.UpdateService;
 import br.com.pitflow.inventory.domain.Service;
 import br.com.pitflow.inventory.infrastructure.api.dto.ServiceResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,21 +51,21 @@ public class ServiceController {
     }
 
     @PostMapping
-    @Operation(summary = "Criar um novo serviço", description = "Registra um serviço de mão de obra no catálogo de serviços da oficina.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Criar um novo serviço", description = "Registra um serviço de mão de obra no catálogo de serviços da oficina.")
     public ResponseEntity<ServiceResponse> create(@RequestBody CreateServiceDto dto) {
         var service = createService.execute(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(service));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar serviço por ID", description = "Recupera os detalhes de um serviço específico usando seu identificador único.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Buscar serviço por ID", description = "Recupera os detalhes de um serviço específico usando seu identificador único.")
     public ResponseEntity<ServiceResponse> getById(@PathVariable UUID id) {
         var service = findServiceById.execute(id);
         return ResponseEntity.ok(toResponse(service));
     }
 
     @GetMapping
-    @Operation(summary = "Listar todos os serviços", description = "Retorna uma lista de todos os serviços cadastrados no catálogo.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Listar todos os serviços", description = "Retorna uma lista de todos os serviços cadastrados no catálogo.")
     public ResponseEntity<java.util.List<ServiceResponse>> listAll() {
         var services = listServices.execute();
         var response = services.stream().map(this::toResponse).toList();
@@ -73,7 +74,7 @@ public class ServiceController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar serviço", description = "Atualiza o nome, descrição ou preço de um serviço de mão de obra.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Atualizar serviço", description = "Atualiza o nome, descrição ou preço de um serviço de mão de obra.")
     public ResponseEntity<ServiceResponse> update(@PathVariable UUID id, @RequestBody UpdateServiceDto dto) {
         updateService.execute(id, dto);
         var updatedService = findServiceById.execute(id);
@@ -81,7 +82,7 @@ public class ServiceController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Excluir serviço", description = "Remove um serviço do catálogo de mão de obra.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Excluir serviço", description = "Remove um serviço do catálogo de mão de obra.")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         deleteService.execute(id);
         return ResponseEntity.noContent().build();
