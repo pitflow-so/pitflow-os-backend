@@ -3,9 +3,9 @@ services:
     image: postgres:16-alpine
     container_name: pitflow-postgres
     environment:
-      POSTGRES_DB: pitflow_os
-      POSTGRES_USER: pitflow
-      POSTGRES_PASSWORD: admin&pitflow_os
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -21,11 +21,12 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # TODO: Mover para variáveis de ambiente no futuro
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/pitflow_os
-      - SPRING_DATASOURCE_USERNAME=pitflow
-      - SPRING_DATASOURCE_PASSWORD=admin&pitflow_os
-      - JWT_SECRET=${JWT_SECRET:-digimon-digimon-digitais-digimons-sao-campeoes-123456789}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       db:
         condition: service_healthy
