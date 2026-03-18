@@ -49,3 +49,15 @@ buildNumber.properties
 
 ## envs ##
 .env
+
+
+## Credenciais e segredos ##
+*.tfvars
+*.tfvars.json
+
+## Estado local ##
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+.terraform.tfstate.lock.info
