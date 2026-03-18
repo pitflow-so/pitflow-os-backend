@@ -7,7 +7,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: create-drop  # JPA cria e destrói as tabelas nos testes
     database-platform: org.hibernate.dialect.H2Dialect
     open-in-view: false
     properties:
@@ -15,8 +15,7 @@ spring:
         format_sql: true
 
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
-    enabled: true
+    enabled: false  # Desabilita Liquibase nos testes
 
 api:
   security:
