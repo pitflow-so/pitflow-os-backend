@@ -1,0 +1,145 @@
+name: Pitflow Full Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # Habilitar execução manual
+
+jobs:
+  # -------------------------------------------------------------------------
+  # JOB 1: INFRAESTRUTURA AWS
+  # -------------------------------------------------------------------------
+  infrastructure:
+    name: Provision Infrastructure
+    runs-on: ubuntu-latest
+    outputs:
+      rds_endpoint: ${{ steps.tf-output.outputs.rds_endpoint }}
+      ecr_url: ${{ steps.tf-output.outputs.ecr_url }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Bootstrap S3 for TF State
+        run: |
+          if ! aws s3api head-bucket --bucket tfstate-backend-fiap-pitflow 2>/dev/null; then
+            aws s3 mb s3://tfstate-backend-fiap-pitflow --region us-east-1
+          else
+            echo "Bucket já existe nesta conta, continuando..."
+          fi
+
+      - name: Cache Terraform
+        uses: actions/cache@v4
+        with:
+          path: infra/terraform/.terraform
+          key: terraform-${{ hashFiles('infra/terraform/.terraform.lock.hcl') }}
+
+      - name: Terraform Setup
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: cd infra/terraform && terraform init
+
+      - name: Terraform Plan
+        run: |
+          cd infra/terraform
+          terraform plan -var="db_password=${{ secrets.DB_PASSWORD }}" -out=main.tfplan
+
+      - name: Terraform Apply
+        run: |
+          cd infra/terraform
+          terraform apply -auto-approve main.tfplan
+
+      - name: Capture Outputs
+        id: tf-output
+        run: |
+          cd infra/terraform
+          echo "rds_endpoint=$(terraform output -raw rds_endpoint)" >> $GITHUB_OUTPUT
+          echo "ecr_url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
+
+  # -------------------------------------------------------------------------
+  # JOB 2: BUILD E TESTES
+  # -------------------------------------------------------------------------
+  build:
+    name: Build and Push Image
+    needs: infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build and Test with Maven
+        run: mvn clean package
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & Push Docker Image
+        run: |
+          ECR_URL=${{ needs.infrastructure.outputs.ecr_url }}
+          docker build -t $ECR_URL:latest .
+          docker push $ECR_URL:latest
+
+  # -------------------------------------------------------------------------
+  # JOB 3: DEPLOY (Configuração e Atualização do EKS)
+  # -------------------------------------------------------------------------
+  deploy:
+    name: Deploy to Kubernetes
+    needs: [infrastructure, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Update Kubeconfig (EKS)
+        run: aws eks update-kubeconfig --name pitflow-eks --region us-east-1
+
+      - name: Prepare and Apply Manifests
+        env:
+          RDS_ENDPOINT: ${{ needs.infrastructure.outputs.rds_endpoint }}
+          CONTAINER_IMAGE: ${{ needs.infrastructure.outputs.ecr_url }}:latest
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        run: |
+          # Substituindo placeholders nos arquivos YAML
+          envsubst < k8s/configmap.yaml | kubectl apply -f -
+          envsubst < k8s/secrets.yaml | kubectl apply -f -
+          envsubst < k8s/deployment.yaml | kubectl apply -f -
+          
+          # Aplicando o restante dos manifestos
+          kubectl apply -f k8s/service.yaml
+          kubectl apply -f k8s/hpa.yaml
+
+      - name: Verify Rollout
+        run: kubectl rollout status deployment/pitflow-backend
