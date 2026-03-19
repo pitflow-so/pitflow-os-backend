@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pitflow-config
+  labels:
+    app: pitflow-backend
+data:
+  DB_HOST: "${RDS_ENDPOINT}" # Filled by github actions
+  DB_PORT: "5432"
+  DB_NAME: "pitflow_os"
+  DB_USER: "pitflow"
