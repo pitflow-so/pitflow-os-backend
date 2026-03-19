@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pitflow-backend
+  labels:
+    app: pitflow-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pitflow-backend
+  template:
+    metadata:
+      labels:
+        app: pitflow-backend
+    spec:
+      containers:
+        - name: pitflow-backend
+          # O placeholder abaixo será substituído pela URL do ECR na Pipeline
+          image: ${CONTAINER_IMAGE}
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          env:
+            # Agora lendo o Host dinâmico do ConfigMap
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: pitflow-config
+                  key: DB_HOST
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: pitflow-config
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: pitflow-config
+                  key: DB_USER
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: pitflow-config
+                  key: DB_PORT
+            # Mantendo os Secrets para dados sensíveis
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pitflow-secrets
+                  key: db-password
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: pitflow-secrets
+                  key: jwt-secret
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 40
+            periodSeconds: 15
