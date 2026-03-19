@@ -30,7 +30,7 @@ logging:
 api:
   security:
     token:
-      secret: ${JWT_SECRET:digimon-digimon-digitais-digimons-sao-campeoes-123456789}
+      secret: ${JWT_SECRET}
       expiration-hours: 3
 
 management:
