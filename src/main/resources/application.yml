@@ -32,3 +32,12 @@ api:
     token:
       secret: ${JWT_SECRET:digimon-digimon-digitais-digimons-sao-campeoes-123456789}
       expiration-hours: 3
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
