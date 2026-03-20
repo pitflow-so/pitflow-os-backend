@@ -16,6 +16,7 @@ jobs:
       rds_endpoint: ${{ steps.tf-output.outputs.rds_endpoint }}
       ecr_url: ${{ steps.tf-output.outputs.ecr_url }}
       eks_cluster_name: ${{ steps.tf-output.outputs.eks_cluster_name }}
+      image_tag: ${{ github.sha }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -102,7 +103,9 @@ jobs:
       - name: Build & Push Docker Image
         run: |
           ECR_URL=${{ needs.infrastructure.outputs.ecr_url }}
-          docker build -t $ECR_URL:latest .
+          IMAGE_TAG=${{ github.sha }}
+          docker build -t $ECR_URL:$IMAGE_TAG -t $ECR_URL:latest .
+          docker push $ECR_URL:$IMAGE_TAG
           docker push $ECR_URL:latest
 
   # -------------------------------------------------------------------------
@@ -130,7 +133,7 @@ jobs:
       - name: Prepare and Apply Manifests
         env:
           RDS_ENDPOINT: ${{ needs.infrastructure.outputs.rds_endpoint }}
-          CONTAINER_IMAGE: ${{ needs.infrastructure.outputs.ecr_url }}:latest
+          CONTAINER_IMAGE: ${{ needs.infrastructure.outputs.ecr_url }}:${{ github.sha }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
