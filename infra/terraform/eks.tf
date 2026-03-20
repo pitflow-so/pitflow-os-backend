@@ -1,6 +1,6 @@
 # data sources:
 data "aws_iam_role" "lab_eks_role" {
-  name = "LabEksClusterRole "
+  name = "LabEksClusterRole"
 }
 
 data "aws_vpc" "default" {
