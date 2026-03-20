@@ -60,15 +60,21 @@ spec:
                 secretKeyRef:
                   name: pitflow-secrets
                   key: jwt-secret
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            failureThreshold: 15  # Vamos tentar por até 15 * 10s = 150s total
+            periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8080
-            initialDelaySeconds: 40
             periodSeconds: 15
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8080
-            initialDelaySeconds: 30
             periodSeconds: 10
+            failureThreshold: 3
