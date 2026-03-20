@@ -144,4 +144,4 @@ jobs:
           kubectl apply -f infra/k8s/hpa.yaml
 
       - name: Verify Rollout
-        run: kubectl rollout status deployment/pitflow-backend
+        run: kubectl rollout status deployment/pitflow-backend --timeout=300s
