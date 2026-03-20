@@ -1,11 +1,6 @@
 # data sources:
-data "aws_iam_role" "lab_eks_role" {
-  name = "AWSServiceRoleForAmazonEKS"
-}
-
-# data sources:
-data "aws_iam_role" "lab_eks_node_group_role" {
-  name = "AWSServiceRoleForAmazonEKSNodegroup"
+data "aws_iam_role" "lab_role" {
+  name = "LabRole"
 }
 
 data "aws_vpc" "default" {
@@ -29,7 +24,7 @@ data "aws_subnets" "default" {
 
 resource "aws_eks_cluster" "pitflow_cluster" {
   name     = "pitflow-eks"
-  role_arn = data.aws_iam_role.lab_eks_role.arn
+  role_arn = data.aws_iam_role.lab_role.arn
 
   vpc_config {
     subnet_ids = data.aws_subnets.default.ids
@@ -39,7 +34,7 @@ resource "aws_eks_cluster" "pitflow_cluster" {
 resource "aws_eks_node_group" "pitflow_nodes" {
   cluster_name    = aws_eks_cluster.pitflow_cluster.name
   node_group_name = "pitflow-node-group"
-  node_role_arn   = data.aws_iam_role.lab_eks_node_group_role.arn
+  node_role_arn   = data.aws_iam_role.lab_role.arn
 
   subnet_ids = data.aws_subnets.default.ids
 
