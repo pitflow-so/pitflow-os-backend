@@ -15,6 +15,7 @@ jobs:
     outputs:
       rds_endpoint: ${{ steps.tf-output.outputs.rds_endpoint }}
       ecr_url: ${{ steps.tf-output.outputs.ecr_url }}
+      eks_cluster_name: ${{ steps.tf-output.outputs.eks_cluster_name }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -63,6 +64,7 @@ jobs:
           cd infra/terraform
           echo "rds_endpoint=$(terraform output -raw rds_endpoint)" >> $GITHUB_OUTPUT
           echo "ecr_url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
+          echo "eks_cluster_name=$(terraform output -raw eks_cluster_name)" >> $GITHUB_OUTPUT
 
   # -------------------------------------------------------------------------
   # JOB 2: BUILD E TESTES
@@ -123,7 +125,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Update Kubeconfig (EKS)
-        run: aws eks update-kubeconfig --name pitflow-eks --region us-east-1
+        run: aws eks update-kubeconfig --name ${{ needs.infrastructure.outputs.eks_cluster_name }} --region us-east-1
 
       - name: Prepare and Apply Manifests
         env:

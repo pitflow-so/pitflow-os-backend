@@ -48,3 +48,7 @@ resource "aws_eks_node_group" "pitflow_nodes" {
   instance_types = ["t3.medium"]
   capacity_type  = "SPOT"
 }
+
+output "eks_cluster_name" {
+  value = aws_eks_cluster.pitflow_cluster.name
+}
