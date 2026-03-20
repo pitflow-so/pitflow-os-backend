@@ -35,6 +35,9 @@ public class SecurityConfig {
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(authorize -> authorize
+                        // Actuator para health check do Kubernetes
+                        .requestMatchers("/actuator/health").permitAll()
+
                         // Endpoints de Autenticação
                         .requestMatchers("/registry/auth/**").permitAll()
                         //Cadastro do mecânico
