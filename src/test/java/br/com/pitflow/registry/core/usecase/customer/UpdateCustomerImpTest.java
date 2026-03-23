@@ -20,12 +20,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class UpdateCustomerImpTest {
-    private CustomerGateway repository;
+    private CustomerGateway gateway;
     private UpdateCustomer updateCustomer;
 
     @BeforeEach void setUp() {
-        repository = mock(CustomerGateway.class);
-        updateCustomer = new UpdateCustomerImp(repository);
+        gateway = mock(CustomerGateway.class);
+        updateCustomer = new UpdateCustomerImp(gateway);
     }
 
     @Test
@@ -36,8 +36,8 @@ class UpdateCustomerImpTest {
         var customer = new Customer("Antigo", new CpfCnpj("12345678909"), "111");
         var dto = new UpdateCustomerCommand("Novo", "98765432100", "222");
 
-        when(repository.findById(id)).thenReturn(Optional.of(customer));
-        when(repository.findByDocument(any())).thenReturn(Optional.empty());
+        when(gateway.findById(id)).thenReturn(Optional.of(customer));
+        when(gateway.findByDocument(any())).thenReturn(Optional.empty());
 
         // Act
         updateCustomer.execute(id, dto);
@@ -46,7 +46,7 @@ class UpdateCustomerImpTest {
         assertThat(customer.getName()).isEqualTo("Novo");
 
         // verify
-        verify(repository).save(customer);
+        verify(gateway).save(customer);
     }
 
     @Test
@@ -58,8 +58,8 @@ class UpdateCustomerImpTest {
         var another = new Customer("Cliente B", new CpfCnpj("42634554010"), "222");
         var dto = new UpdateCustomerCommand("Cliente A", "42634554010", "111");
 
-        when(repository.findById(id)).thenReturn(Optional.of(customer));
-        when(repository.findByDocument(new CpfCnpj("42634554010"))).thenReturn(Optional.of(another));
+        when(gateway.findById(id)).thenReturn(Optional.of(customer));
+        when(gateway.findByDocument(new CpfCnpj("42634554010"))).thenReturn(Optional.of(another));
 
         // Act & Assert
         assertThatThrownBy(() -> updateCustomer.execute(id, dto))

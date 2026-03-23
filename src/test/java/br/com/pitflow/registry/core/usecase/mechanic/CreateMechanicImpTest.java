@@ -7,7 +7,6 @@ import br.com.pitflow.registry.core.gateway.PasswordEncoderGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -23,18 +22,18 @@ import static org.mockito.Mockito.when;
 
 class CreateMechanicImpTest {
 
-    private MechanicGateway repository;
+    private MechanicGateway gateway;
     private PasswordEncoderGateway passwordEncoder;
     private CreateMechanicImp createMechanic;
 
     @BeforeEach
     void setUp() {
         // Inicialização manual dos mocks
-        this.repository = mock(MechanicGateway.class);
+        this.gateway = mock(MechanicGateway.class);
         this.passwordEncoder = mock(PasswordEncoderGateway.class);
 
         // Instanciação direta da classe sob teste
-        this.createMechanic = new CreateMechanicImp(repository, passwordEncoder);
+        this.createMechanic = new CreateMechanicImp(gateway, passwordEncoder);
     }
 
     @Test
@@ -43,7 +42,7 @@ class CreateMechanicImpTest {
         // Arrange
         var dto = new CreateMechanicCommand("Mestre do Torquimetro", "mestre.os", "password123");
 
-        when(repository.findByUsername("mestre.os")).thenReturn(Optional.empty());
+        when(gateway.findByUsername("mestre.os")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("password123")).thenReturn("hashed_password");
 
         // Act
@@ -54,9 +53,9 @@ class CreateMechanicImpTest {
         assertThat(result.getUsername()).isEqualTo("mestre.os");
         assertThat(result.getPassword()).isEqualTo("hashed_password");
 
-        verify(repository).findByUsername("mestre.os");
+        verify(gateway).findByUsername("mestre.os");
         verify(passwordEncoder).encode("password123");
-        verify(repository).save(any(Mechanic.class));
+        verify(gateway).save(any(Mechanic.class));
     }
 
     @Test
@@ -66,15 +65,15 @@ class CreateMechanicImpTest {
         var dto = new CreateMechanicCommand("Outro Nome", "mestre.os", "any_pass");
         var existingMechanic = new Mechanic("João", "mestre.os", "pass");
 
-        when(repository.findByUsername("mestre.os")).thenReturn(Optional.of(existingMechanic));
+        when(gateway.findByUsername("mestre.os")).thenReturn(Optional.of(existingMechanic));
 
         // Act & Assert
         assertThatThrownBy(() -> createMechanic.execute(dto))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Mechanic with username mestre.os already exists");
 
-        verify(repository).findByUsername("mestre.os");
+        verify(gateway).findByUsername("mestre.os");
         verify(passwordEncoder, never()).encode(anyString());
-        verify(repository, never()).save(any(Mechanic.class));
+        verify(gateway, never()).save(any(Mechanic.class));
     }
 }

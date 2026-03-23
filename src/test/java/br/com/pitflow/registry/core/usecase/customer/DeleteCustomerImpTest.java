@@ -11,13 +11,13 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class DeleteCustomerImpTest {
-    private CustomerGateway repository;
+    private CustomerGateway gateway;
     private DeleteCustomerImp deleteCustomer;
 
     @BeforeEach
     void setUp() {
-        repository = mock(CustomerGateway.class);
-        deleteCustomer = new DeleteCustomerImp(repository);
+        gateway = mock(CustomerGateway.class);
+        deleteCustomer = new DeleteCustomerImp(gateway);
     }
 
     @Test
@@ -25,13 +25,13 @@ class DeleteCustomerImpTest {
     void shouldDeleteCustomerSuccessfully() {
         // Arrange
         UUID id = UUID.randomUUID();
-        when(repository.findById(id)).thenReturn(Optional.of(mock(Customer.class)));
+        when(gateway.findById(id)).thenReturn(Optional.of(mock(Customer.class)));
 
         // Act
         deleteCustomer.execute(id);
 
         // Verify
-        verify(repository).delete(id);
+        verify(gateway).delete(id);
     }
 
     @Test
@@ -39,13 +39,13 @@ class DeleteCustomerImpTest {
     void shouldThrowExceptionWhenCustomerNotFound() {
         // Arrange
         UUID id = UUID.randomUUID();
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(gateway.findById(id)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> deleteCustomer.execute(id))
                 .isInstanceOf(IllegalArgumentException.class);
 
         // Verify
-        verify(repository, never()).delete(any());
+        verify(gateway, never()).delete(any());
     }
 }

@@ -3,7 +3,6 @@ package br.com.pitflow.registry.core.usecase.vehicle;
 import br.com.pitflow.common.valueobject.LicensePlate;
 import br.com.pitflow.registry.core.entity.Vehicle;
 import br.com.pitflow.registry.core.gateway.VehicleGateway;
-import br.com.pitflow.registry.core.usecase.vehicle.FindVehicleByPlateImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,12 +12,12 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class FindVehicleByPlateImpTest {
-    private VehicleGateway repository;
+    private VehicleGateway gateway;
     private FindVehicleByPlateImp useCase;
 
     @BeforeEach void setUp() {
-        repository = mock(VehicleGateway.class);
-        useCase = new FindVehicleByPlateImp(repository);
+        gateway = mock(VehicleGateway.class);
+        useCase = new FindVehicleByPlateImp(gateway);
     }
 
     @Test
@@ -27,7 +26,7 @@ class FindVehicleByPlateImpTest {
         // Arrange
         var plate = "ABC1D23";
         var vehicle = new Vehicle(UUID.randomUUID(), new LicensePlate(plate), "Fiat", "Uno", 2010);
-        when(repository.findByLicensePlate(any())).thenReturn(Optional.of(vehicle));
+        when(gateway.findByLicensePlate(any())).thenReturn(Optional.of(vehicle));
 
         // Act
         var result = useCase.execute(plate);
@@ -36,14 +35,14 @@ class FindVehicleByPlateImpTest {
         assertThat(result.getLicensePlate().value()).isEqualTo(plate);
 
         // Verify
-        verify(repository).findByLicensePlate(any());
+        verify(gateway).findByLicensePlate(any());
     }
 
     @Test
     @DisplayName("Should throw exception when vehicle not found")
     void shouldThrowExceptionWhenPlateNotFound() {
         // Arrange
-        when(repository.findByLicensePlate(any())).thenReturn(Optional.empty());
+        when(gateway.findByLicensePlate(any())).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> useCase.execute("XYZ9999"))

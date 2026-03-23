@@ -13,13 +13,13 @@ import static org.mockito.Mockito.*;
 
 class FindCustomerByDocumentImpTest {
 
-    private CustomerGateway repository;
+    private CustomerGateway gateway;
     private FindCustomerByDocumentImp findCustomerByDocument;
 
     @BeforeEach
     void setUp() {
-        repository = mock(CustomerGateway.class);
-        findCustomerByDocument = new FindCustomerByDocumentImp(repository);
+        gateway = mock(CustomerGateway.class);
+        findCustomerByDocument = new FindCustomerByDocumentImp(gateway);
     }
 
     @Test
@@ -30,7 +30,7 @@ class FindCustomerByDocumentImpTest {
         var cpfCnpj = new CpfCnpj(docValue);
         var customer = new Customer("João Silva", cpfCnpj, "11999999999");
 
-        when(repository.findByDocument(any(CpfCnpj.class))).thenReturn(Optional.of(customer));
+        when(gateway.findByDocument(any(CpfCnpj.class))).thenReturn(Optional.of(customer));
 
         // Act
         Customer result = findCustomerByDocument.execute(docValue);
@@ -39,7 +39,7 @@ class FindCustomerByDocumentImpTest {
         assertThat(result).isNotNull();
         assertThat(result.getDocument().value()).isEqualTo(docValue);
         assertThat(result.getName()).isEqualTo("João Silva");
-        verify(repository, times(1)).findByDocument(any(CpfCnpj.class));
+        verify(gateway, times(1)).findByDocument(any(CpfCnpj.class));
     }
 
     @Test
@@ -47,13 +47,13 @@ class FindCustomerByDocumentImpTest {
     void shouldThrowExceptionWhenCustomerNotFound() {
         // Arrange
         String docValue = "42634554010";
-        when(repository.findByDocument(any(CpfCnpj.class))).thenReturn(Optional.empty());
+        when(gateway.findByDocument(any(CpfCnpj.class))).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> findCustomerByDocument.execute(docValue))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Customer not found with document: " + docValue);
 
-        verify(repository, times(1)).findByDocument(any(CpfCnpj.class));
+        verify(gateway, times(1)).findByDocument(any(CpfCnpj.class));
     }
 }

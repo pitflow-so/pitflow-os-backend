@@ -3,7 +3,6 @@ package br.com.pitflow.registry.core.usecase.vehicle;
 import br.com.pitflow.common.valueobject.LicensePlate;
 import br.com.pitflow.registry.core.entity.Vehicle;
 import br.com.pitflow.registry.core.gateway.VehicleGateway;
-import br.com.pitflow.registry.core.usecase.vehicle.FindVehiclesByCustomerIdImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,17 +12,21 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class FindVehiclesByCustomerIdImpTest {
 
-    private VehicleGateway repository;
+    private VehicleGateway gateway;
     private FindVehiclesByCustomerIdImp findVehiclesByCustomer;
 
     @BeforeEach
     void setUp() {
-        repository = mock(VehicleGateway.class);
-        findVehiclesByCustomer = new FindVehiclesByCustomerIdImp(repository);
+        gateway = mock(VehicleGateway.class);
+        findVehiclesByCustomer = new FindVehiclesByCustomerIdImp(gateway);
     }
 
     @Test
@@ -34,7 +37,7 @@ class FindVehiclesByCustomerIdImpTest {
         var v1 = new Vehicle(customerId, new LicensePlate("ABC1D23"), "Toyota", "Corolla", 2022);
         var v2 = new Vehicle(customerId, new LicensePlate("XYZ9G88"), "Honda", "Civic", 2021);
 
-        when(repository.findByCustomerId(customerId)).thenReturn(List.of(v1, v2));
+        when(gateway.findByCustomerId(customerId)).thenReturn(List.of(v1, v2));
 
         // Act
         List<Vehicle> result = findVehiclesByCustomer.execute(customerId);
@@ -52,7 +55,7 @@ class FindVehiclesByCustomerIdImpTest {
         );
 
         // Verify
-        verify(repository, times(1)).findByCustomerId(customerId);
+        verify(gateway, times(1)).findByCustomerId(customerId);
     }
 
     @Test
@@ -60,7 +63,7 @@ class FindVehiclesByCustomerIdImpTest {
     void shouldReturnEmptyListWhenCustomerHasNoVehicles() {
         // Arrange
         UUID customerId = UUID.randomUUID();
-        when(repository.findByCustomerId(customerId)).thenReturn(Collections.emptyList());
+        when(gateway.findByCustomerId(customerId)).thenReturn(Collections.emptyList());
 
         // Act
         List<Vehicle> result = findVehiclesByCustomer.execute(customerId);
@@ -70,7 +73,7 @@ class FindVehiclesByCustomerIdImpTest {
                 .isNotNull()
                 .isEmpty();
 
-        verify(repository, times(1)).findByCustomerId(customerId);
+        verify(gateway, times(1)).findByCustomerId(customerId);
     }
 
     @Test
@@ -83,6 +86,6 @@ class FindVehiclesByCustomerIdImpTest {
         findVehiclesByCustomer.execute(customerId);
 
         // Assert
-        verify(repository).findByCustomerId(argThat(id -> id.equals(customerId)));
+        verify(gateway).findByCustomerId(argThat(id -> id.equals(customerId)));
     }
 }

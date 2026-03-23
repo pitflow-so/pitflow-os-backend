@@ -16,13 +16,13 @@ import static org.mockito.Mockito.*;
 
 class FindCustomerByIdImpTest {
 
-    private CustomerGateway repository;
+    private CustomerGateway gateway;
     private FindCustomerByIdImp findCustomerById;
 
     @BeforeEach
     void setUp() {
-        repository = mock(CustomerGateway.class);
-        findCustomerById = new FindCustomerByIdImp(repository);
+        gateway = mock(CustomerGateway.class);
+        findCustomerById = new FindCustomerByIdImp(gateway);
     }
 
     @Test
@@ -33,7 +33,7 @@ class FindCustomerByIdImpTest {
         var customer = new Customer("Fulano de Tal", new CpfCnpj("42634554010"), "11988887777");
         customer.setId(id);
 
-        when(repository.findById(id)).thenReturn(Optional.of(customer));
+        when(gateway.findById(id)).thenReturn(Optional.of(customer));
 
         // Act
         Customer result = findCustomerById.execute(id);
@@ -44,7 +44,7 @@ class FindCustomerByIdImpTest {
         assertThat(result.getName()).isEqualTo("Fulano de Tal");
 
         // Verify
-        verify(repository, times(1)).findById(id);
+        verify(gateway, times(1)).findById(id);
     }
 
     @Test
@@ -52,7 +52,7 @@ class FindCustomerByIdImpTest {
     void shouldThrowExceptionWhenCustomerNotFound() {
         // Arrange
         UUID id = UUID.randomUUID();
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(gateway.findById(id)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> findCustomerById.execute(id))
@@ -60,6 +60,6 @@ class FindCustomerByIdImpTest {
                 .hasMessage("Customer not found with ID: " + id);
 
         // Verify
-        verify(repository, times(1)).findById(id);
+        verify(gateway, times(1)).findById(id);
     }
 }

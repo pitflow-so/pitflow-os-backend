@@ -23,13 +23,13 @@ import static org.mockito.Mockito.when;
 
 public class CreateCustomerImpTest {
 
-    private CustomerGateway repository;
+    private CustomerGateway gateway;
     private CreateCustomerImp createCustomer;
 
     @BeforeEach
     void setUp() {
-        repository = mock(CustomerGateway.class);
-        createCustomer = new CreateCustomerImp(repository);
+        gateway = mock(CustomerGateway.class);
+        createCustomer = new CreateCustomerImp(gateway);
     }
 
     @Test
@@ -37,7 +37,7 @@ public class CreateCustomerImpTest {
     void shouldCreateCustomerWithSuccess() {
         // Arrange
         var dto = new CreateCustomerCommand("Rafael Moreira", "06678477073", "11996195936");
-        when(repository.findByDocument(any(CpfCnpj.class))).thenReturn(Optional.empty());
+        when(gateway.findByDocument(any(CpfCnpj.class))).thenReturn(Optional.empty());
 
         // Act
         Customer result = createCustomer.execute(dto);
@@ -49,7 +49,7 @@ public class CreateCustomerImpTest {
         assertEquals("06678477073", result.getDocument().value());
 
         // verify
-        verify(repository, times(1)).save(any(Customer.class));
+        verify(gateway, times(1)).save(any(Customer.class));
     }
 
     @Test
@@ -60,14 +60,14 @@ public class CreateCustomerImpTest {
         var existingCustomer = new Customer("Outro Nome", new CpfCnpj("06678477073"), "11000000000");
         var exceptionMessage = String.format("Customer with document %s already exists.", existingCustomer.getDocument().value());
 
-        when(repository.findByDocument(any(CpfCnpj.class))).thenReturn(Optional.of(existingCustomer));
+        when(gateway.findByDocument(any(CpfCnpj.class))).thenReturn(Optional.of(existingCustomer));
 
         // Act & Assert
         var exception = assertThrows(IllegalStateException.class, () -> createCustomer.execute(dto));
         assertEquals(exceptionMessage, exception.getMessage());
 
         // verify
-        verify(repository, never()).save(any(Customer.class));
+        verify(gateway, never()).save(any(Customer.class));
     }
 
     @Test
@@ -80,6 +80,6 @@ public class CreateCustomerImpTest {
         assertThrows(IllegalArgumentException.class, () -> createCustomer.execute(dto));
 
         // verify
-        verifyNoInteractions(repository);
+        verifyNoInteractions(gateway);
     }
 }

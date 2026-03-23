@@ -7,7 +7,6 @@ import br.com.pitflow.registry.core.entity.Customer;
 import br.com.pitflow.registry.core.entity.Vehicle;
 import br.com.pitflow.registry.core.gateway.CustomerGateway;
 import br.com.pitflow.registry.core.gateway.VehicleGateway;
-import br.com.pitflow.registry.core.usecase.vehicle.AddVehicleImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

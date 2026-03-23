@@ -3,7 +3,6 @@ package br.com.pitflow.registry.core.usecase.vehicle;
 import br.com.pitflow.common.valueobject.LicensePlate;
 import br.com.pitflow.registry.core.entity.Vehicle;
 import br.com.pitflow.registry.core.gateway.VehicleGateway;
-import br.com.pitflow.registry.core.usecase.vehicle.ListVehiclesImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,13 +16,13 @@ import static org.mockito.Mockito.*;
 
 class ListVehiclesImpTest {
 
-    private VehicleGateway repository;
+    private VehicleGateway gateway;
     private ListVehiclesImp listVehicles;
 
     @BeforeEach
     void setUp() {
-        repository = mock(VehicleGateway.class);
-        listVehicles = new ListVehiclesImp(repository);
+        gateway = mock(VehicleGateway.class);
+        listVehicles = new ListVehiclesImp(gateway);
     }
 
     @Test
@@ -33,7 +32,7 @@ class ListVehiclesImpTest {
         var v1 = new Vehicle(UUID.randomUUID(), new LicensePlate("PLK0J11"), "Chevrolet", "Onix", 2022);
         var v2 = new Vehicle(UUID.randomUUID(), new LicensePlate("KLI9090"), "Renault", "Sandero", 2019);
 
-        when(repository.findAll()).thenReturn(List.of(v1, v2));
+        when(gateway.findAll()).thenReturn(List.of(v1, v2));
 
         // Act
         List<Vehicle> result = listVehicles.execute();
@@ -44,14 +43,14 @@ class ListVehiclesImpTest {
                 .hasSize(2)
                 .containsExactly(v1, v2);
 
-        verify(repository, times(1)).findAll();
+        verify(gateway, times(1)).findAll();
     }
 
     @Test
     @DisplayName("Should return empty list when no vehicles exist")
     void shouldReturnEmptyListWhenNoVehiclesExist() {
         // Arrange
-        when(repository.findAll()).thenReturn(Collections.emptyList());
+        when(gateway.findAll()).thenReturn(Collections.emptyList());
 
         // Act
         List<Vehicle> result = listVehicles.execute();
@@ -61,6 +60,6 @@ class ListVehiclesImpTest {
                 .isNotNull()
                 .isEmpty();
 
-        verify(repository, times(1)).findAll();
+        verify(gateway, times(1)).findAll();
     }
 }
