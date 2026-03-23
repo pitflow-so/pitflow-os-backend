@@ -1,4 +1,4 @@
-package br.com.pitflow.common.security;
+package br.com.pitflow.common.infrastructure.security;
 
 import br.com.pitflow.common.infrastructure.security.JwtServiceImp;
 import org.junit.jupiter.api.BeforeEach;

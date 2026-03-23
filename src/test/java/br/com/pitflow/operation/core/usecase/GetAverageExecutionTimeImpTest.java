@@ -1,7 +1,6 @@
-package br.com.pitflow.operation.application;
+package br.com.pitflow.operation.core.usecase;
 
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
-import br.com.pitflow.operation.core.usecase.GetAverageExecutionTimeImp;
 import br.com.pitflow.operation.core.usecase.outputData.ExecutionTimeMetrics;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

@@ -1,6 +1,5 @@
-package br.com.pitflow.operation.domain;
+package br.com.pitflow.operation.core.entity;
 
-import br.com.pitflow.operation.core.entity.ServiceOrder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

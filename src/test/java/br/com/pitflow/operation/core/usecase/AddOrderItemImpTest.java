@@ -1,4 +1,4 @@
-package br.com.pitflow.operation.application;
+package br.com.pitflow.operation.core.usecase;
 
 import br.com.pitflow.inventory.core.entity.Part;
 import br.com.pitflow.inventory.core.gateway.PartGateway;
@@ -7,7 +7,6 @@ import br.com.pitflow.operation.controller.dto.AddOrderItemCommand;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.entity.ServiceOrder.ItemType;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
-import br.com.pitflow.operation.core.usecase.AddOrderItemImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

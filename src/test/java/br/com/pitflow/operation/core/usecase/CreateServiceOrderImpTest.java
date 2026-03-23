@@ -1,9 +1,8 @@
-package br.com.pitflow.operation.application;
+package br.com.pitflow.operation.core.usecase;
 
 import br.com.pitflow.operation.controller.dto.CreateServiceOrderCommand;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
-import br.com.pitflow.operation.core.usecase.CreateServiceOrderImp;
 import br.com.pitflow.registry.core.entity.Customer;
 import br.com.pitflow.registry.core.entity.Vehicle;
 import br.com.pitflow.registry.core.gateway.CustomerGateway;

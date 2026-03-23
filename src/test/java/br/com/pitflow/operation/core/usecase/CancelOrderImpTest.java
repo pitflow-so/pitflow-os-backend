@@ -1,9 +1,8 @@
-package br.com.pitflow.operation.application;
+package br.com.pitflow.operation.core.usecase;
 
 import br.com.pitflow.operation.controller.dto.CancelOrderCommand;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
-import br.com.pitflow.operation.core.usecase.CancelOrderImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
