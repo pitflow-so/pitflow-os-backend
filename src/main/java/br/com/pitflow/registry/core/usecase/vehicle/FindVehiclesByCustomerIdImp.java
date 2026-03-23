@@ -8,14 +8,14 @@ import java.util.List;
 import java.util.UUID;
 
 public class FindVehiclesByCustomerIdImp implements FindVehiclesByCustomerId {
-    private final VehicleGateway repository;
+    private final VehicleGateway gateway;
 
-    public FindVehiclesByCustomerIdImp(VehicleGateway repository) {
-        this.repository = repository;
+    public FindVehiclesByCustomerIdImp(VehicleGateway gateway) {
+        this.gateway = gateway;
     }
 
     @Override
     public List<Vehicle> execute(UUID customerId) {
-        return repository.findByCustomerId(customerId);
+        return gateway.findByCustomerId(customerId);
     }
 }

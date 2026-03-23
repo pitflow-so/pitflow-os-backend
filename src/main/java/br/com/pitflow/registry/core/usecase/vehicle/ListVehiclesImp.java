@@ -7,14 +7,14 @@ import br.com.pitflow.registry.core.gateway.VehicleGateway;
 import java.util.List;
 
 public class ListVehiclesImp implements ListVehicles {
-    private final VehicleGateway repository;
+    private final VehicleGateway gateway;
 
-    public ListVehiclesImp(VehicleGateway repository) {
-        this.repository = repository;
+    public ListVehiclesImp(VehicleGateway gateway) {
+        this.gateway = gateway;
     }
 
     @Override
     public List<Vehicle> execute() {
-        return repository.findAll();
+        return gateway.findAll();
     }
 }

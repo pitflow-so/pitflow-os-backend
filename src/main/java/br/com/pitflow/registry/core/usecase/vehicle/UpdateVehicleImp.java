@@ -8,22 +8,22 @@ import br.com.pitflow.registry.core.usecase.vehicle.inputPort.UpdateVehicle;
 import java.util.UUID;
 
 public class UpdateVehicleImp implements UpdateVehicle {
-    private final VehicleGateway repository;
+    private final VehicleGateway gateway;
 
-    public UpdateVehicleImp(VehicleGateway repository) {
-        this.repository = repository;
+    public UpdateVehicleImp(VehicleGateway gateway) {
+        this.gateway = gateway;
     }
 
     @Override
     public void execute(UUID id, UpdateVehicleCommand dto) {
-        var vehicle = repository.findById(id)
+        var vehicle = gateway.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Vehicle not found with ID: " + id));
 
         var newPlate = new LicensePlate(dto.licensePlate());
 
         // Check if the new license plate is different from the current one
         if (!vehicle.getLicensePlate().equals(newPlate)) {
-            repository.findByLicensePlate(newPlate).ifPresent(v -> {
+            gateway.findByLicensePlate(newPlate).ifPresent(v -> {
                 throw new IllegalStateException("License plate already in use by another vehicle");
             });
         }
@@ -33,6 +33,6 @@ public class UpdateVehicleImp implements UpdateVehicle {
         vehicle.setYear(dto.year());
         vehicle.setLicensePlate(newPlate);
 
-        repository.save(vehicle);
+        gateway.save(vehicle);
     }
 }
