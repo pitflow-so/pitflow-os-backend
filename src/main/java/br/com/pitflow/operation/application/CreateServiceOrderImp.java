@@ -4,30 +4,30 @@ import br.com.pitflow.operation.application.dto.CreateServiceOrderDto;
 import br.com.pitflow.operation.application.usecase.CreateServiceOrder;
 import br.com.pitflow.operation.domain.ServiceOrder;
 import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
-import br.com.pitflow.registry.domain.repository.CustomerRepository;
-import br.com.pitflow.registry.domain.repository.VehicleRepository;
+import br.com.pitflow.registry.core.gateway.CustomerGateway;
+import br.com.pitflow.registry.core.gateway.VehicleGateway;
 
 public class CreateServiceOrderImp implements CreateServiceOrder {
 
     private final ServiceOrderRepository serviceOrderRepository;
-    private final CustomerRepository customerRepository;
-    private final VehicleRepository vehicleRepository;
+    private final CustomerGateway customerGateway;
+    private final VehicleGateway vehicleGateway;
 
     public CreateServiceOrderImp(
             ServiceOrderRepository serviceOrderRepository,
-            CustomerRepository customerRepository,
-            VehicleRepository vehicleRepository) {
+            CustomerGateway customerGateway,
+            VehicleGateway vehicleGateway) {
         this.serviceOrderRepository = serviceOrderRepository;
-        this.customerRepository = customerRepository;
-        this.vehicleRepository = vehicleRepository;
+        this.customerGateway = customerGateway;
+        this.vehicleGateway = vehicleGateway;
     }
 
     @Override
     public ServiceOrder execute(CreateServiceOrderDto dto) {
-        customerRepository.findById(dto.customerId())
+        customerGateway.findById(dto.customerId())
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found with ID: " + dto.customerId()));
 
-        var vehicle = vehicleRepository.findById(dto.vehicleId())
+        var vehicle = vehicleGateway.findById(dto.vehicleId())
                 .orElseThrow(() -> new IllegalArgumentException("Vehicle not found with ID: " + dto.vehicleId()));
 
 

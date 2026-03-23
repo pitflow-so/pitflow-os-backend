@@ -1,6 +1,6 @@
 package br.com.pitflow.common.infrastructure.security;
 
-import br.com.pitflow.registry.domain.Mechanic;
+import br.com.pitflow.registry.core.entity.Mechanic;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

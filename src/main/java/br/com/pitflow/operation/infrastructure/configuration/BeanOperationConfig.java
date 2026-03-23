@@ -33,8 +33,8 @@ import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
 import br.com.pitflow.operation.infrastructure.notifications.LogNotificationMock;
 import br.com.pitflow.operation.infrastructure.persistence.adapter.JpaServiceOrderRepositoryAdapter;
 import br.com.pitflow.operation.infrastructure.persistence.repository.SpringServiceOrderRepository;
-import br.com.pitflow.registry.domain.repository.CustomerRepository;
-import br.com.pitflow.registry.domain.repository.VehicleRepository;
+import br.com.pitflow.registry.core.gateway.CustomerGateway;
+import br.com.pitflow.registry.core.gateway.VehicleGateway;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -74,9 +74,9 @@ public class BeanOperationConfig {
     @Bean
     public CreateServiceOrder createServiceOrder(
             ServiceOrderRepository repository,
-            CustomerRepository customerRepository,
-            VehicleRepository vehicleRepository) {
-        return new CreateServiceOrderImp(repository, customerRepository, vehicleRepository);
+            CustomerGateway customerGateway,
+            VehicleGateway vehicleGateway) {
+        return new CreateServiceOrderImp(repository, customerGateway, vehicleGateway);
     }
 
     @Bean

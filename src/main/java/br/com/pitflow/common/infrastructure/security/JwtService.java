@@ -1,6 +1,6 @@
 package br.com.pitflow.common.infrastructure.security;
 
-import br.com.pitflow.registry.domain.Mechanic;
+import br.com.pitflow.registry.core.entity.Mechanic;
 
 public interface JwtService {
     String generateToken(Mechanic mechanic);

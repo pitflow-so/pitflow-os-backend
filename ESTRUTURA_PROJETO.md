@@ -78,7 +78,7 @@ Arquivo: `src/main/java/br/com/pitflow/common/infrastructure/configuration/Secur
 package br.com.pitflow.common.infrastructure.configuration;
 
 import br.com.pitflow.common.infrastructure.security.SecurityFilter;
-import br.com.pitflow.registry.domain.repository.MechanicRepository;
+import br.com.pitflow.registry.core.gateway.MechanicGateway;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -116,7 +116,7 @@ public class SecurityConfig {
                         .requestMatchers(POST, "/registry/mechanics").permitAll()
                         .requestMatchers(POST, "/registry/vehicles").permitAll()
                         .requestMatchers(GET, "/registry/vehicles/plate/{plate}").permitAll()
-                        .requestMatchers(POST,"/registry/customers").permitAll()
+                        .requestMatchers(POST, "/registry/customers").permitAll()
                         .requestMatchers(GET, "/registry/customers/document/{document}").permitAll()
                         .requestMatchers(POST, "/operation/service-orders").permitAll()
                         .requestMatchers(PATCH, "/operation/service-orders/{id}/approve").permitAll()
@@ -138,7 +138,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService(MechanicRepository repository) {
+    public UserDetailsService userDetailsService(MechanicGateway repository) {
         return username -> {
             var mechanic = repository.findByUsername(username)
                     .orElseThrow(() -> new UsernameNotFoundException("Mechanic not found: " + username));
@@ -161,7 +161,7 @@ Arquivo: `src/main/java/br/com/pitflow/common/infrastructure/security/SecurityFi
 ```java
 package br.com.pitflow.common.infrastructure.security;
 
-import br.com.pitflow.registry.domain.repository.MechanicRepository;
+import br.com.pitflow.registry.core.gateway.MechanicGateway;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -176,11 +176,11 @@ import java.io.IOException;
 public class SecurityFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final MechanicRepository mechanicRepository;
+    private final MechanicGateway mechanicGateway;
 
-    public SecurityFilter(JwtService jwtService, MechanicRepository mechanicRepository) {
+    public SecurityFilter(JwtService jwtService, MechanicGateway mechanicGateway) {
         this.jwtService = jwtService;
-        this.mechanicRepository = mechanicRepository;
+        this.mechanicGateway = mechanicGateway;
     }
 
     @Override
@@ -195,7 +195,7 @@ public class SecurityFilter extends OncePerRequestFilter {
             var username = jwtService.validateToken(token);
 
             if (username != null) {
-                var mechanic = mechanicRepository.findByUsername(username)
+                var mechanic = mechanicGateway.findByUsername(username)
                         .orElseThrow(() -> new RuntimeException("Mechanic not found"));
 
                 var userDetails = User.builder()
@@ -217,7 +217,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-private String recoverToken(HttpServletRequest request) {
+    private String recoverToken(HttpServletRequest request) {
         var authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return null;
@@ -235,6 +235,7 @@ Arquivo: `src/main/java/br/com/pitflow/registry/domain/Customer.java`
 package br.com.pitflow.registry.domain;
 
 import br.com.pitflow.common.valueobject.CpfCnpj;
+import br.com.pitflow.registry.core.entity.Vehicle;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -268,16 +269,30 @@ public class Customer {
         this.vehicles.add(vehicle);
     }
 
-    public UUID getId() { return id; }
-    public String getName() { return name; }
-    public CpfCnpj getDocument() { return document; }
-    public String getPhone() { return phone; }
+    public UUID getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public CpfCnpj getDocument() {
+        return document;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
 
     public List<Vehicle> getVehicles() {
         return Collections.unmodifiableList(vehicles);
     }
 
-    public void setId(UUID id) { this.id = id; }
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
     public void setName(String name) {
         validateName(name);
         this.name = name;
@@ -301,20 +316,19 @@ Arquivo: `src/main/java/br/com/pitflow/registry/application/CreateCustomerImp.ja
 package br.com.pitflow.registry.application;
 
 import br.com.pitflow.common.valueobject.CpfCnpj;
-import br.com.pitflow.registry.application.dto.CreateCustomerDto;
-import br.com.pitflow.registry.application.usecases.CreateCustomer;
-import br.com.pitflow.registry.domain.Customer;
-import br.com.pitflow.registry.domain.repository.CustomerRepository;
+import br.com.pitflow.registry.core.gateway.CustomerGateway;import br.com.pitflow.registry.infrastructure.web.dto.CreateCustomerRequest;
+import br.com.pitflow.registry.core.gateway.CustomerGateway;
+import br.com.pitflow.registry.core.entity.Customer;
 
-public class CreateCustomerImp implements CreateCustomer {
-    private final CustomerRepository repository;
+public class CreateCustomerImp implements br.com.pitflow.registry.core.usecase.customer.inputPort.CreateCustomer {
+    private final CustomerGateway repository;
 
-    public CreateCustomerImp(CustomerRepository repository) {
+    public CreateCustomerImp(CustomerGateway repository) {
         this.repository = repository;
     }
 
     @Override
-    public Customer execute(CreateCustomerDto dto) {
+    public Customer execute(CreateCustomerRequest dto) {
         var document = new CpfCnpj(dto.document());
 
         repository.findByDocument(document).ifPresent(customer -> {
@@ -334,18 +348,18 @@ public class CreateCustomerImp implements CreateCustomer {
 Arquivo: `src/main/java/br/com/pitflow/registry/infrastructure/api/CustomerController.java`
 
 ```java
-package br.com.pitflow.registry.infrastructure.api;
+package br.com.pitflow.registry.infrastructure.web;
 
-import br.com.pitflow.registry.application.dto.CreateCustomerDto;
-import br.com.pitflow.registry.application.dto.UpdateCustomerDto;
-import br.com.pitflow.registry.application.usecases.CreateCustomer;
-import br.com.pitflow.registry.application.usecases.DeleteCustomer;
-import br.com.pitflow.registry.application.usecases.FindCustomerByDocument;
-import br.com.pitflow.registry.application.usecases.FindCustomerById;
-import br.com.pitflow.registry.application.usecases.ListCustomers;
-import br.com.pitflow.registry.application.usecases.UpdateCustomer;
-import br.com.pitflow.registry.domain.Customer;
-import br.com.pitflow.registry.infrastructure.api.dto.CustomerResponse;
+import br.com.pitflow.registry.infrastructure.web.dto.CreateCustomerRequest;
+import br.com.pitflow.registry.infrastructure.web.dto.UpdateCustomerRequest;
+import br.com.pitflow.registry.core.usecase.customer.inputPort.CreateCustomer;
+import br.com.pitflow.registry.core.usecase.customer.inputPort.DeleteCustomer;
+import br.com.pitflow.registry.core.usecase.customer.inputPort.FindCustomerByDocument;
+import br.com.pitflow.registry.core.usecase.customer.inputPort.FindCustomerById;
+import br.com.pitflow.registry.core.usecase.customer.inputPort.ListCustomers;
+import br.com.pitflow.registry.core.usecase.customer.inputPort.UpdateCustomer;
+import br.com.pitflow.registry.core.entity.Customer;
+import br.com.pitflow.registry.presenter.dto.CustomerResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -368,7 +382,7 @@ import java.util.UUID;
 @Tag(name = "Registry - Customers", description = "Gerenciamento de clientes")
 public class CustomerController {
 
-    private final CreateCustomer createCustomer;
+    private final br.com.pitflow.registry.core.usecase.customer.inputPort.CreateCustomer createCustomer;
     private final UpdateCustomer updateCustomer;
     private final DeleteCustomer deleteCustomer;
     private final FindCustomerById findCustomerById;
@@ -386,14 +400,14 @@ public class CustomerController {
 
     @PostMapping
     @Operation(summary = "Criar cliente", description = "Cria um novo cliente com os dados fornecidos.")
-    public ResponseEntity<CustomerResponse> create(@RequestBody CreateCustomerDto dto) {
+    public ResponseEntity<CustomerResponse> create(@RequestBody CreateCustomerRequest dto) {
         var customer = createCustomer.execute(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(customer));
     }
 
     @PutMapping("/{id}")
     @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Atualizar cliente", description = "Atualiza os dados de um cliente existente.")
-    public ResponseEntity<CustomerResponse> update(@PathVariable UUID id, @RequestBody UpdateCustomerDto dto) {
+    public ResponseEntity<CustomerResponse> update(@PathVariable UUID id, @RequestBody UpdateCustomerRequest dto) {
         updateCustomer.execute(id, dto);
         var updated = findCustomerById.execute(id);
         return ResponseEntity.ok(toResponse(updated));
@@ -442,8 +456,8 @@ Arquivo: `src/main/java/br/com/pitflow/registry/infrastructure/persistence/adapt
 package br.com.pitflow.registry.infrastructure.persistence.adapter;
 
 import br.com.pitflow.common.valueobject.CpfCnpj;
-import br.com.pitflow.registry.domain.Customer;
-import br.com.pitflow.registry.domain.repository.CustomerRepository;
+import br.com.pitflow.registry.core.entity.Customer;
+import br.com.pitflow.registry.core.gateway.CustomerGateway;
 import br.com.pitflow.registry.infrastructure.persistence.mapper.CustomerMapper;
 import br.com.pitflow.registry.infrastructure.persistence.repository.SpringCustomerRepository;
 
@@ -452,12 +466,13 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class JpaCustomerRepositoryAdapter implements CustomerRepository {
+public class JpaCustomerRepositoryAdapter implements CustomerGateway {
     private final SpringCustomerRepository repository;
 
     public JpaCustomerRepositoryAdapter(SpringCustomerRepository repository) {
         this.repository = repository;
     }
+
     @Override
     public void save(Customer customer) {
         var entity = CustomerMapper.toEntity(customer);
@@ -689,30 +704,31 @@ import br.com.pitflow.operation.application.dto.CreateServiceOrderDto;
 import br.com.pitflow.operation.application.usecase.CreateServiceOrder;
 import br.com.pitflow.operation.domain.ServiceOrder;
 import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
-import br.com.pitflow.registry.domain.repository.CustomerRepository;
-import br.com.pitflow.registry.domain.repository.VehicleRepository;
+import br.com.pitflow.registry.core.gateway.CustomerGateway;
+import br.com.pitflow.registry.core.gateway.VehicleGateway;
+import br.com.pitflow.registry.core.gateway.VehicleRepository;
 
 public class CreateServiceOrderImp implements CreateServiceOrder {
 
     private final ServiceOrderRepository serviceOrderRepository;
-    private final CustomerRepository customerRepository;
-    private final VehicleRepository vehicleRepository;
+    private final CustomerGateway customerGateway;
+    private final VehicleGateway vehicleGateway;
 
     public CreateServiceOrderImp(
             ServiceOrderRepository serviceOrderRepository,
-            CustomerRepository customerRepository,
-            VehicleRepository vehicleRepository) {
+            CustomerGateway customerGateway,
+            VehicleGateway vehicleGateway) {
         this.serviceOrderRepository = serviceOrderRepository;
-        this.customerRepository = customerRepository;
-        this.vehicleRepository = vehicleRepository;
+        this.customerGateway = customerGateway;
+        this.vehicleGateway = vehicleGateway;
     }
 
     @Override
     public ServiceOrder execute(CreateServiceOrderDto dto) {
-        customerRepository.findById(dto.customerId())
+        customerGateway.findById(dto.customerId())
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found with ID: " + dto.customerId()));
 
-        var vehicle = vehicleRepository.findById(dto.vehicleId())
+        var vehicle = vehicleGateway.findById(dto.vehicleId())
                 .orElseThrow(() -> new IllegalArgumentException("Vehicle not found with ID: " + dto.vehicleId()));
 
         if (!vehicle.getCustomerId().equals(dto.customerId())) {

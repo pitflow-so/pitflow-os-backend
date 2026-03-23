@@ -2,8 +2,8 @@ package br.com.pitflow.common.security;
 
 import br.com.pitflow.common.infrastructure.security.JwtService;
 import br.com.pitflow.common.infrastructure.security.SecurityFilter;
-import br.com.pitflow.registry.domain.Mechanic;
-import br.com.pitflow.registry.domain.repository.MechanicRepository;
+import br.com.pitflow.registry.core.entity.Mechanic;
+import br.com.pitflow.registry.core.gateway.MechanicGateway;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 class SecurityFilterTest {
 
     private JwtService jwtService;
-    private MechanicRepository mechanicRepository;
+    private MechanicGateway mechanicGateway;
     private SecurityFilter securityFilter;
     private HttpServletRequest request;
     private HttpServletResponse response;
@@ -31,8 +31,8 @@ class SecurityFilterTest {
     @BeforeEach
     void setUp() {
         this.jwtService = mock(JwtService.class);
-        this.mechanicRepository = mock(MechanicRepository.class);
-        this.securityFilter = new SecurityFilter(jwtService, mechanicRepository);
+        this.mechanicGateway = mock(MechanicGateway.class);
+        this.securityFilter = new SecurityFilter(jwtService, mechanicGateway);
 
         this.request = mock(HttpServletRequest.class);
         this.response = mock(HttpServletResponse.class);
@@ -51,7 +51,7 @@ class SecurityFilterTest {
 
         when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
         when(jwtService.validateToken(token)).thenReturn(username);
-        when(mechanicRepository.findByUsername(username)).thenReturn(Optional.of(mechanic));
+        when(mechanicGateway.findByUsername(username)).thenReturn(Optional.of(mechanic));
 
         // Act
         securityFilter.doFilterInternal(request, response, filterChain);

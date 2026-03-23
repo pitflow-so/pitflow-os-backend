@@ -1,7 +1,7 @@
 package br.com.pitflow.common.infrastructure.configuration;
 
 import br.com.pitflow.common.infrastructure.security.SecurityFilter;
-import br.com.pitflow.registry.domain.repository.MechanicRepository;
+import br.com.pitflow.registry.core.gateway.MechanicGateway;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -77,7 +77,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService(MechanicRepository repository) {
+    public UserDetailsService userDetailsService(MechanicGateway repository) {
         return username -> {
             var mechanic = repository.findByUsername(username)
                     .orElseThrow(() -> new UsernameNotFoundException("Mechanic not found: " + username));

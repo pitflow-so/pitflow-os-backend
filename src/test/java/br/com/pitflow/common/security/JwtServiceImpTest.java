@@ -1,7 +1,7 @@
 package br.com.pitflow.common.security;
 
 import br.com.pitflow.common.infrastructure.security.JwtServiceImp;
-import br.com.pitflow.registry.domain.Mechanic;
+import br.com.pitflow.registry.core.entity.Mechanic;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

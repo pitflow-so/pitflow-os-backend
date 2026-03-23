@@ -3,10 +3,10 @@ package br.com.pitflow.operation.application;
 import br.com.pitflow.operation.application.dto.CreateServiceOrderDto;
 import br.com.pitflow.operation.domain.ServiceOrder;
 import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
-import br.com.pitflow.registry.domain.Customer;
-import br.com.pitflow.registry.domain.Vehicle;
-import br.com.pitflow.registry.domain.repository.CustomerRepository;
-import br.com.pitflow.registry.domain.repository.VehicleRepository;
+import br.com.pitflow.registry.core.entity.Customer;
+import br.com.pitflow.registry.core.entity.Vehicle;
+import br.com.pitflow.registry.core.gateway.CustomerGateway;
+import br.com.pitflow.registry.core.gateway.VehicleGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,16 +20,16 @@ import static org.mockito.Mockito.*;
 class CreateServiceOrderImpTest {
 
     private ServiceOrderRepository serviceOrderRepository;
-    private CustomerRepository customerRepository;
-    private VehicleRepository vehicleRepository;
+    private CustomerGateway customerGateway;
+    private VehicleGateway vehicleGateway;
     private CreateServiceOrderImp createServiceOrder;
 
     @BeforeEach
     void setUp() {
         serviceOrderRepository = mock(ServiceOrderRepository.class);
-        customerRepository = mock(CustomerRepository.class);
-        vehicleRepository = mock(VehicleRepository.class);
-        createServiceOrder = new CreateServiceOrderImp(serviceOrderRepository, customerRepository, vehicleRepository);
+        customerGateway = mock(CustomerGateway.class);
+        vehicleGateway = mock(VehicleGateway.class);
+        createServiceOrder = new CreateServiceOrderImp(serviceOrderRepository, customerGateway, vehicleGateway);
     }
 
     @Test
@@ -40,8 +40,8 @@ class CreateServiceOrderImpTest {
         var dto = new CreateServiceOrderDto(customerId, vehicleId, "Dummy Problem");
 
         var vehicleMock = mock(Vehicle.class);
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(mock(Customer.class)));
-        when(vehicleRepository.findById(vehicleId)).thenReturn(Optional.of(vehicleMock));
+        when(customerGateway.findById(customerId)).thenReturn(Optional.of(mock(Customer.class)));
+        when(vehicleGateway.findById(vehicleId)).thenReturn(Optional.of(vehicleMock));
         when(vehicleMock.getCustomerId()).thenReturn(customerId);
 
         var result = createServiceOrder.execute(dto);
@@ -60,8 +60,8 @@ class CreateServiceOrderImpTest {
         var dto = new CreateServiceOrderDto(customerId, vehicleId, "Dummy Problem");
 
         var vehicleMock = mock(Vehicle.class);
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(mock(Customer.class)));
-        when(vehicleRepository.findById(vehicleId)).thenReturn(Optional.of(vehicleMock));
+        when(customerGateway.findById(customerId)).thenReturn(Optional.of(mock(Customer.class)));
+        when(vehicleGateway.findById(vehicleId)).thenReturn(Optional.of(vehicleMock));
         when(vehicleMock.getCustomerId()).thenReturn(otherCustomerId); // Dono diferente
 
         assertThatThrownBy(() -> createServiceOrder.execute(dto))
