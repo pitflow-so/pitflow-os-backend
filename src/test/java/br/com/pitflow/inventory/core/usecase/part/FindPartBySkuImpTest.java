@@ -1,8 +1,7 @@
-package br.com.pitflow.inventory.application;
+package br.com.pitflow.inventory.core.usecase.part;
 
 import br.com.pitflow.inventory.core.entity.Part;
 import br.com.pitflow.inventory.core.gateway.PartGateway;
-import br.com.pitflow.inventory.core.usecase.part.FindPartBySkuImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,13 +18,13 @@ import static org.mockito.Mockito.when;
 
 public class FindPartBySkuImpTest {
 
-    private PartGateway repository;
+    private PartGateway gateway;
     private FindPartBySkuImp findPartBySku;
 
     @BeforeEach
     void setUp() {
-        repository = mock(PartGateway.class);
-        findPartBySku = new FindPartBySkuImp(repository);
+        gateway = mock(PartGateway.class);
+        findPartBySku = new FindPartBySkuImp(gateway);
     }
 
     @Test
@@ -35,7 +34,7 @@ public class FindPartBySkuImpTest {
         String sku = "FIL-999";
         var part = new Part(sku, "Filtro de Ar", "Desc", new BigDecimal("45.00"), 5);
 
-        when(repository.findBySku(sku)).thenReturn(Optional.of(part));
+        when(gateway.findBySku(sku)).thenReturn(Optional.of(part));
 
         // Act
         Part result = findPartBySku.execute(sku);
@@ -44,7 +43,7 @@ public class FindPartBySkuImpTest {
         assertThat(result).isNotNull();
         assertThat(result.getSku()).isEqualTo(sku);
         assertThat(result.getName()).isEqualTo("Filtro de Ar");
-        verify(repository, times(1)).findBySku(sku);
+        verify(gateway, times(1)).findBySku(sku);
     }
 
     @Test
@@ -52,13 +51,13 @@ public class FindPartBySkuImpTest {
     void shouldThrowExceptionWhenSkuNotFound() {
         // Arrange
         String sku = "INEXISTENTE-001";
-        when(repository.findBySku(sku)).thenReturn(Optional.empty());
+        when(gateway.findBySku(sku)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> findPartBySku.execute(sku))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Part with SKU " + sku + " not found.");
 
-        verify(repository, times(1)).findBySku(sku);
+        verify(gateway, times(1)).findBySku(sku);
     }
 }

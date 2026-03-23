@@ -1,8 +1,7 @@
-package br.com.pitflow.inventory.application;
+package br.com.pitflow.inventory.core.usecase.part;
 
 import br.com.pitflow.inventory.core.entity.Part;
 import br.com.pitflow.inventory.core.gateway.PartGateway;
-import br.com.pitflow.inventory.core.usecase.part.FindPartByIdImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,13 +19,13 @@ import static org.mockito.Mockito.when;
 
 public class FindPartByIdImpTest {
 
-    private PartGateway repository;
+    private PartGateway gateway;
     private FindPartByIdImp findPartById;
 
     @BeforeEach
     void setUp() {
-        repository = mock(PartGateway.class);
-        findPartById = new FindPartByIdImp(repository);
+        gateway = mock(PartGateway.class);
+        findPartById = new FindPartByIdImp(gateway);
     }
 
     @Test
@@ -37,7 +36,7 @@ public class FindPartByIdImpTest {
         var part = new Part("SKU-123", "Pastilha", "Desc", new BigDecimal("100.00"), 10);
         part.setId(id);
 
-        when(repository.findById(id)).thenReturn(Optional.of(part));
+        when(gateway.findById(id)).thenReturn(Optional.of(part));
 
         // Act
         Part result = findPartById.execute(id);
@@ -46,7 +45,7 @@ public class FindPartByIdImpTest {
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(id);
         assertThat(result.getSku()).isEqualTo("SKU-123");
-        verify(repository, times(1)).findById(id);
+        verify(gateway, times(1)).findById(id);
     }
 
     @Test
@@ -54,13 +53,13 @@ public class FindPartByIdImpTest {
     void shouldThrowExceptionWhenPartNotFound() {
         // Arrange
         UUID id = UUID.randomUUID();
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(gateway.findById(id)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> findPartById.execute(id))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Part not found with ID: " + id);
 
-        verify(repository, times(1)).findById(id);
+        verify(gateway, times(1)).findById(id);
     }
 }

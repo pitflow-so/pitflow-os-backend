@@ -1,9 +1,8 @@
-package br.com.pitflow.inventory.application;
+package br.com.pitflow.inventory.core.usecase.service;
 
-import br.com.pitflow.inventory.infrastructure.web.dto.CreateServiceRequest;
+import br.com.pitflow.inventory.controller.dto.CreateServiceCommand;
 import br.com.pitflow.inventory.core.entity.Service;
 import br.com.pitflow.inventory.core.gateway.ServiceGateway;
-import br.com.pitflow.inventory.core.usecase.service.CreateServiceImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,20 +20,20 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 public class CreateServiceImpTest {
 
-    private ServiceGateway repository;
+    private ServiceGateway gateway;
     private CreateServiceImp createService;
 
     @BeforeEach
     void setUp() {
-        repository = mock(ServiceGateway.class);
-        createService = new CreateServiceImp(repository);
+        gateway = mock(ServiceGateway.class);
+        createService = new CreateServiceImp(gateway);
     }
 
     @Test
     @DisplayName("Should create service successfully")
     void shouldCreateServiceSuccessfully() {
         // Arrange
-        var dto = new CreateServiceRequest(
+        var dto = new CreateServiceCommand(
                 "Troca de Pastilhas",
                 "Substituição das pastilhas de travão dianteiras",
                 new BigDecimal("120.00")
@@ -50,14 +49,14 @@ public class CreateServiceImpTest {
         assertThat(result.getPrice()).isEqualTo(new BigDecimal("120.00"));
 
         // Verify
-        verify(repository, times(1)).save(any(Service.class));
+        verify(gateway, times(1)).save(any(Service.class));
     }
 
     @Test
     @DisplayName("Should throw exception when price is negative")
     void shouldThrowExceptionWhenPriceIsNegative() {
         // Arrange
-        var dto = new CreateServiceRequest(
+        var dto = new CreateServiceCommand(
                 "Serviço Inválido",
                 "Descrição",
                 new BigDecimal("-50.00")
@@ -69,14 +68,14 @@ public class CreateServiceImpTest {
                 .hasMessageContaining("Service price cannot be negative");
 
         // Verify
-        verify(repository, never()).save(any(Service.class));
+        verify(gateway, never()).save(any(Service.class));
     }
 
     @Test
     @DisplayName("Should throw exception when name is empty")
     void shouldThrowExceptionWhenNameIsEmpty() {
         // Arrange
-        var dto = new CreateServiceRequest(
+        var dto = new CreateServiceCommand(
                 "",
                 "Descrição",
                 new BigDecimal("100.00")
@@ -87,6 +86,6 @@ public class CreateServiceImpTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Service name cannot be empty");
 
-        verifyNoInteractions(repository);
+        verifyNoInteractions(gateway);
     }
 }

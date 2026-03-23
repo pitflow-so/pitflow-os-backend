@@ -1,8 +1,7 @@
-package br.com.pitflow.inventory.application;
+package br.com.pitflow.inventory.core.usecase.service;
 
 import br.com.pitflow.inventory.core.entity.Service;
 import br.com.pitflow.inventory.core.gateway.ServiceGateway;
-import br.com.pitflow.inventory.core.usecase.service.ListServicesImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,13 +15,13 @@ import static org.mockito.Mockito.*;
 
 class ListServicesImpTest {
 
-    private ServiceGateway repository;
+    private ServiceGateway gateway;
     private ListServicesImp listServices;
 
     @BeforeEach
     void setUp() {
-        repository = mock(ServiceGateway.class);
-        listServices = new ListServicesImp(repository);
+        gateway = mock(ServiceGateway.class);
+        listServices = new ListServicesImp(gateway);
     }
 
     @Test
@@ -33,7 +32,7 @@ class ListServicesImpTest {
         var service2 = new Service("Balanceamento", "Balanceamento de rodas", new BigDecimal("60.00"));
         var mockList = List.of(service1, service2);
 
-        when(repository.findAll()).thenReturn(mockList);
+        when(gateway.findAll()).thenReturn(mockList);
 
         // Act
         List<Service> result = listServices.execute();
@@ -43,20 +42,20 @@ class ListServicesImpTest {
                 .hasSize(2)
                 .containsExactly(service1, service2);
 
-        verify(repository, times(1)).findAll();
+        verify(gateway, times(1)).findAll();
     }
 
     @Test
     @DisplayName("Should return empty list when no services exist")
     void shouldReturnEmptyListWhenNoServicesExist() {
         // Arrange
-        when(repository.findAll()).thenReturn(Collections.emptyList());
+        when(gateway.findAll()).thenReturn(Collections.emptyList());
 
         // Act
         List<Service> result = listServices.execute();
 
         // Assert
         assertThat(result).isEmpty();
-        verify(repository, times(1)).findAll();
+        verify(gateway, times(1)).findAll();
     }
 }

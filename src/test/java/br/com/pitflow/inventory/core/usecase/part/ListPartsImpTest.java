@@ -1,8 +1,7 @@
-package br.com.pitflow.inventory.application;
+package br.com.pitflow.inventory.core.usecase.part;
 
 import br.com.pitflow.inventory.core.entity.Part;
 import br.com.pitflow.inventory.core.gateway.PartGateway;
-import br.com.pitflow.inventory.core.usecase.part.ListPartsImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,13 +15,13 @@ import static org.mockito.Mockito.*;
 
 class ListPartsImpTest {
 
-    private PartGateway repository;
+    private PartGateway gateway;
     private ListPartsImp listParts;
 
     @BeforeEach
     void setUp() {
-        repository = mock(PartGateway.class);
-        listParts = new ListPartsImp(repository);
+        gateway = mock(PartGateway.class);
+        listParts = new ListPartsImp(gateway);
     }
 
     @Test
@@ -33,7 +32,7 @@ class ListPartsImpTest {
         var part2 = new Part("SKU-02", "Pastilha Freio", "Desc", new BigDecimal("120.00"), 5);
         var partsList = List.of(part1, part2);
 
-        when(repository.findAll()).thenReturn(partsList);
+        when(gateway.findAll()).thenReturn(partsList);
 
         // Act
         List<Part> result = listParts.execute();
@@ -41,20 +40,20 @@ class ListPartsImpTest {
         // Assert
         assertThat(result).hasSize(2);
         assertThat(result).containsExactly(part1, part2);
-        verify(repository, times(1)).findAll();
+        verify(gateway, times(1)).findAll();
     }
 
     @Test
     @DisplayName("Should return empty list when no parts exist")
     void shouldReturnEmptyListWhenNoPartsExist() {
         // Arrange
-        when(repository.findAll()).thenReturn(Collections.emptyList());
+        when(gateway.findAll()).thenReturn(Collections.emptyList());
 
         // Act
         List<Part> result = listParts.execute();
 
         // Assert
         assertThat(result).isEmpty();
-        verify(repository, times(1)).findAll();
+        verify(gateway, times(1)).findAll();
     }
 }

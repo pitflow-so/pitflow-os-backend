@@ -1,9 +1,9 @@
-package br.com.pitflow.inventory.application;
+package br.com.pitflow.inventory.core.usecase.service;
 
+import br.com.pitflow.inventory.controller.dto.UpdateServiceCommand;
 import br.com.pitflow.inventory.infrastructure.web.dto.UpdateServiceRequest;
 import br.com.pitflow.inventory.core.entity.Service;
 import br.com.pitflow.inventory.core.gateway.ServiceGateway;
-import br.com.pitflow.inventory.core.usecase.service.UpdateServiceImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,13 +14,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 class UpdateServiceImpTest {
-    private ServiceGateway repository;
+    private ServiceGateway gateway;
     private UpdateServiceImp updateService;
 
     @BeforeEach
     void setUp() {
-        repository = mock(ServiceGateway.class);
-        updateService = new UpdateServiceImp(repository);
+        gateway = mock(ServiceGateway.class);
+        updateService = new UpdateServiceImp(gateway);
     }
 
     @Test
@@ -28,14 +28,14 @@ class UpdateServiceImpTest {
     void shouldUpdateServiceSuccessfully() {
         UUID id = UUID.randomUUID();
         var service = new Service("Old", "Desc", new BigDecimal("50"));
-        var dto = new UpdateServiceRequest("New", "New Desc", new BigDecimal("100"));
+        var dto = new UpdateServiceCommand("New", "New Desc", new BigDecimal("100"));
 
-        when(repository.findById(id)).thenReturn(Optional.of(service));
+        when(gateway.findById(id)).thenReturn(Optional.of(service));
 
         updateService.execute(id, dto);
 
         assertThat(service.getName()).isEqualTo("New");
         assertThat(service.getPrice()).isEqualTo(new BigDecimal("100"));
-        verify(repository).save(service);
+        verify(gateway).save(service);
     }
 }

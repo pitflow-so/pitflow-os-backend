@@ -1,8 +1,7 @@
-package br.com.pitflow.inventory.application;
+package br.com.pitflow.inventory.core.usecase.service;
 
 import br.com.pitflow.inventory.core.entity.Service;
 import br.com.pitflow.inventory.core.gateway.ServiceGateway;
-import br.com.pitflow.inventory.core.usecase.service.DeleteServiceImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,13 +15,13 @@ import static org.mockito.Mockito.*;
 
 class DeleteServiceImpTest {
 
-    private ServiceGateway repository;
+    private ServiceGateway gateway;
     private DeleteServiceImp deleteService;
 
     @BeforeEach
     void setUp() {
-        repository = mock(ServiceGateway.class);
-        deleteService = new DeleteServiceImp(repository);
+        gateway = mock(ServiceGateway.class);
+        deleteService = new DeleteServiceImp(gateway);
     }
 
     @Test
@@ -32,14 +31,14 @@ class DeleteServiceImpTest {
         UUID id = UUID.randomUUID();
         var service = new Service("Mão de Obra", "Descrição", new BigDecimal("100.00"));
 
-        when(repository.findById(id)).thenReturn(Optional.of(service));
+        when(gateway.findById(id)).thenReturn(Optional.of(service));
 
         // Act
         deleteService.execute(id);
 
         // Assert
-        verify(repository, times(1)).findById(id);
-        verify(repository, times(1)).deleteById(id);
+        verify(gateway, times(1)).findById(id);
+        verify(gateway, times(1)).deleteById(id);
     }
 
     @Test
@@ -47,7 +46,7 @@ class DeleteServiceImpTest {
     void shouldThrowExceptionWhenServiceNotFound() {
         // Arrange
         UUID id = UUID.randomUUID();
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(gateway.findById(id)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> deleteService.execute(id))
@@ -55,6 +54,6 @@ class DeleteServiceImpTest {
                 .hasMessage("Service not found");
 
         // Verify
-        verify(repository, never()).deleteById(any());
+        verify(gateway, never()).deleteById(any());
     }
 }

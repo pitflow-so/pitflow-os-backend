@@ -1,8 +1,7 @@
-package br.com.pitflow.inventory.application;
+package br.com.pitflow.inventory.core.usecase.service;
 
 import br.com.pitflow.inventory.core.entity.Service;
 import br.com.pitflow.inventory.core.gateway.ServiceGateway;
-import br.com.pitflow.inventory.core.usecase.service.FindServiceByIdImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,13 +16,13 @@ import static org.mockito.Mockito.*;
 
 class FindServiceByIdImpTest {
 
-    private ServiceGateway repository;
+    private ServiceGateway gateway;
     private FindServiceByIdImp findServiceById;
 
     @BeforeEach
     void setUp() {
-        repository = mock(ServiceGateway.class);
-        findServiceById = new FindServiceByIdImp(repository);
+        gateway = mock(ServiceGateway.class);
+        findServiceById = new FindServiceByIdImp(gateway);
     }
 
     @Test
@@ -34,7 +33,7 @@ class FindServiceByIdImpTest {
         var service = new Service("Troca de Óleo", "Substituição de óleo e filtro", new BigDecimal("150.00"));
         service.setId(expectedId);
 
-        when(repository.findById(expectedId)).thenReturn(Optional.of(service));
+        when(gateway.findById(expectedId)).thenReturn(Optional.of(service));
 
         // Act
         Service result = findServiceById.execute(expectedId);
@@ -43,7 +42,7 @@ class FindServiceByIdImpTest {
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(expectedId);
         assertThat(result.getName()).isEqualTo("Troca de Óleo");
-        verify(repository, times(1)).findById(expectedId);
+        verify(gateway, times(1)).findById(expectedId);
     }
 
     @Test
@@ -51,13 +50,13 @@ class FindServiceByIdImpTest {
     void shouldThrowExceptionWhenServiceNotFound() {
         // Arrange
         UUID id = UUID.randomUUID();
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(gateway.findById(id)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> findServiceById.execute(id))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Service not found");
 
-        verify(repository, times(1)).findById(id);
+        verify(gateway, times(1)).findById(id);
     }
 }

@@ -1,8 +1,7 @@
-package br.com.pitflow.inventory.application;
+package br.com.pitflow.inventory.core.usecase.part;
 
 import br.com.pitflow.inventory.core.entity.Part;
 import br.com.pitflow.inventory.core.gateway.PartGateway;
-import br.com.pitflow.inventory.core.usecase.part.DeletePartImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,13 +15,13 @@ import static org.mockito.Mockito.*;
 
 class DeletePartImpTest {
 
-    private PartGateway repository;
+    private PartGateway gateway;
     private DeletePartImp deletePart;
 
     @BeforeEach
     void setUp() {
-        repository = mock(PartGateway.class);
-        deletePart = new DeletePartImp(repository);
+        gateway = mock(PartGateway.class);
+        deletePart = new DeletePartImp(gateway);
     }
 
     @Test
@@ -32,14 +31,14 @@ class DeletePartImpTest {
         UUID id = UUID.randomUUID();
         var part = new Part("SKU-123", "Peça Teste", "Desc", new BigDecimal("10.00"), 5);
 
-        when(repository.findById(id)).thenReturn(Optional.of(part));
+        when(gateway.findById(id)).thenReturn(Optional.of(part));
 
         // Act
         deletePart.execute(id);
 
         // Assert
-        verify(repository, times(1)).findById(id);
-        verify(repository, times(1)).deleteById(id);
+        verify(gateway, times(1)).findById(id);
+        verify(gateway, times(1)).deleteById(id);
     }
 
     @Test
@@ -47,7 +46,7 @@ class DeletePartImpTest {
     void shouldThrowExceptionWhenPartNotFound() {
         // Arrange
         UUID id = UUID.randomUUID();
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(gateway.findById(id)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> deletePart.execute(id))
@@ -55,6 +54,6 @@ class DeletePartImpTest {
                 .hasMessageContaining("Cannot delete: Part not found with ID: " + id);
 
         // Verify
-        verify(repository, never()).deleteById(any());
+        verify(gateway, never()).deleteById(any());
     }
 }
