@@ -1,14 +1,13 @@
 package br.com.pitflow.common.security;
 
 import br.com.pitflow.common.infrastructure.security.JwtServiceImp;
-import br.com.pitflow.registry.core.entity.Mechanic;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class JwtServiceImpTest {
 
@@ -26,13 +25,13 @@ public class JwtServiceImpTest {
     @DisplayName("Should generate a non-blank token string for a valid mechanic")
     void shouldGenerateToken() {
         // Arrange
-        var mechanic = mock(Mechanic.class);
-        when(mechanic.getUsername()).thenReturn("mechanic.test");
-        when(mechanic.getName()).thenReturn("Test Mechanic");
-        when(mechanic.getRole()).thenReturn("ROLE_MECHANIC");
+        var claims = Map.<String, Object>of(
+                "name", "Test Mechanic",
+                "role", "ROLE_MECHANIC"
+        );
 
         // Act
-        String token = jwtService.generateToken(mechanic);
+        String token = jwtService.generateToken("mechanic.test", claims);
 
         // Assert
         assertThat(token).isNotBlank();
@@ -44,12 +43,12 @@ public class JwtServiceImpTest {
     @DisplayName("Should validate a valid token and return the correct subject (username)")
     void shouldValidateValidToken() {
         // Arrange
-        var mechanic = mock(Mechanic.class);
-        when(mechanic.getUsername()).thenReturn("mechanic.admin");
-        when(mechanic.getName()).thenReturn("Admin");
-        when(mechanic.getRole()).thenReturn("ROLE_MECHANIC");
+        var claims = Map.<String, Object>of(
+                "name", "Admin",
+                "role", "ROLE_MECHANIC"
+        );
 
-        String token = jwtService.generateToken(mechanic);
+        String token = jwtService.generateToken("mechanic.admin", claims);
 
         // Act
         String subject = jwtService.validateToken(token);

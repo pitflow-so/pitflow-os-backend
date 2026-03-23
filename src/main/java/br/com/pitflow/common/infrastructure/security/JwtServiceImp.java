@@ -1,6 +1,6 @@
 package br.com.pitflow.common.infrastructure.security;
 
-import br.com.pitflow.registry.core.entity.Mechanic;
+import br.com.pitflow.common.core.gateway.TokenGateway;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -10,8 +10,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
+import java.util.Map;
 
-public class JwtServiceImp implements JwtService {
+public class JwtServiceImp implements TokenGateway {
 
     private final String secret;
     private final Integer expirationHours;
@@ -22,20 +23,18 @@ public class JwtServiceImp implements JwtService {
     }
 
     @Override
-    public String generateToken(Mechanic mechanic) {
+    public String generateToken(String subject, Map<String, Object> claims) {
         try {
             SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-
             return Jwts.builder()
-                    .subject(mechanic.getUsername())
-                    .claim("name", mechanic.getName())
-                    .claim("role", mechanic.getRole())
+                    .subject(subject)
+                    .claims(claims)
                     .issuedAt(new Date())
                     .expiration(generateExpirationDate())
                     .signWith(key)
                     .compact();
-        } catch (Exception exception) {
-            throw new RuntimeException("Error generating JWT token", exception);
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating JWT token", e);
         }
     }
 
@@ -43,14 +42,13 @@ public class JwtServiceImp implements JwtService {
     public String validateToken(String token) {
         try {
             SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-
             return Jwts.parser()
                     .verifyWith(key)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload()
                     .getSubject();
-        } catch (JwtException exception) {
+        } catch (JwtException e) {
             return null;
         }
     }

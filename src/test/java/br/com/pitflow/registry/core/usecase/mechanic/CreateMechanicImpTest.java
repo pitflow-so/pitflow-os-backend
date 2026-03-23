@@ -3,6 +3,7 @@ package br.com.pitflow.registry.core.usecase.mechanic;
 import br.com.pitflow.registry.controller.dto.CreateMechanicCommand;
 import br.com.pitflow.registry.core.entity.Mechanic;
 import br.com.pitflow.registry.core.gateway.MechanicGateway;
+import br.com.pitflow.registry.core.gateway.PasswordEncoderGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,14 +24,14 @@ import static org.mockito.Mockito.when;
 class CreateMechanicImpTest {
 
     private MechanicGateway repository;
-    private PasswordEncoder passwordEncoder;
+    private PasswordEncoderGateway passwordEncoder;
     private CreateMechanicImp createMechanic;
 
     @BeforeEach
     void setUp() {
         // Inicialização manual dos mocks
         this.repository = mock(MechanicGateway.class);
-        this.passwordEncoder = mock(PasswordEncoder.class);
+        this.passwordEncoder = mock(PasswordEncoderGateway.class);
 
         // Instanciação direta da classe sob teste
         this.createMechanic = new CreateMechanicImp(repository, passwordEncoder);

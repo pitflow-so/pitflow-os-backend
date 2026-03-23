@@ -1,6 +1,6 @@
 package br.com.pitflow.common.infrastructure.configuration;
 
-import br.com.pitflow.common.infrastructure.security.JwtService;
+import br.com.pitflow.common.core.gateway.TokenGateway;
 import br.com.pitflow.common.infrastructure.security.JwtServiceImp;
 import br.com.pitflow.common.infrastructure.security.SecurityFilter;
 import br.com.pitflow.registry.core.gateway.MechanicGateway;
@@ -18,12 +18,12 @@ public class BeanSecurityConfig {
     private Integer expirationHours;
 
     @Bean
-    public JwtService jwtService() {
+    public TokenGateway tokenGateway() {
         return new JwtServiceImp(secret, expirationHours);
     }
 
     @Bean
-    public SecurityFilter securityFilter(JwtService jwtService, MechanicGateway mechanicGateway) {
-        return new SecurityFilter(jwtService, mechanicGateway);
+    public SecurityFilter securityFilter(TokenGateway tokenGateway, MechanicGateway mechanicGateway) {
+        return new SecurityFilter(tokenGateway, mechanicGateway);
     }
 }

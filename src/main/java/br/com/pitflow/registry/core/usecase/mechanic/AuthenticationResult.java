@@ -1,4 +1,4 @@
-package br.com.pitflow.registry.controller.dto;
+package br.com.pitflow.registry.core.usecase.mechanic;
 
 import br.com.pitflow.registry.core.entity.Mechanic;
 

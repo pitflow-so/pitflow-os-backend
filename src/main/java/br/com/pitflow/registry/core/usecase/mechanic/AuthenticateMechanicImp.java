@@ -1,37 +1,42 @@
 package br.com.pitflow.registry.core.usecase.mechanic;
 
-import br.com.pitflow.common.infrastructure.security.JwtService;
-import br.com.pitflow.registry.controller.dto.AuthenticationResult;
+import br.com.pitflow.common.core.gateway.PasswordVerifierGateway;
+import br.com.pitflow.common.core.gateway.TokenGateway;
 import br.com.pitflow.registry.controller.dto.LoginCommand;
 import br.com.pitflow.registry.core.gateway.MechanicGateway;
 import br.com.pitflow.registry.core.usecase.mechanic.inputPort.AuthenticateMechanic;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Map;
 
 public class AuthenticateMechanicImp implements AuthenticateMechanic {
 
-    private final MechanicGateway repository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    private final MechanicGateway mechanicGateway;
+    private final PasswordVerifierGateway passwordVerifier;
+    private final TokenGateway tokenGateway;
 
-    public AuthenticateMechanicImp(MechanicGateway repository,
-                                   PasswordEncoder passwordEncoder,
-                                   JwtService jwtService) {
-        this.repository = repository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
+    public AuthenticateMechanicImp(
+            MechanicGateway mechanicGateway,
+            PasswordVerifierGateway passwordVerifier,
+            TokenGateway tokenGateway) {
+        this.mechanicGateway = mechanicGateway;
+        this.passwordVerifier = passwordVerifier;
+        this.tokenGateway = tokenGateway;
     }
 
     @Override
-    public AuthenticationResult execute(LoginCommand dto) {
-        var mechanic = repository.findByUsername(dto.username())
-                .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
+    public AuthenticationResult execute(LoginCommand command) {
+        var mechanic = mechanicGateway.findByUsername(command.username())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
 
-        if (!passwordEncoder.matches(dto.password(), mechanic.getPassword())) {
-            throw new BadCredentialsException("Invalid username or password");
+        if (!passwordVerifier.matches(command.password(), mechanic.getPassword())) {
+            throw new IllegalArgumentException("Invalid username or password");
         }
 
-        String token = jwtService.generateToken(mechanic);
+        var claims = Map.<String, Object>of(
+                "name", mechanic.getName(),
+                "role", mechanic.getRole()
+        );
+        var token = tokenGateway.generateToken(mechanic.getUsername(), claims);
 
         return new AuthenticationResult(mechanic, token);
     }

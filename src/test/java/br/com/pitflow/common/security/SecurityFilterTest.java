@@ -1,6 +1,6 @@
 package br.com.pitflow.common.security;
 
-import br.com.pitflow.common.infrastructure.security.JwtService;
+import br.com.pitflow.common.core.gateway.TokenGateway;
 import br.com.pitflow.common.infrastructure.security.SecurityFilter;
 import br.com.pitflow.registry.core.entity.Mechanic;
 import br.com.pitflow.registry.core.gateway.MechanicGateway;
@@ -17,11 +17,13 @@ import java.io.IOException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class SecurityFilterTest {
 
-    private JwtService jwtService;
+    private TokenGateway tokenGateway;
     private MechanicGateway mechanicGateway;
     private SecurityFilter securityFilter;
     private HttpServletRequest request;
@@ -30,9 +32,9 @@ class SecurityFilterTest {
 
     @BeforeEach
     void setUp() {
-        this.jwtService = mock(JwtService.class);
+        this.tokenGateway = mock(TokenGateway.class);
         this.mechanicGateway = mock(MechanicGateway.class);
-        this.securityFilter = new SecurityFilter(jwtService, mechanicGateway);
+        this.securityFilter = new SecurityFilter(tokenGateway, mechanicGateway);
 
         this.request = mock(HttpServletRequest.class);
         this.response = mock(HttpServletResponse.class);
@@ -50,7 +52,7 @@ class SecurityFilterTest {
         var mechanic = new Mechanic("Jorge", username, "encoded-pass");
 
         when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtService.validateToken(token)).thenReturn(username);
+        when(tokenGateway.validateToken(token)).thenReturn(username);
         when(mechanicGateway.findByUsername(username)).thenReturn(Optional.of(mechanic));
 
         // Act

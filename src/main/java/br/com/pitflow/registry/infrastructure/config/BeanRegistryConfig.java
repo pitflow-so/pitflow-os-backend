@@ -1,42 +1,44 @@
 package br.com.pitflow.registry.infrastructure.config;
 
-import br.com.pitflow.common.infrastructure.security.JwtService;
+import br.com.pitflow.common.core.gateway.PasswordVerifierGateway;
+import br.com.pitflow.common.core.gateway.TokenGateway;
 import br.com.pitflow.registry.controller.AuthController;
 import br.com.pitflow.registry.controller.CustomerController;
 import br.com.pitflow.registry.controller.MechanicController;
 import br.com.pitflow.registry.controller.VehicleController;
 import br.com.pitflow.registry.core.gateway.CustomerGateway;
 import br.com.pitflow.registry.core.gateway.MechanicGateway;
+import br.com.pitflow.registry.core.gateway.PasswordEncoderGateway;
 import br.com.pitflow.registry.core.gateway.VehicleGateway;
-import br.com.pitflow.registry.core.usecase.vehicle.AddVehicleImp;
-import br.com.pitflow.registry.core.usecase.mechanic.AuthenticateMechanicImp;
 import br.com.pitflow.registry.core.usecase.customer.CreateCustomerImp;
-import br.com.pitflow.registry.core.usecase.mechanic.CreateMechanicImp;
 import br.com.pitflow.registry.core.usecase.customer.DeleteCustomerImp;
-import br.com.pitflow.registry.core.usecase.vehicle.DeleteVehicleImp;
 import br.com.pitflow.registry.core.usecase.customer.FindCustomerByDocumentImp;
 import br.com.pitflow.registry.core.usecase.customer.FindCustomerByIdImp;
+import br.com.pitflow.registry.core.usecase.customer.ListCustomersImp;
+import br.com.pitflow.registry.core.usecase.customer.UpdateCustomerImp;
+import br.com.pitflow.registry.core.usecase.customer.inputPort.CreateCustomer;
+import br.com.pitflow.registry.core.usecase.customer.inputPort.DeleteCustomer;
+import br.com.pitflow.registry.core.usecase.customer.inputPort.FindCustomerByDocument;
+import br.com.pitflow.registry.core.usecase.customer.inputPort.FindCustomerById;
+import br.com.pitflow.registry.core.usecase.customer.inputPort.ListCustomers;
+import br.com.pitflow.registry.core.usecase.customer.inputPort.UpdateCustomer;
+import br.com.pitflow.registry.core.usecase.mechanic.AuthenticateMechanicImp;
+import br.com.pitflow.registry.core.usecase.mechanic.CreateMechanicImp;
+import br.com.pitflow.registry.core.usecase.mechanic.inputPort.AuthenticateMechanic;
+import br.com.pitflow.registry.core.usecase.mechanic.inputPort.CreateMechanic;
+import br.com.pitflow.registry.core.usecase.vehicle.AddVehicleImp;
+import br.com.pitflow.registry.core.usecase.vehicle.DeleteVehicleImp;
 import br.com.pitflow.registry.core.usecase.vehicle.FindVehicleByIdImp;
 import br.com.pitflow.registry.core.usecase.vehicle.FindVehicleByPlateImp;
 import br.com.pitflow.registry.core.usecase.vehicle.FindVehiclesByCustomerIdImp;
-import br.com.pitflow.registry.core.usecase.customer.ListCustomersImp;
 import br.com.pitflow.registry.core.usecase.vehicle.ListVehiclesImp;
-import br.com.pitflow.registry.core.usecase.customer.UpdateCustomerImp;
 import br.com.pitflow.registry.core.usecase.vehicle.UpdateVehicleImp;
 import br.com.pitflow.registry.core.usecase.vehicle.inputPort.AddVehicle;
-import br.com.pitflow.registry.core.usecase.mechanic.inputPort.AuthenticateMechanic;
-import br.com.pitflow.registry.core.usecase.customer.inputPort.CreateCustomer;
-import br.com.pitflow.registry.core.usecase.mechanic.inputPort.CreateMechanic;
-import br.com.pitflow.registry.core.usecase.customer.inputPort.DeleteCustomer;
 import br.com.pitflow.registry.core.usecase.vehicle.inputPort.DeleteVehicle;
-import br.com.pitflow.registry.core.usecase.customer.inputPort.FindCustomerByDocument;
-import br.com.pitflow.registry.core.usecase.customer.inputPort.FindCustomerById;
 import br.com.pitflow.registry.core.usecase.vehicle.inputPort.FindVehicleById;
 import br.com.pitflow.registry.core.usecase.vehicle.inputPort.FindVehicleByPlate;
 import br.com.pitflow.registry.core.usecase.vehicle.inputPort.FindVehiclesByCustomerId;
-import br.com.pitflow.registry.core.usecase.customer.inputPort.ListCustomers;
 import br.com.pitflow.registry.core.usecase.vehicle.inputPort.ListVehicles;
-import br.com.pitflow.registry.core.usecase.customer.inputPort.UpdateCustomer;
 import br.com.pitflow.registry.core.usecase.vehicle.inputPort.UpdateVehicle;
 import br.com.pitflow.registry.infrastructure.persistence.adapter.JpaCustomerGatewayAdapter;
 import br.com.pitflow.registry.infrastructure.persistence.adapter.JpaMechanicGatewayAdapter;
@@ -44,6 +46,8 @@ import br.com.pitflow.registry.infrastructure.persistence.adapter.JpaVehicleGate
 import br.com.pitflow.registry.infrastructure.persistence.repository.SpringCustomerRepository;
 import br.com.pitflow.registry.infrastructure.persistence.repository.SpringMechanicRepository;
 import br.com.pitflow.registry.infrastructure.persistence.repository.SpringVehicleRepository;
+import br.com.pitflow.registry.infrastructure.security.BcryptPasswordEncoderAdapter;
+import br.com.pitflow.registry.infrastructure.security.BcryptPasswordVerifierAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -132,16 +136,18 @@ public class BeanRegistryConfig {
     }
 
     @Bean
-    public CreateMechanic createMechanic(MechanicGateway mechanicGateway, PasswordEncoder passwordEncoder) {
-        return new CreateMechanicImp(mechanicGateway, passwordEncoder);
+    public PasswordEncoderGateway passwordEncoderGateway(PasswordEncoder passwordEncoder) {
+        return new BcryptPasswordEncoderAdapter(passwordEncoder);
     }
 
     @Bean
-    public AuthenticateMechanic authenticateMechanic(
-            MechanicGateway mechanicGateway,
-            PasswordEncoder passwordEncoder,
-            JwtService jwtService) {
-        return new AuthenticateMechanicImp(mechanicGateway, passwordEncoder, jwtService);
+    public CreateMechanic createMechanic(MechanicGateway mechanicGateway, PasswordEncoderGateway passwordEncoderGateway) {
+        return new CreateMechanicImp(mechanicGateway, passwordEncoderGateway);
+    }
+
+    @Bean
+    public PasswordVerifierGateway passwordVerifierGateway(PasswordEncoder passwordEncoder) {
+        return new BcryptPasswordVerifierAdapter(passwordEncoder);
     }
 
     @Bean
@@ -167,8 +173,11 @@ public class BeanRegistryConfig {
     }
 
     @Bean
-    public MechanicController mechanicController(CreateMechanic createMechanic){
-        return new MechanicController(createMechanic);
+    public AuthenticateMechanic authenticateMechanic(
+            MechanicGateway mechanicGateway,
+            PasswordVerifierGateway passwordVerifier,
+            TokenGateway tokenGateway) {
+        return new AuthenticateMechanicImp(mechanicGateway, passwordVerifier, tokenGateway);
     }
 
     @Bean
@@ -190,5 +199,11 @@ public class BeanRegistryConfig {
                 findVehiclesByCustomerId,
                 listVehicles
         );
+    }
+
+    @Bean
+    public MechanicController mechanicController(
+            CreateMechanic createMechanic) {
+        return new MechanicController(createMechanic);
     }
 }
