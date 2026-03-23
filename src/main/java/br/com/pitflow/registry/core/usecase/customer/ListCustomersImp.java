@@ -7,14 +7,14 @@ import br.com.pitflow.registry.core.gateway.CustomerGateway;
 import java.util.List;
 
 public class ListCustomersImp implements ListCustomers {
-    private final CustomerGateway repository;
+    private final CustomerGateway gateway;
 
-    public ListCustomersImp(CustomerGateway repository) {
-        this.repository = repository;
+    public ListCustomersImp(CustomerGateway gateway) {
+        this.gateway = gateway;
     }
 
     @Override
     public List<Customer> execute() {
-        return repository.findAll();
+        return gateway.findAll();
     }
 }

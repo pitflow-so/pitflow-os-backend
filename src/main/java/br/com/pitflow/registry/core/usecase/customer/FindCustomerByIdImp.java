@@ -7,15 +7,15 @@ import br.com.pitflow.registry.core.entity.Customer;
 import java.util.UUID;
 
 public class FindCustomerByIdImp implements FindCustomerById {
-    private final CustomerGateway repository;
+    private final CustomerGateway gateway;
 
-    public FindCustomerByIdImp(CustomerGateway repository) {
-        this.repository = repository;
+    public FindCustomerByIdImp(CustomerGateway gateway) {
+        this.gateway = gateway;
     }
 
     @Override
     public Customer execute(UUID id) {
-        return repository.findById(id)
+        return gateway.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found with ID: " + id));
     }
 }

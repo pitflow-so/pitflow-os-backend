@@ -7,23 +7,23 @@ import br.com.pitflow.registry.core.gateway.CustomerGateway;
 import br.com.pitflow.registry.core.usecase.customer.inputPort.CreateCustomer;
 
 public class CreateCustomerImp implements CreateCustomer {
-    private final CustomerGateway repository;
+    private final CustomerGateway gateway;
 
-    public CreateCustomerImp(CustomerGateway repository) {
-        this.repository = repository;
+    public CreateCustomerImp(CustomerGateway gateway) {
+        this.gateway = gateway;
     }
 
     @Override
     public Customer execute(CreateCustomerCommand dto) {
         var document = new CpfCnpj(dto.document());
 
-        repository.findByDocument(document).ifPresent(customer -> {
+        gateway.findByDocument(document).ifPresent(customer -> {
             var message = String.format("Customer with document %s already exists.", document.value());
             throw new IllegalStateException(message);
         });
 
         var customer = new Customer(dto.name(), document, dto.phone());
-        repository.save(customer);
+        gateway.save(customer);
         return customer;
     }
 }

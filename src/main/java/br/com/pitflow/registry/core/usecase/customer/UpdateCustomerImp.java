@@ -8,22 +8,22 @@ import br.com.pitflow.registry.core.usecase.customer.inputPort.UpdateCustomer;
 import java.util.UUID;
 
 public class UpdateCustomerImp implements UpdateCustomer {
-    private final CustomerGateway repository;
+    private final CustomerGateway gateway;
 
-    public UpdateCustomerImp(CustomerGateway repository) {
-        this.repository = repository;
+    public UpdateCustomerImp(CustomerGateway gateway) {
+        this.gateway = gateway;
     }
 
     @Override
     public void execute(UUID id, UpdateCustomerCommand dto) {
-        var customer = repository.findById(id)
+        var customer = gateway.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
 
         var newDocument = new CpfCnpj(dto.document());
 
         // Validate document uniqueness only if it has changed
         if (!customer.getDocument().equals(newDocument)) {
-            repository.findByDocument(newDocument).ifPresent(c -> {
+            gateway.findByDocument(newDocument).ifPresent(c -> {
                 throw new IllegalStateException("Document already in use by another customer");
             });
         }
@@ -32,6 +32,6 @@ public class UpdateCustomerImp implements UpdateCustomer {
         customer.setDocument(newDocument);
         customer.setPhone(dto.phone());
 
-        repository.save(customer);
+        gateway.save(customer);
     }
 }

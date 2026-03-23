@@ -1,8 +1,9 @@
 package br.com.pitflow.inventory.application;
 
-import br.com.pitflow.inventory.application.dto.CreatePartDto;
+import br.com.pitflow.inventory.infrastructure.web.dto.CreatePartRequest;
 import br.com.pitflow.inventory.core.entity.Part;
 import br.com.pitflow.inventory.core.gateway.PartGateway;
+import br.com.pitflow.inventory.core.usecase.part.CreatePartImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,7 @@ public class CreatePartImpTest {
     @Test
     @DisplayName("Should create part successfully")
     void shouldCreatePartSuccessfully() {
-        var dto = new CreatePartDto("SKU-1", "Peça", "Desc", new BigDecimal("10.00"), 5);
+        var dto = new CreatePartRequest("SKU-1", "Peça", "Desc", new BigDecimal("10.00"), 5);
         when(repository.findBySku("SKU-1")).thenReturn(Optional.empty());
 
         var result = createPart.execute(dto);
@@ -45,7 +46,7 @@ public class CreatePartImpTest {
     @Test
     @DisplayName("Should throw error when SKU already exists")
     void shouldThrowErrorWhenSkuExists() {
-        var dto = new CreatePartDto("SKU-1", "Peça", "Desc", new BigDecimal("10.00"), 5);
+        var dto = new CreatePartRequest("SKU-1", "Peça", "Desc", new BigDecimal("10.00"), 5);
         var existingPart = new Part("SKU-1", "Antiga", "D", new BigDecimal("5.00"), 1);
 
         when(repository.findBySku("SKU-1")).thenReturn(Optional.of(existingPart));

@@ -3,6 +3,7 @@ package br.com.pitflow.inventory.application;
 import br.com.pitflow.inventory.application.dto.CreateServiceDto;
 import br.com.pitflow.inventory.core.entity.Service;
 import br.com.pitflow.inventory.core.gateway.ServiceGateway;
+import br.com.pitflow.inventory.core.usecase.service.CreateServiceImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

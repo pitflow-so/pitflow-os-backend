@@ -1022,18 +1022,18 @@ public class Part {
 Arquivo: `src/main/java/br/com/pitflow/inventory/infrastructure/api/PartController.java`
 
 ```java
-package br.com.pitflow.inventory.infrastructure.api;
+package br.com.pitflow.inventory.infrastructure.web;
 
-import br.com.pitflow.inventory.application.dto.CreatePartDto;
-import br.com.pitflow.inventory.application.dto.UpdatePartDto;
-import br.com.pitflow.inventory.application.usecase.CreatePart;
-import br.com.pitflow.inventory.application.usecase.DeletePart;
-import br.com.pitflow.inventory.application.usecase.FindPartById;
-import br.com.pitflow.inventory.application.usecase.FindPartBySku;
-import br.com.pitflow.inventory.application.usecase.ListParts;
-import br.com.pitflow.inventory.application.usecase.UpdatePart;
+import br.com.pitflow.inventory.infrastructure.web.dto.UpdatePartRequest;
+import br.com.pitflow.inventory.infrastructure.web.dto.CreatePartRequest;
+import br.com.pitflow.inventory.core.usecase.part.inputPort.CreatePart;
+import br.com.pitflow.inventory.core.usecase.part.inputPort.DeletePart;
+import br.com.pitflow.inventory.core.usecase.part.inputPort.FindPartById;
+import br.com.pitflow.inventory.core.usecase.part.inputPort.FindPartBySku;
+import br.com.pitflow.inventory.core.usecase.part.inputPort.ListParts;
+import br.com.pitflow.inventory.core.usecase.part.inputPort.UpdatePart;
 import br.com.pitflow.inventory.core.entity.Part;
-import br.com.pitflow.inventory.infrastructure.api.dto.PartResponse;
+import br.com.pitflow.inventory.presenter.dto.PartResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -1081,7 +1081,7 @@ public class PartController {
 
     @PostMapping
     @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Cadastrar nova peça", description = "Adiciona uma peça ao inventário com SKU único.")
-    public ResponseEntity<PartResponse> create(@RequestBody CreatePartDto dto) {
+    public ResponseEntity<PartResponse> create(@RequestBody CreatePartRequest dto) {
         var part = createPart.execute(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(part));
     }
@@ -1110,7 +1110,7 @@ public class PartController {
 
     @PutMapping("/{id}")
     @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Atualizar peça", description = "Atualiza os dados de uma peça existente.")
-    public ResponseEntity<PartResponse> update(@PathVariable UUID id, @RequestBody UpdatePartDto dto) {
+    public ResponseEntity<PartResponse> update(@PathVariable UUID id, @RequestBody UpdatePartRequest dto) {
         updatePart.execute(id, dto);
         var updatedPart = findPartById.execute(id);
         return ResponseEntity.ok(toResponse(updatedPart));

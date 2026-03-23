@@ -6,15 +6,15 @@ import br.com.pitflow.registry.core.usecase.customer.inputPort.DeleteCustomer;
 import java.util.UUID;
 
 public class DeleteCustomerImp implements DeleteCustomer {
-    private final CustomerGateway repository;
+    private final CustomerGateway gateway;
 
-    public DeleteCustomerImp(CustomerGateway repository) {
-        this.repository = repository;
+    public DeleteCustomerImp(CustomerGateway gateway) {
+        this.gateway = gateway;
     }
 
     @Override
     public void execute(UUID id) {
-        repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Customer not found"));
-        repository.delete(id);
+        gateway.findById(id).orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+        gateway.delete(id);
     }
 }

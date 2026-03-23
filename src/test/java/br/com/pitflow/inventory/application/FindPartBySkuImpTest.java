@@ -2,6 +2,7 @@ package br.com.pitflow.inventory.application;
 
 import br.com.pitflow.inventory.core.entity.Part;
 import br.com.pitflow.inventory.core.gateway.PartGateway;
+import br.com.pitflow.inventory.core.usecase.part.FindPartBySkuImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

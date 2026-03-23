@@ -6,16 +6,16 @@ import br.com.pitflow.registry.core.usecase.customer.inputPort.FindCustomerByDoc
 import br.com.pitflow.registry.core.entity.Customer;
 
 public class FindCustomerByDocumentImp implements FindCustomerByDocument {
-    private final CustomerGateway repository;
+    private final CustomerGateway gateway;
 
-    public FindCustomerByDocumentImp(CustomerGateway repository) {
-        this.repository = repository;
+    public FindCustomerByDocumentImp(CustomerGateway gateway) {
+        this.gateway = gateway;
     }
 
     @Override
     public Customer execute(String document) {
         var cpfCnpj = new CpfCnpj(document);
-        return repository.findByDocument(cpfCnpj)
+        return gateway.findByDocument(cpfCnpj)
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found with document: " + document));
     }
 }

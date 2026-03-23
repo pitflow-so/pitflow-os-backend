@@ -1,8 +1,9 @@
 package br.com.pitflow.inventory.application;
 
-import br.com.pitflow.inventory.application.dto.UpdatePartDto;
+import br.com.pitflow.inventory.infrastructure.web.dto.UpdatePartRequest;
 import br.com.pitflow.inventory.core.entity.Part;
 import br.com.pitflow.inventory.core.gateway.PartGateway;
+import br.com.pitflow.inventory.core.usecase.part.UpdatePartImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,7 @@ class UpdatePartImpTest {
         UUID id = UUID.randomUUID();
         var part = new Part("SKU-OLD", "Old Name", "Desc", new BigDecimal("10"), 1);
         part.setId(id);
-        var dto = new UpdatePartDto("SKU-NEW", "New Name", "New Desc", new BigDecimal("20"), 5);
+        var dto = new UpdatePartRequest("SKU-NEW", "New Name", "New Desc", new BigDecimal("20"), 5);
 
         when(repository.findById(id)).thenReturn(Optional.of(part));
         when(repository.findBySku("SKU-NEW")).thenReturn(Optional.empty());
@@ -44,7 +45,7 @@ class UpdatePartImpTest {
     void shouldThrowExceptionWhenSkuAlreadyInUseByAnotherPart() {
         UUID id = UUID.randomUUID();
         var part = new Part("SKU-1", "Name", "Desc", new BigDecimal("10"), 1);
-        var dto = new UpdatePartDto("SKU-TAKEN", "Name", "Desc", new BigDecimal("10"), 1);
+        var dto = new UpdatePartRequest("SKU-TAKEN", "Name", "Desc", new BigDecimal("10"), 1);
         var anotherPart = new Part("SKU-TAKEN", "Other", "Desc", new BigDecimal("10"), 1);
 
         when(repository.findById(id)).thenReturn(Optional.of(part));
