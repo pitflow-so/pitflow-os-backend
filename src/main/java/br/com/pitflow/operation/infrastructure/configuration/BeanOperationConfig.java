@@ -1,7 +1,7 @@
 package br.com.pitflow.operation.infrastructure.configuration;
 
-import br.com.pitflow.inventory.domain.repository.PartRepository;
-import br.com.pitflow.inventory.domain.repository.ServiceRepository;
+import br.com.pitflow.inventory.core.gateway.PartGateway;
+import br.com.pitflow.inventory.core.gateway.ServiceGateway;
 import br.com.pitflow.operation.application.AddOrderItemImp;
 import br.com.pitflow.operation.application.ApproveOrderImp;
 import br.com.pitflow.operation.application.CancelOrderImp;
@@ -49,9 +49,9 @@ public class BeanOperationConfig {
     @Bean
     public AddOrderItem addOrderItem(
             ServiceOrderRepository repository,
-            PartRepository partRepository,
-            ServiceRepository serviceRepository) {
-        return new AddOrderItemImp(repository, partRepository, serviceRepository);
+            PartGateway partGateway,
+            ServiceGateway serviceGateway) {
+        return new AddOrderItemImp(repository, partGateway, serviceGateway);
     }
 
     @Bean

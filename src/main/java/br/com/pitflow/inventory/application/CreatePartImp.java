@@ -2,21 +2,21 @@ package br.com.pitflow.inventory.application;
 
 import br.com.pitflow.inventory.application.dto.CreatePartDto;
 import br.com.pitflow.inventory.application.usecase.CreatePart;
-import br.com.pitflow.inventory.domain.Part;
-import br.com.pitflow.inventory.domain.repository.PartRepository;
+import br.com.pitflow.inventory.core.entity.Part;
+import br.com.pitflow.inventory.core.gateway.PartGateway;
 
 public class CreatePartImp  implements CreatePart {
 
-    private final PartRepository partRepository;
+    private final PartGateway partGateway;
 
-    public CreatePartImp(PartRepository partRepository) {
-        this.partRepository = partRepository;
+    public CreatePartImp(PartGateway partGateway) {
+        this.partGateway = partGateway;
     }
 
     @Override
     public Part execute(CreatePartDto dto) {
         //SKU must be unique
-        partRepository.findBySku(dto.sku()).ifPresent(p -> {
+        partGateway.findBySku(dto.sku()).ifPresent(p -> {
             throw new IllegalStateException("A part with SKU " + dto.sku() + " already exists.");
         });
 
@@ -28,7 +28,7 @@ public class CreatePartImp  implements CreatePart {
                 dto.initialStock()
         );
 
-        partRepository.save(part);
+        partGateway.save(part);
         return part;
     }
 }

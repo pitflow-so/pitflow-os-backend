@@ -1,5 +1,6 @@
 package br.com.pitflow.inventory.domain;
 
+import br.com.pitflow.inventory.core.entity.Service;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

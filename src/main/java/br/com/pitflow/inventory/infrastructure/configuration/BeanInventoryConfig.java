@@ -22,10 +22,10 @@ import br.com.pitflow.inventory.application.usecase.ListParts;
 import br.com.pitflow.inventory.application.usecase.ListServices;
 import br.com.pitflow.inventory.application.usecase.UpdatePart;
 import br.com.pitflow.inventory.application.usecase.UpdateService;
-import br.com.pitflow.inventory.domain.repository.PartRepository;
-import br.com.pitflow.inventory.domain.repository.ServiceRepository;
-import br.com.pitflow.inventory.infrastructure.persistence.adapter.JpaPartRepositoryAdapter;
-import br.com.pitflow.inventory.infrastructure.persistence.adapter.JpaServiceRepositoryAdapter;
+import br.com.pitflow.inventory.core.gateway.PartGateway;
+import br.com.pitflow.inventory.core.gateway.ServiceGateway;
+import br.com.pitflow.inventory.infrastructure.persistence.adapter.JpaPartGatewayAdapter;
+import br.com.pitflow.inventory.infrastructure.persistence.adapter.JpaServiceGatewayAdapter;
 import br.com.pitflow.inventory.infrastructure.persistence.repository.SpringPartRepository;
 import br.com.pitflow.inventory.infrastructure.persistence.repository.SpringServiceRepository;
 import org.springframework.context.annotation.Bean;
@@ -35,68 +35,68 @@ import org.springframework.context.annotation.Configuration;
 public class BeanInventoryConfig {
 
     @Bean
-    public PartRepository partRepository(SpringPartRepository springPartRepository) {
-        return new JpaPartRepositoryAdapter(springPartRepository);
+    public PartGateway partRepository(SpringPartRepository springPartRepository) {
+        return new JpaPartGatewayAdapter(springPartRepository);
     }
 
     @Bean
-    public ServiceRepository serviceRepository(SpringServiceRepository springServiceRepository) {
-        return new JpaServiceRepositoryAdapter(springServiceRepository);
+    public ServiceGateway serviceRepository(SpringServiceRepository springServiceRepository) {
+        return new JpaServiceGatewayAdapter(springServiceRepository);
     }
 
     @Bean
-    public CreatePart createPart(PartRepository partController) {
+    public CreatePart createPart(PartGateway partController) {
         return new CreatePartImp(partController);
     }
 
     @Bean
-    public CreateService createService(ServiceRepository serviceRepository) {
-        return new CreateServiceImp(serviceRepository);
+    public CreateService createService(ServiceGateway serviceGateway) {
+        return new CreateServiceImp(serviceGateway);
     }
 
     @Bean
-    public FindPartById findPartById(PartRepository partRepository) {
-        return new FindPartByIdImp(partRepository);
+    public FindPartById findPartById(PartGateway partGateway) {
+        return new FindPartByIdImp(partGateway);
     }
 
     @Bean
-    public FindPartBySku findPartBySku(PartRepository partRepository) {
-        return new FindPartBySkuImp(partRepository);
+    public FindPartBySku findPartBySku(PartGateway partGateway) {
+        return new FindPartBySkuImp(partGateway);
     }
 
     @Bean
-    public ListParts listParts(PartRepository partRepository) {
-        return new ListPartsImp(partRepository);
+    public ListParts listParts(PartGateway partGateway) {
+        return new ListPartsImp(partGateway);
     }
 
     @Bean
-    public UpdatePart updatePart(PartRepository partRepository) {
-        return new UpdatePartImp(partRepository);
+    public UpdatePart updatePart(PartGateway partGateway) {
+        return new UpdatePartImp(partGateway);
     }
 
     @Bean
-    public DeletePart deletePart(PartRepository partRepository) {
-        return new DeletePartImp(partRepository);
+    public DeletePart deletePart(PartGateway partGateway) {
+        return new DeletePartImp(partGateway);
     }
 
     @Bean
-    public FindServiceById findServiceById(ServiceRepository serviceRepository) {
-        return new FindServiceByIdImp(serviceRepository);
+    public FindServiceById findServiceById(ServiceGateway serviceGateway) {
+        return new FindServiceByIdImp(serviceGateway);
     }
 
     @Bean
-    public ListServices listServices(ServiceRepository serviceRepository) {
-        return new ListServicesImp(serviceRepository);
+    public ListServices listServices(ServiceGateway serviceGateway) {
+        return new ListServicesImp(serviceGateway);
     }
 
     @Bean
-    public UpdateService updateService(ServiceRepository serviceRepository) {
-        return new UpdateServiceImp(serviceRepository);
+    public UpdateService updateService(ServiceGateway serviceGateway) {
+        return new UpdateServiceImp(serviceGateway);
     }
 
     @Bean
-    public DeleteService deleteService(ServiceRepository serviceRepository) {
-        return new DeleteServiceImp(serviceRepository);
+    public DeleteService deleteService(ServiceGateway serviceGateway) {
+        return new DeleteServiceImp(serviceGateway);
     }
 
 }

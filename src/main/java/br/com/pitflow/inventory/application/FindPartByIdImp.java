@@ -1,14 +1,14 @@
 package br.com.pitflow.inventory.application;
 
 import br.com.pitflow.inventory.application.usecase.FindPartById;
-import br.com.pitflow.inventory.domain.Part;
-import br.com.pitflow.inventory.domain.repository.PartRepository;
+import br.com.pitflow.inventory.core.entity.Part;
+import br.com.pitflow.inventory.core.gateway.PartGateway;
 
 import java.util.UUID;
 
 public class FindPartByIdImp implements FindPartById {
-    private final PartRepository repository;
-    public FindPartByIdImp(PartRepository repository) { this.repository = repository; }
+    private final PartGateway repository;
+    public FindPartByIdImp(PartGateway repository) { this.repository = repository; }
 
     @Override
     public Part execute(UUID id) {

@@ -1,7 +1,7 @@
 package br.com.pitflow.inventory.application;
 
-import br.com.pitflow.inventory.domain.Service;
-import br.com.pitflow.inventory.domain.repository.ServiceRepository;
+import br.com.pitflow.inventory.core.entity.Service;
+import br.com.pitflow.inventory.core.gateway.ServiceGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,12 +15,12 @@ import static org.mockito.Mockito.*;
 
 class DeleteServiceImpTest {
 
-    private ServiceRepository repository;
+    private ServiceGateway repository;
     private DeleteServiceImp deleteService;
 
     @BeforeEach
     void setUp() {
-        repository = mock(ServiceRepository.class);
+        repository = mock(ServiceGateway.class);
         deleteService = new DeleteServiceImp(repository);
     }
 

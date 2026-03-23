@@ -1,6 +1,6 @@
 package br.com.pitflow.inventory.infrastructure.persistence.mapper;
 
-import br.com.pitflow.inventory.domain.Service;
+import br.com.pitflow.inventory.core.entity.Service;
 import br.com.pitflow.inventory.infrastructure.persistence.entity.ServiceJpa;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

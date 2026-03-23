@@ -2,14 +2,14 @@ package br.com.pitflow.inventory.application;
 
 import br.com.pitflow.inventory.application.dto.UpdatePartDto;
 import br.com.pitflow.inventory.application.usecase.UpdatePart;
-import br.com.pitflow.inventory.domain.repository.PartRepository;
+import br.com.pitflow.inventory.core.gateway.PartGateway;
 
 import java.util.UUID;
 
 public class UpdatePartImp implements UpdatePart {
-    private final PartRepository repository;
+    private final PartGateway repository;
 
-    public UpdatePartImp(PartRepository repository) {
+    public UpdatePartImp(PartGateway repository) {
         this.repository = repository;
     }
 

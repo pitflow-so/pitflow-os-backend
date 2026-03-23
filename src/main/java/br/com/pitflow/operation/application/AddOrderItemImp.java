@@ -1,7 +1,7 @@
 package br.com.pitflow.operation.application;
 
-import br.com.pitflow.inventory.domain.repository.PartRepository;
-import br.com.pitflow.inventory.domain.repository.ServiceRepository;
+import br.com.pitflow.inventory.core.gateway.PartGateway;
+import br.com.pitflow.inventory.core.gateway.ServiceGateway;
 import br.com.pitflow.operation.application.dto.AddOrderItemDto;
 import br.com.pitflow.operation.application.usecase.AddOrderItem;
 import br.com.pitflow.operation.domain.ServiceOrder;
@@ -10,16 +10,16 @@ import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
 public class AddOrderItemImp implements AddOrderItem {
 
     private final ServiceOrderRepository serviceOrderRepository;
-    private final PartRepository partRepository;
-    private final ServiceRepository serviceRepository;
+    private final PartGateway partGateway;
+    private final ServiceGateway serviceGateway;
 
     public AddOrderItemImp(
             ServiceOrderRepository serviceOrderRepository,
-            PartRepository partRepository,
-            ServiceRepository serviceRepository) {
+            PartGateway partGateway,
+            ServiceGateway serviceGateway) {
         this.serviceOrderRepository = serviceOrderRepository;
-        this.partRepository = partRepository;
-        this.serviceRepository = serviceRepository;
+        this.partGateway = partGateway;
+        this.serviceGateway = serviceGateway;
     }
 
     @Override
@@ -28,7 +28,7 @@ public class AddOrderItemImp implements AddOrderItem {
                 .orElseThrow(() -> new IllegalArgumentException("Service Order not found"));
 
         if (dto.type() == ServiceOrder.ItemType.PART) {
-            var part = partRepository.findById(dto.catalogId())
+            var part = partGateway.findById(dto.catalogId())
                     .orElseThrow(() -> new IllegalArgumentException("Part not found in inventory"));
 
             // Remove from inventory
@@ -38,10 +38,10 @@ public class AddOrderItemImp implements AddOrderItem {
             os.addPart(part.getId(), part.getName(), part.getPrice(), dto.quantity());
 
             // Update part stock in inventory
-            partRepository.save(part);
+            partGateway.save(part);
 
         } else {
-            var service = serviceRepository.findById(dto.catalogId())
+            var service = serviceGateway.findById(dto.catalogId())
                     .orElseThrow(() -> new IllegalArgumentException("Service not found in inventory"));
 
             // Add to order

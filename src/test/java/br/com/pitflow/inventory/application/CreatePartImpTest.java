@@ -1,8 +1,8 @@
 package br.com.pitflow.inventory.application;
 
 import br.com.pitflow.inventory.application.dto.CreatePartDto;
-import br.com.pitflow.inventory.domain.Part;
-import br.com.pitflow.inventory.domain.repository.PartRepository;
+import br.com.pitflow.inventory.core.entity.Part;
+import br.com.pitflow.inventory.core.gateway.PartGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,12 +21,12 @@ import static org.mockito.Mockito.when;
 
 public class CreatePartImpTest {
 
-    private PartRepository repository;
+    private PartGateway repository;
     private CreatePartImp createPart;
 
     @BeforeEach
     void setUp() {
-        repository = mock(PartRepository.class);
+        repository = mock(PartGateway.class);
         createPart = new CreatePartImp(repository);
     }
 

@@ -2,15 +2,15 @@ package br.com.pitflow.inventory.application;
 
 import br.com.pitflow.inventory.application.dto.CreateServiceDto;
 import br.com.pitflow.inventory.application.usecase.CreateService;
-import br.com.pitflow.inventory.domain.Service;
-import br.com.pitflow.inventory.domain.repository.ServiceRepository;
+import br.com.pitflow.inventory.core.entity.Service;
+import br.com.pitflow.inventory.core.gateway.ServiceGateway;
 
 public class CreateServiceImp implements CreateService {
 
-    private final ServiceRepository serviceRepository;
+    private final ServiceGateway serviceGateway;
 
-    public CreateServiceImp(ServiceRepository serviceRepository) {
-        this.serviceRepository = serviceRepository;
+    public CreateServiceImp(ServiceGateway serviceGateway) {
+        this.serviceGateway = serviceGateway;
     }
 
     @Override
@@ -21,7 +21,7 @@ public class CreateServiceImp implements CreateService {
                 dto.price()
         );
 
-        serviceRepository.save(service);
+        serviceGateway.save(service);
         return service;
     }
 }

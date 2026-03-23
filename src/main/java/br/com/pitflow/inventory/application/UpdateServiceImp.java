@@ -2,14 +2,14 @@ package br.com.pitflow.inventory.application;
 
 import br.com.pitflow.inventory.application.dto.UpdateServiceDto;
 import br.com.pitflow.inventory.application.usecase.UpdateService;
-import br.com.pitflow.inventory.domain.repository.ServiceRepository;
+import br.com.pitflow.inventory.core.gateway.ServiceGateway;
 
 import java.util.UUID;
 
 public class UpdateServiceImp implements UpdateService {
-    private final ServiceRepository repository;
+    private final ServiceGateway repository;
 
-    public UpdateServiceImp(ServiceRepository repository) {
+    public UpdateServiceImp(ServiceGateway repository) {
         this.repository = repository;
     }
 

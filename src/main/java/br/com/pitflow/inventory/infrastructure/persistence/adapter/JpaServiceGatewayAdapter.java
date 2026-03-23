@@ -1,7 +1,7 @@
 package br.com.pitflow.inventory.infrastructure.persistence.adapter;
 
-import br.com.pitflow.inventory.domain.Service;
-import br.com.pitflow.inventory.domain.repository.ServiceRepository;
+import br.com.pitflow.inventory.core.entity.Service;
+import br.com.pitflow.inventory.core.gateway.ServiceGateway;
 import br.com.pitflow.inventory.infrastructure.persistence.mapper.ServiceMapper;
 import br.com.pitflow.inventory.infrastructure.persistence.repository.SpringServiceRepository;
 
@@ -10,11 +10,11 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class JpaServiceRepositoryAdapter implements ServiceRepository {
+public class JpaServiceGatewayAdapter implements ServiceGateway {
 
     private final SpringServiceRepository springServiceRepository;
 
-    public JpaServiceRepositoryAdapter(SpringServiceRepository springServiceRepository) {
+    public JpaServiceGatewayAdapter(SpringServiceRepository springServiceRepository) {
         this.springServiceRepository = springServiceRepository;
     }
 

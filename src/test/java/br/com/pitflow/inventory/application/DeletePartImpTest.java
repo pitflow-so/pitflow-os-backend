@@ -1,7 +1,7 @@
 package br.com.pitflow.inventory.application;
 
-import br.com.pitflow.inventory.domain.Part;
-import br.com.pitflow.inventory.domain.repository.PartRepository;
+import br.com.pitflow.inventory.core.entity.Part;
+import br.com.pitflow.inventory.core.gateway.PartGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,12 +15,12 @@ import static org.mockito.Mockito.*;
 
 class DeletePartImpTest {
 
-    private PartRepository repository;
+    private PartGateway repository;
     private DeletePartImp deletePart;
 
     @BeforeEach
     void setUp() {
-        repository = mock(PartRepository.class);
+        repository = mock(PartGateway.class);
         deletePart = new DeletePartImp(repository);
     }
 

@@ -1,13 +1,13 @@
 package br.com.pitflow.inventory.application;
 
 import br.com.pitflow.inventory.application.usecase.FindPartBySku;
-import br.com.pitflow.inventory.domain.Part;
-import br.com.pitflow.inventory.domain.repository.PartRepository;
+import br.com.pitflow.inventory.core.entity.Part;
+import br.com.pitflow.inventory.core.gateway.PartGateway;
 
 public class FindPartBySkuImp implements FindPartBySku {
-    private final PartRepository repository;
+    private final PartGateway repository;
 
-    public FindPartBySkuImp(PartRepository repository) {
+    public FindPartBySkuImp(PartGateway repository) {
         this.repository = repository;
     }
 

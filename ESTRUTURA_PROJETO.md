@@ -1032,7 +1032,7 @@ import br.com.pitflow.inventory.application.usecase.FindPartById;
 import br.com.pitflow.inventory.application.usecase.FindPartBySku;
 import br.com.pitflow.inventory.application.usecase.ListParts;
 import br.com.pitflow.inventory.application.usecase.UpdatePart;
-import br.com.pitflow.inventory.domain.Part;
+import br.com.pitflow.inventory.core.entity.Part;
 import br.com.pitflow.inventory.infrastructure.api.dto.PartResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -1137,8 +1137,9 @@ Arquivo: `src/main/java/br/com/pitflow/inventory/infrastructure/persistence/adap
 ```java
 package br.com.pitflow.inventory.infrastructure.persistence.adapter;
 
-import br.com.pitflow.inventory.domain.Part;
-import br.com.pitflow.inventory.domain.repository.PartRepository;
+import br.com.pitflow.inventory.core.entity.Part;
+import br.com.pitflow.inventory.core.gateway.PartGateway;
+import br.com.pitflow.inventory.core.gateway.PartRepository;
 import br.com.pitflow.inventory.infrastructure.persistence.mapper.PartMapper;
 import br.com.pitflow.inventory.infrastructure.persistence.repository.SpringPartRepository;
 
@@ -1147,7 +1148,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class JpaPartRepositoryAdapter implements PartRepository {
+public class JpaPartRepositoryAdapter implements PartGateway {
     private final SpringPartRepository springPartRepository;
 
     public JpaPartRepositoryAdapter(SpringPartRepository springPartRepository) {

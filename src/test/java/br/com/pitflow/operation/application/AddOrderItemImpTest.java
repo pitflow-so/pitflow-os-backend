@@ -1,8 +1,8 @@
 package br.com.pitflow.operation.application;
 
-import br.com.pitflow.inventory.domain.Part;
-import br.com.pitflow.inventory.domain.repository.PartRepository;
-import br.com.pitflow.inventory.domain.repository.ServiceRepository;
+import br.com.pitflow.inventory.core.entity.Part;
+import br.com.pitflow.inventory.core.gateway.PartGateway;
+import br.com.pitflow.inventory.core.gateway.ServiceGateway;
 import br.com.pitflow.operation.application.dto.AddOrderItemDto;
 import br.com.pitflow.operation.domain.ServiceOrder;
 import br.com.pitflow.operation.domain.ServiceOrder.ItemType;
@@ -19,16 +19,16 @@ import static org.mockito.Mockito.*;
 
 class AddOrderItemImpTest {
     private ServiceOrderRepository osRepository;
-    private PartRepository partRepository;
-    private ServiceRepository serviceRepository;
+    private PartGateway partGateway;
+    private ServiceGateway serviceGateway;
     private AddOrderItemImp addOrderItem;
 
     @BeforeEach
     void setUp() {
         osRepository = mock(ServiceOrderRepository.class);
-        partRepository = mock(PartRepository.class);
-        serviceRepository = mock(ServiceRepository.class);
-        addOrderItem = new AddOrderItemImp(osRepository, partRepository, serviceRepository);
+        partGateway = mock(PartGateway.class);
+        serviceGateway = mock(ServiceGateway.class);
+        addOrderItem = new AddOrderItemImp(osRepository, partGateway, serviceGateway);
     }
 
     @Test
@@ -42,7 +42,7 @@ class AddOrderItemImpTest {
         part.setId(partId);
 
         when(osRepository.findById(osId)).thenReturn(Optional.of(os));
-        when(partRepository.findById(partId)).thenReturn(Optional.of(part));
+        when(partGateway.findById(partId)).thenReturn(Optional.of(part));
 
         // Act
         addOrderItem.execute(new AddOrderItemDto(osId, partId, 2, ItemType.PART));
@@ -65,7 +65,7 @@ class AddOrderItemImpTest {
         part.setId(partId);
 
         when(osRepository.findById(osId)).thenReturn(Optional.of(mock(ServiceOrder.class)));
-        when(partRepository.findById(partId)).thenReturn(Optional.of(part));
+        when(partGateway.findById(partId)).thenReturn(Optional.of(part));
 
         //Act
         // Tak 4 but there is only two in the inventory
@@ -88,7 +88,7 @@ class AddOrderItemImpTest {
         part.setId(partId);
 
         when(osRepository.findById(osId)).thenReturn(Optional.of(os));
-        when(partRepository.findById(partId)).thenReturn(Optional.of(part));
+        when(partGateway.findById(partId)).thenReturn(Optional.of(part));
 
         // Act
         addOrderItem.execute(new AddOrderItemDto(osId, partId, 2, ItemType.PART));
@@ -98,7 +98,7 @@ class AddOrderItemImpTest {
         assertThat(part.getStockQuantity()).isEqualTo(8);
 
         // Verify
-        verify(partRepository).save(part);
+        verify(partGateway).save(part);
         verify(osRepository).save(os);
     }
 }

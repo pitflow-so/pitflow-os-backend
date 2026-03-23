@@ -1,14 +1,14 @@
 package br.com.pitflow.inventory.application;
 
 import br.com.pitflow.inventory.application.usecase.DeleteService;
-import br.com.pitflow.inventory.domain.repository.ServiceRepository;
+import br.com.pitflow.inventory.core.gateway.ServiceGateway;
 
 import java.util.UUID;
 
 public class DeleteServiceImp implements DeleteService {
-    private final ServiceRepository repository;
+    private final ServiceGateway repository;
 
-    public DeleteServiceImp(ServiceRepository repository) {
+    public DeleteServiceImp(ServiceGateway repository) {
         this.repository = repository;
     }
 

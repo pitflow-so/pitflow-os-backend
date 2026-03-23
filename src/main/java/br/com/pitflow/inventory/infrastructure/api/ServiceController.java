@@ -7,7 +7,7 @@ import br.com.pitflow.inventory.application.usecase.DeleteService;
 import br.com.pitflow.inventory.application.usecase.FindServiceById;
 import br.com.pitflow.inventory.application.usecase.ListServices;
 import br.com.pitflow.inventory.application.usecase.UpdateService;
-import br.com.pitflow.inventory.domain.Service;
+import br.com.pitflow.inventory.core.entity.Service;
 import br.com.pitflow.inventory.infrastructure.api.dto.ServiceResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

@@ -1,7 +1,7 @@
 package br.com.pitflow.inventory.infrastructure.persistence.adapter;
 
-import br.com.pitflow.inventory.domain.Part;
-import br.com.pitflow.inventory.domain.repository.PartRepository;
+import br.com.pitflow.inventory.core.entity.Part;
+import br.com.pitflow.inventory.core.gateway.PartGateway;
 import br.com.pitflow.inventory.infrastructure.persistence.mapper.PartMapper;
 import br.com.pitflow.inventory.infrastructure.persistence.repository.SpringPartRepository;
 
@@ -10,10 +10,10 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class JpaPartRepositoryAdapter implements PartRepository {
+public class JpaPartGatewayAdapter implements PartGateway {
     private final SpringPartRepository springPartRepository;
 
-    public JpaPartRepositoryAdapter(SpringPartRepository springPartRepository) {
+    public JpaPartGatewayAdapter(SpringPartRepository springPartRepository) {
         this.springPartRepository = springPartRepository;
     }
 

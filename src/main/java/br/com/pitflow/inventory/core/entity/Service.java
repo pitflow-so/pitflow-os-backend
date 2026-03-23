@@ -1,4 +1,4 @@
-package br.com.pitflow.inventory.domain;
+package br.com.pitflow.inventory.core.entity;
 
 import java.math.BigDecimal;
 import java.util.UUID;

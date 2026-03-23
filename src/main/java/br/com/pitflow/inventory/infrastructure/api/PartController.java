@@ -8,7 +8,7 @@ import br.com.pitflow.inventory.application.usecase.FindPartById;
 import br.com.pitflow.inventory.application.usecase.FindPartBySku;
 import br.com.pitflow.inventory.application.usecase.ListParts;
 import br.com.pitflow.inventory.application.usecase.UpdatePart;
-import br.com.pitflow.inventory.domain.Part;
+import br.com.pitflow.inventory.core.entity.Part;
 import br.com.pitflow.inventory.infrastructure.api.dto.PartResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
