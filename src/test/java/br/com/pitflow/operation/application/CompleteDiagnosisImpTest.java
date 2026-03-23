@@ -1,8 +1,9 @@
 package br.com.pitflow.operation.application;
 
-import br.com.pitflow.operation.application.usecase.NotificationService;
-import br.com.pitflow.operation.domain.ServiceOrder;
-import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
+import br.com.pitflow.operation.core.gateway.NotificationGateway;
+import br.com.pitflow.operation.core.entity.ServiceOrder;
+import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.usecase.CompleteDiagnosisImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,15 +16,15 @@ import static org.mockito.Mockito.*;
 
 class CompleteDiagnosisImpTest {
 
-    private ServiceOrderRepository repository;
-    private NotificationService notificationService;
+    private ServiceOrderGateway gateway;
+    private NotificationGateway notificationGateway;
     private CompleteDiagnosisImp completeDiagnosis;
 
     @BeforeEach
     void setUp() {
-        repository = mock(ServiceOrderRepository.class);
-        notificationService = mock(NotificationService.class);
-        completeDiagnosis = new CompleteDiagnosisImp(repository, notificationService);
+        gateway = mock(ServiceOrderGateway.class);
+        notificationGateway = mock(NotificationGateway.class);
+        completeDiagnosis = new CompleteDiagnosisImp(gateway, notificationGateway);
     }
 
     @Test
@@ -36,15 +37,15 @@ class CompleteDiagnosisImpTest {
         os.startDiagnosis(); // Muda para IN_DIAGNOSIS
         os.addService(UUID.randomUUID(), "Limpeza", new BigDecimal("100.0")); // Adiciona item obrigatório
 
-        when(repository.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findById(osId)).thenReturn(Optional.of(os));
 
         // Act
         completeDiagnosis.execute(osId);
 
         // Assert
         assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.AWAITING_APPROVAL);
-        verify(repository).save(os);
-        verify(notificationService).send(eq(osId), anyString());
+        verify(gateway).save(os);
+        verify(notificationGateway).send(eq(osId), anyString());
     }
 
     @Test
@@ -52,7 +53,7 @@ class CompleteDiagnosisImpTest {
     void shouldFailIfOsNotFound() {
         // Arrange
         UUID osId = UUID.randomUUID();
-        when(repository.findById(osId)).thenReturn(Optional.empty());
+        when(gateway.findById(osId)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> completeDiagnosis.execute(osId))
@@ -69,7 +70,7 @@ class CompleteDiagnosisImpTest {
         os.startDiagnosis();
         // Items not added
 
-        when(repository.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findById(osId)).thenReturn(Optional.of(os));
 
         // Act & Assert
         assertThatThrownBy(() -> completeDiagnosis.execute(osId))
@@ -86,16 +87,16 @@ class CompleteDiagnosisImpTest {
         os.startDiagnosis();
         os.addService(UUID.randomUUID(), "Reparo", new BigDecimal("100"));
 
-        when(repository.findById(osId)).thenReturn(Optional.of(os));
-        NotificationService notificationService = mock(NotificationService.class);
-        var interactor = new CompleteDiagnosisImp(repository, notificationService);
+        when(gateway.findById(osId)).thenReturn(Optional.of(os));
+        NotificationGateway notificationGateway = mock(NotificationGateway.class);
+        var interactor = new CompleteDiagnosisImp(gateway, notificationGateway);
 
         // Act
         interactor.execute(osId);
 
         // Assert
         assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.AWAITING_APPROVAL);
-        verify(repository).save(os);
-        verify(notificationService).send(eq(os.getId()), anyString());
+        verify(gateway).save(os);
+        verify(notificationGateway).send(eq(os.getId()), anyString());
     }
 }

@@ -1,7 +1,8 @@
 package br.com.pitflow.operation.application;
 
-import br.com.pitflow.operation.domain.ServiceOrder;
-import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
+import br.com.pitflow.operation.core.entity.ServiceOrder;
+import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.usecase.DeliverOrderImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,13 +15,13 @@ import static org.mockito.Mockito.*;
 
 class DeliverOrderImpTest {
 
-    private ServiceOrderRepository repository;
+    private ServiceOrderGateway gateway;
     private DeliverOrderImp deliverOrder;
 
     @BeforeEach
     void setUp() {
-        repository = mock(ServiceOrderRepository.class);
-        deliverOrder = new DeliverOrderImp(repository);
+        gateway = mock(ServiceOrderGateway.class);
+        deliverOrder = new DeliverOrderImp(gateway);
     }
 
     @Test
@@ -37,7 +38,7 @@ class DeliverOrderImpTest {
         os.approve();
         os.finish();
 
-        when(repository.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findById(osId)).thenReturn(Optional.of(os));
 
         // Act
         deliverOrder.execute(osId);
@@ -45,7 +46,7 @@ class DeliverOrderImpTest {
         // Assert
         assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.DELIVERED);
         assertThat(os.getDeliveredAt()).isNotNull();
-        verify(repository).save(os);
+        verify(gateway).save(os);
     }
 
     @Test
@@ -55,7 +56,7 @@ class DeliverOrderImpTest {
         UUID osId = UUID.randomUUID();
         var os = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Conserto");
 
-        when(repository.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findById(osId)).thenReturn(Optional.of(os));
 
         // Act & Assert
         assertThatThrownBy(() -> deliverOrder.execute(osId))

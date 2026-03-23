@@ -700,31 +700,31 @@ Arquivo: `src/main/java/br/com/pitflow/operation/application/CreateServiceOrderI
 ```java
 package br.com.pitflow.operation.application;
 
-import br.com.pitflow.operation.application.dto.CreateServiceOrderDto;
-import br.com.pitflow.operation.application.usecase.CreateServiceOrder;
-import br.com.pitflow.operation.domain.ServiceOrder;
-import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
+import br.com.pitflow.operation.infrastructure.web.dto.CreateServiceOrderRequest;
+import br.com.pitflow.operation.core.entity.ServiceOrder;
+import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.gateway.ServiceOrderRepository;
 import br.com.pitflow.registry.core.gateway.CustomerGateway;
 import br.com.pitflow.registry.core.gateway.VehicleGateway;
 import br.com.pitflow.registry.core.gateway.VehicleRepository;
 
-public class CreateServiceOrderImp implements CreateServiceOrder {
+public class CreateServiceOrderImp implements br.com.pitflow.operation.core.usecase.inputPort.CreateServiceOrder {
 
-    private final ServiceOrderRepository serviceOrderRepository;
+    private final ServiceOrderGateway serviceOrderGateway;
     private final CustomerGateway customerGateway;
     private final VehicleGateway vehicleGateway;
 
     public CreateServiceOrderImp(
-            ServiceOrderRepository serviceOrderRepository,
+            ServiceOrderGateway serviceOrderGateway,
             CustomerGateway customerGateway,
             VehicleGateway vehicleGateway) {
-        this.serviceOrderRepository = serviceOrderRepository;
+        this.serviceOrderGateway = serviceOrderGateway;
         this.customerGateway = customerGateway;
         this.vehicleGateway = vehicleGateway;
     }
 
     @Override
-    public ServiceOrder execute(CreateServiceOrderDto dto) {
+    public ServiceOrder execute(CreateServiceOrderRequest dto) {
         customerGateway.findById(dto.customerId())
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found with ID: " + dto.customerId()));
 
@@ -737,7 +737,7 @@ public class CreateServiceOrderImp implements CreateServiceOrder {
 
         var serviceOrder = new ServiceOrder(dto.customerId(), dto.vehicleId(), dto.description());
 
-        serviceOrderRepository.save(serviceOrder);
+        serviceOrderGateway.save(serviceOrder);
         return serviceOrder;
     }
 }
@@ -748,28 +748,28 @@ public class CreateServiceOrderImp implements CreateServiceOrder {
 Arquivo: `src/main/java/br/com/pitflow/operation/infrastructure/api/ServiceOrderController.java`
 
 ```java
-package br.com.pitflow.operation.infrastructure.api;
+package br.com.pitflow.operation.infrastructure.web;
 
-import br.com.pitflow.operation.application.dto.AddOrderItemDto;
-import br.com.pitflow.operation.application.dto.CancelOrderDto;
-import br.com.pitflow.operation.application.dto.CreateServiceOrderDto;
-import br.com.pitflow.operation.application.usecase.AddOrderItem;
-import br.com.pitflow.operation.application.usecase.ApproveOrder;
-import br.com.pitflow.operation.application.usecase.CancelOrder;
-import br.com.pitflow.operation.application.usecase.CompleteDiagnosis;
-import br.com.pitflow.operation.application.usecase.CreateServiceOrder;
-import br.com.pitflow.operation.application.usecase.DeliverOrder;
-import br.com.pitflow.operation.application.usecase.FindAllServiceOrders;
-import br.com.pitflow.operation.application.usecase.FinishOrder;
-import br.com.pitflow.operation.application.usecase.GetAverageExecutionTime;
-import br.com.pitflow.operation.application.usecase.GetServiceOrderById;
-import br.com.pitflow.operation.application.usecase.GetServiceOrderDuration;
-import br.com.pitflow.operation.application.usecase.ListInExecutionOrders;
-import br.com.pitflow.operation.application.usecase.StartDiagnosis;
-import br.com.pitflow.operation.infrastructure.api.dto.ExecutionTimeMetricsResponse;
-import br.com.pitflow.operation.infrastructure.api.dto.OrderDurationResponse;
-import br.com.pitflow.operation.infrastructure.api.dto.ServiceOrderResponse;
-import br.com.pitflow.operation.infrastructure.api.mapper.ServiceOrderApiMapper;
+import br.com.pitflow.operation.controller.dto.CancelOrderCommand;
+import br.com.pitflow.operation.infrastructure.web.dto.AddOrderItemRequest;
+import br.com.pitflow.operation.infrastructure.web.dto.CreateServiceOrderRequest;
+import br.com.pitflow.operation.core.usecase.inputPort.AddOrderItem;
+import br.com.pitflow.operation.core.usecase.inputPort.ApproveOrder;
+import br.com.pitflow.operation.core.usecase.inputPort.CancelOrder;
+import br.com.pitflow.operation.core.usecase.inputPort.CompleteDiagnosis;
+import br.com.pitflow.operation.core.usecase.inputPort.CreateServiceOrder;
+import br.com.pitflow.operation.core.usecase.inputPort.DeliverOrder;
+import br.com.pitflow.operation.core.usecase.inputPort.FindAllServiceOrders;
+import br.com.pitflow.operation.core.usecase.inputPort.FinishOrder;
+import br.com.pitflow.operation.core.usecase.inputPort.GetAverageExecutionTime;
+import br.com.pitflow.operation.core.usecase.inputPort.GetServiceOrderById;
+import br.com.pitflow.operation.core.usecase.inputPort.GetServiceOrderDuration;
+import br.com.pitflow.operation.core.usecase.inputPort.ListInExecutionOrders;
+import br.com.pitflow.operation.core.usecase.inputPort.StartDiagnosis;
+import br.com.pitflow.operation.presenter.dto.ExecutionTimeMetricsResponse;
+import br.com.pitflow.operation.presenter.dto.OrderDurationResponse;
+import br.com.pitflow.operation.presenter.dto.ServiceOrderResponse;
+import br.com.pitflow.operation.infrastructure.web.mapper.ServiceOrderApiMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -824,15 +824,15 @@ public class ServiceOrderController {
 
     @PostMapping
     @Operation(summary = "Abre uma nova Ordem de Serviço", description = "Status inicial: RECEIVED")
-    public ResponseEntity<ServiceOrderResponse> create(@RequestBody CreateServiceOrderDto dto) {
+    public ResponseEntity<ServiceOrderResponse> create(@RequestBody CreateServiceOrderRequest dto) {
         var domain = createServiceOrder.execute(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(ServiceOrderApiMapper.toResponse(domain));
     }
 
     @PostMapping("/{id}/items")
     @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Adiciona peça ou serviço à OS", description = "Permitido apenas nos status RECEIVED ou IN_DIAGNOSIS")
-    public ResponseEntity<Void> addItem(@PathVariable UUID id, @RequestBody AddOrderItemDto dto) {
-        var updateDto = new AddOrderItemDto(id, dto.catalogId(), dto.quantity(), dto.type());
+    public ResponseEntity<Void> addItem(@PathVariable UUID id, @RequestBody AddOrderItemRequest dto) {
+        var updateDto = new AddOrderItemRequest(id, dto.catalogId(), dto.quantity(), dto.type());
         addOrderItem.execute(updateDto);
         return ResponseEntity.noContent().build();
     }
@@ -875,7 +875,7 @@ public class ServiceOrderController {
     @PatchMapping("/{id}/cancel")
     @Operation(summary = "Cancela a Ordem de Serviço", description = "Exige motivo. Não permitido para OS finalizadas.")
     public ResponseEntity<Void> cancel(@PathVariable UUID id, @RequestBody String reason) {
-        cancelOrder.execute(new CancelOrderDto(id, reason));
+        cancelOrder.execute(new CancelOrderCommand(id, reason));
         return ResponseEntity.noContent().build();
     }
 

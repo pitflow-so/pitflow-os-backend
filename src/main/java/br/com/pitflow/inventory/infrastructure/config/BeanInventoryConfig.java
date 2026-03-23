@@ -1,5 +1,7 @@
 package br.com.pitflow.inventory.infrastructure.config;
 
+import br.com.pitflow.inventory.controller.PartController;
+import br.com.pitflow.inventory.controller.ServiceController;
 import br.com.pitflow.inventory.core.usecase.part.CreatePartImp;
 import br.com.pitflow.inventory.core.usecase.service.CreateServiceImp;
 import br.com.pitflow.inventory.core.usecase.part.DeletePartImp;
@@ -35,12 +37,12 @@ import org.springframework.context.annotation.Configuration;
 public class BeanInventoryConfig {
 
     @Bean
-    public PartGateway partRepository(SpringPartRepository springPartRepository) {
+    public PartGateway partGateway(SpringPartRepository springPartRepository) {
         return new JpaPartGatewayAdapter(springPartRepository);
     }
 
     @Bean
-    public ServiceGateway serviceRepository(SpringServiceRepository springServiceRepository) {
+    public ServiceGateway serviceGateway(SpringServiceRepository springServiceRepository) {
         return new JpaServiceGatewayAdapter(springServiceRepository);
     }
 
@@ -99,4 +101,25 @@ public class BeanInventoryConfig {
         return new DeleteServiceImp(serviceGateway);
     }
 
+    @Bean
+    public PartController partController(CreatePart createPart,
+                                         FindPartById findPartById,
+                                         FindPartBySku findPartBySku,
+                                         ListParts listParts,
+                                         UpdatePart updatePart,
+                                         DeletePart deletePart)
+    {
+        return new  PartController(createPart, findPartById, findPartBySku, listParts, updatePart, deletePart);
+    }
+
+    @Bean
+    public ServiceController serviceController(
+            CreateService createService,
+            FindServiceById findServiceById,
+            ListServices listServices,
+            UpdateService updateService,
+            DeleteService deleteService
+    ){
+        return new ServiceController(createService,  findServiceById, listServices, updateService, deleteService);
+    }
 }

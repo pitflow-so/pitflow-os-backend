@@ -1,8 +1,9 @@
 package br.com.pitflow.operation.application;
 
-import br.com.pitflow.operation.application.dto.CancelOrderDto;
-import br.com.pitflow.operation.domain.ServiceOrder;
-import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
+import br.com.pitflow.operation.controller.dto.CancelOrderCommand;
+import br.com.pitflow.operation.core.entity.ServiceOrder;
+import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.usecase.CancelOrderImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,13 +15,13 @@ import static org.mockito.Mockito.*;
 
 class CancelOrderImpTest {
 
-    private ServiceOrderRepository repository;
+    private ServiceOrderGateway gateway;
     private CancelOrderImp cancelOrder;
 
     @BeforeEach
     void setUp() {
-        repository = mock(ServiceOrderRepository.class);
-        cancelOrder = new CancelOrderImp(repository);
+        gateway = mock(ServiceOrderGateway.class);
+        cancelOrder = new CancelOrderImp(gateway);
     }
 
     @Test
@@ -31,14 +32,14 @@ class CancelOrderImpTest {
         // Usando o novo construtor com descrição que você criou
         var os = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Troca de óleo");
 
-        when(repository.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findById(osId)).thenReturn(Optional.of(os));
 
         // Act
-        cancelOrder.execute(new CancelOrderDto(osId, "Dummy reason"));
+        cancelOrder.execute(new CancelOrderCommand(osId, "Dummy reason"));
 
         // Assert
         assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.CANCELLED);
-        verify(repository).save(os);
+        verify(gateway).save(os);
     }
 
     @Test
@@ -56,10 +57,10 @@ class CancelOrderImpTest {
         os.finish(); // [cite: 30]
         os.deliver(); // [cite: 31]
 
-        when(repository.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findById(osId)).thenReturn(Optional.of(os));
 
         // Act & Assert
-        assertThatThrownBy(() -> cancelOrder.execute(new CancelOrderDto(osId, "Dummy reason")))
+        assertThatThrownBy(() -> cancelOrder.execute(new CancelOrderCommand(osId, "Dummy reason")))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Cannot cancel an order that is already finished or delivered.");
     }
@@ -72,15 +73,15 @@ class CancelOrderImpTest {
         String reason = "Cliente achou o valor das peças muito alto";
         var os = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Troca de amortecedores");
 
-        when(repository.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findById(osId)).thenReturn(Optional.of(os));
 
         // Act
-        cancelOrder.execute(new CancelOrderDto(osId, reason));
+        cancelOrder.execute(new CancelOrderCommand(osId, reason));
 
         // Assert
         assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.CANCELLED);
         assertThat(os.getCancelledAt()).isNotNull();
         // Aqui verificaríamos se o atributo foi salvo (se houver getter para cancellationDescription)
-        verify(repository).save(os);
+        verify(gateway).save(os);
     }
 }

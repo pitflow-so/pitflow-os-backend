@@ -1,6 +1,6 @@
 package br.com.pitflow.operation.infrastructure.persistence.mapper;
 
-import br.com.pitflow.operation.domain.ServiceOrder;
+import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.infrastructure.persistence.entity.OrderItemJpa;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

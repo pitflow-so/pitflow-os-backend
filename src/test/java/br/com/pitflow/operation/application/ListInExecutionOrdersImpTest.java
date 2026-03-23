@@ -1,7 +1,8 @@
 package br.com.pitflow.operation.application;
 
-import br.com.pitflow.operation.domain.ServiceOrder;
-import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
+import br.com.pitflow.operation.core.entity.ServiceOrder;
+import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.usecase.ListInExecutionOrdersImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,13 +14,13 @@ import static org.mockito.Mockito.*;
 
 class ListInExecutionOrdersImpTest {
 
-    private ServiceOrderRepository repository;
+    private ServiceOrderGateway gateway;
     private ListInExecutionOrdersImp listInExecutionOrders;
 
     @BeforeEach
     void setUp() {
-        repository = mock(ServiceOrderRepository.class);
-        listInExecutionOrders = new ListInExecutionOrdersImp(repository);
+        gateway = mock(ServiceOrderGateway.class);
+        listInExecutionOrders = new ListInExecutionOrdersImp(gateway);
     }
 
     @Test
@@ -29,7 +30,7 @@ class ListInExecutionOrdersImpTest {
         var os = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Reparo");
         os.reconstituteStatus(ServiceOrder.Status.IN_EXECUTION);
 
-        when(repository.findByStatusOrderByCreatedAtAsc(ServiceOrder.Status.IN_EXECUTION))
+        when(gateway.findByStatusOrderByCreatedAtAsc(ServiceOrder.Status.IN_EXECUTION))
                 .thenReturn(List.of(os));
 
         // Act
@@ -40,6 +41,6 @@ class ListInExecutionOrdersImpTest {
         assertThat(result.get(0).getStatus()).isEqualTo(ServiceOrder.Status.IN_EXECUTION);
 
         // Verify
-        verify(repository).findByStatusOrderByCreatedAtAsc(ServiceOrder.Status.IN_EXECUTION);
+        verify(gateway).findByStatusOrderByCreatedAtAsc(ServiceOrder.Status.IN_EXECUTION);
     }
 }

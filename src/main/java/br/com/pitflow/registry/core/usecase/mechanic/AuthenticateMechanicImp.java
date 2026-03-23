@@ -5,6 +5,7 @@ import br.com.pitflow.common.core.gateway.TokenGateway;
 import br.com.pitflow.registry.controller.dto.LoginCommand;
 import br.com.pitflow.registry.core.gateway.MechanicGateway;
 import br.com.pitflow.registry.core.usecase.mechanic.inputPort.AuthenticateMechanic;
+import br.com.pitflow.registry.core.usecase.mechanic.outputData.AuthenticationResult;
 
 import java.util.Map;
 

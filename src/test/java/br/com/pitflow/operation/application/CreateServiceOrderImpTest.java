@@ -1,8 +1,9 @@
 package br.com.pitflow.operation.application;
 
-import br.com.pitflow.operation.application.dto.CreateServiceOrderDto;
-import br.com.pitflow.operation.domain.ServiceOrder;
-import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
+import br.com.pitflow.operation.controller.dto.CreateServiceOrderCommand;
+import br.com.pitflow.operation.core.entity.ServiceOrder;
+import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.usecase.CreateServiceOrderImp;
 import br.com.pitflow.registry.core.entity.Customer;
 import br.com.pitflow.registry.core.entity.Vehicle;
 import br.com.pitflow.registry.core.gateway.CustomerGateway;
@@ -14,22 +15,26 @@ import org.junit.jupiter.api.Test;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class CreateServiceOrderImpTest {
 
-    private ServiceOrderRepository serviceOrderRepository;
+    private ServiceOrderGateway serviceOrderGateway;
     private CustomerGateway customerGateway;
     private VehicleGateway vehicleGateway;
     private CreateServiceOrderImp createServiceOrder;
 
     @BeforeEach
     void setUp() {
-        serviceOrderRepository = mock(ServiceOrderRepository.class);
+        serviceOrderGateway = mock(ServiceOrderGateway.class);
         customerGateway = mock(CustomerGateway.class);
         vehicleGateway = mock(VehicleGateway.class);
-        createServiceOrder = new CreateServiceOrderImp(serviceOrderRepository, customerGateway, vehicleGateway);
+        createServiceOrder = new CreateServiceOrderImp(serviceOrderGateway, customerGateway, vehicleGateway);
     }
 
     @Test
@@ -37,7 +42,7 @@ class CreateServiceOrderImpTest {
     void shouldCreateServiceOrderSuccessfully() {
         UUID customerId = UUID.randomUUID();
         UUID vehicleId = UUID.randomUUID();
-        var dto = new CreateServiceOrderDto(customerId, vehicleId, "Dummy Problem");
+        var dto = new CreateServiceOrderCommand(customerId, vehicleId, "Dummy Problem");
 
         var vehicleMock = mock(Vehicle.class);
         when(customerGateway.findById(customerId)).thenReturn(Optional.of(mock(Customer.class)));
@@ -48,7 +53,7 @@ class CreateServiceOrderImpTest {
 
         assertThat(result).isNotNull();
         assertThat(result.getStatus()).isEqualTo(ServiceOrder.Status.RECEIVED);
-        verify(serviceOrderRepository).save(any(ServiceOrder.class));
+        verify(serviceOrderGateway).save(any(ServiceOrder.class));
     }
 
     @Test
@@ -57,7 +62,7 @@ class CreateServiceOrderImpTest {
         UUID customerId = UUID.randomUUID();
         UUID otherCustomerId = UUID.randomUUID();
         UUID vehicleId = UUID.randomUUID();
-        var dto = new CreateServiceOrderDto(customerId, vehicleId, "Dummy Problem");
+        var dto = new CreateServiceOrderCommand(customerId, vehicleId, "Dummy Problem");
 
         var vehicleMock = mock(Vehicle.class);
         when(customerGateway.findById(customerId)).thenReturn(Optional.of(mock(Customer.class)));

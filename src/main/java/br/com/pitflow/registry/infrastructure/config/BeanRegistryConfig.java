@@ -56,7 +56,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class BeanRegistryConfig {
 
     @Bean
-    public CustomerGateway customerRepository(SpringCustomerRepository repository) {
+    public CustomerGateway customerGateway(SpringCustomerRepository repository) {
         return new JpaCustomerGatewayAdapter(repository);
     }
 
@@ -91,7 +91,7 @@ public class BeanRegistryConfig {
     }
 
     @Bean
-    public VehicleGateway vehicleRepository(SpringVehicleRepository repository) {
+    public VehicleGateway vehicleGateway(SpringVehicleRepository repository) {
         return new JpaVehicleGatewayAdapter(repository);
     }
 
@@ -131,7 +131,7 @@ public class BeanRegistryConfig {
     }
 
     @Bean
-    public MechanicGateway mechanicRepository(SpringMechanicRepository springMechanicRepository) {
+    public MechanicGateway mechanicGateway(SpringMechanicRepository springMechanicRepository) {
         return new JpaMechanicGatewayAdapter(springMechanicRepository);
     }
 

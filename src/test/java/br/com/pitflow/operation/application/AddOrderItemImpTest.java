@@ -3,32 +3,37 @@ package br.com.pitflow.operation.application;
 import br.com.pitflow.inventory.core.entity.Part;
 import br.com.pitflow.inventory.core.gateway.PartGateway;
 import br.com.pitflow.inventory.core.gateway.ServiceGateway;
-import br.com.pitflow.operation.application.dto.AddOrderItemDto;
-import br.com.pitflow.operation.domain.ServiceOrder;
-import br.com.pitflow.operation.domain.ServiceOrder.ItemType;
-import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
+import br.com.pitflow.operation.controller.dto.AddOrderItemCommand;
+import br.com.pitflow.operation.core.entity.ServiceOrder;
+import br.com.pitflow.operation.core.entity.ServiceOrder.ItemType;
+import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.usecase.AddOrderItemImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class AddOrderItemImpTest {
-    private ServiceOrderRepository osRepository;
+    private ServiceOrderGateway serviceOrderGateway;
     private PartGateway partGateway;
     private ServiceGateway serviceGateway;
     private AddOrderItemImp addOrderItem;
 
     @BeforeEach
     void setUp() {
-        osRepository = mock(ServiceOrderRepository.class);
+        serviceOrderGateway = mock(ServiceOrderGateway.class);
         partGateway = mock(PartGateway.class);
         serviceGateway = mock(ServiceGateway.class);
-        addOrderItem = new AddOrderItemImp(osRepository, partGateway, serviceGateway);
+        addOrderItem = new AddOrderItemImp(serviceOrderGateway, partGateway, serviceGateway);
     }
 
     @Test
@@ -41,18 +46,18 @@ class AddOrderItemImpTest {
         var part = new Part("SKU", "Filtro", "Filtro de ar automotivo",new BigDecimal("50.0"), 2);
         part.setId(partId);
 
-        when(osRepository.findById(osId)).thenReturn(Optional.of(os));
+        when(serviceOrderGateway.findById(osId)).thenReturn(Optional.of(os));
         when(partGateway.findById(partId)).thenReturn(Optional.of(part));
 
         // Act
-        addOrderItem.execute(new AddOrderItemDto(osId, partId, 2, ItemType.PART));
+        addOrderItem.execute(new AddOrderItemCommand(osId, partId, 2, ItemType.PART.name()));
 
         // Assert
         assertThat(os.getItems()).hasSize(1);
         assertThat(os.getTotalAmount()).isEqualByComparingTo(new BigDecimal("100.0"));
 
         // Verify
-        verify(osRepository).save(os);
+        verify(serviceOrderGateway).save(os);
     }
 
     @Test
@@ -64,12 +69,12 @@ class AddOrderItemImpTest {
         var part = new Part("SKU", "Pneu", "pneu pirelli 175 65 r14", new BigDecimal("500.0"), 2);
         part.setId(partId);
 
-        when(osRepository.findById(osId)).thenReturn(Optional.of(mock(ServiceOrder.class)));
+        when(serviceOrderGateway.findById(osId)).thenReturn(Optional.of(mock(ServiceOrder.class)));
         when(partGateway.findById(partId)).thenReturn(Optional.of(part));
 
         //Act
         // Tak 4 but there is only two in the inventory
-        var dto = new AddOrderItemDto(osId, partId, 4, ItemType.PART);
+        var dto = new AddOrderItemCommand(osId, partId, 4, ItemType.PART.name());
 
         // Assert
         assertThatThrownBy(() -> addOrderItem.execute(dto))
@@ -87,11 +92,11 @@ class AddOrderItemImpTest {
         var part = new Part("SKU-001", "Amortecedor", "Desc", new BigDecimal("500.0"), 10);
         part.setId(partId);
 
-        when(osRepository.findById(osId)).thenReturn(Optional.of(os));
+        when(serviceOrderGateway.findById(osId)).thenReturn(Optional.of(os));
         when(partGateway.findById(partId)).thenReturn(Optional.of(part));
 
         // Act
-        addOrderItem.execute(new AddOrderItemDto(osId, partId, 2, ItemType.PART));
+        addOrderItem.execute(new AddOrderItemCommand(osId, partId, 2, ItemType.PART.name()));
 
         // Assert
         assertThat(os.getItems()).hasSize(1);
@@ -99,6 +104,6 @@ class AddOrderItemImpTest {
 
         // Verify
         verify(partGateway).save(part);
-        verify(osRepository).save(os);
+        verify(serviceOrderGateway).save(os);
     }
 }

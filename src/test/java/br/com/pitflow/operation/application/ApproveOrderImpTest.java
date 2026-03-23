@@ -1,7 +1,8 @@
 package br.com.pitflow.operation.application;
 
-import br.com.pitflow.operation.domain.ServiceOrder;
-import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
+import br.com.pitflow.operation.core.entity.ServiceOrder;
+import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.usecase.ApproveOrderImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,13 +15,13 @@ import static org.mockito.Mockito.*;
 
 class ApproveOrderImpTest {
 
-    private ServiceOrderRepository repository;
+    private ServiceOrderGateway gateway;
     private ApproveOrderImp approveOrder;
 
     @BeforeEach
     void setUp() {
-        repository = mock(ServiceOrderRepository.class);
-        approveOrder = new ApproveOrderImp(repository);
+        gateway = mock(ServiceOrderGateway.class);
+        approveOrder = new ApproveOrderImp(gateway);
     }
 
     @Test
@@ -33,7 +34,7 @@ class ApproveOrderImpTest {
         os.addService(UUID.randomUUID(), "Reparo", new BigDecimal("150.0"));
         os.completeDiagnosis(); // Agora está AWAITING_APPROVAL
 
-        when(repository.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findById(osId)).thenReturn(Optional.of(os));
 
         // Act
         approveOrder.execute(osId);
@@ -41,7 +42,7 @@ class ApproveOrderImpTest {
         // Assert
         assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.IN_EXECUTION);
         assertThat(os.getExecutionStartedAt()).isNotNull(); // Essencial para o Requisito 40
-        verify(repository).save(os);
+        verify(gateway).save(os);
     }
 
     @Test
@@ -51,7 +52,7 @@ class ApproveOrderImpTest {
         UUID osId = UUID.randomUUID();
         var os = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Troca de óleo");
 
-        when(repository.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findById(osId)).thenReturn(Optional.of(os));
 
         // Act & Assert
         assertThatThrownBy(() -> approveOrder.execute(osId))

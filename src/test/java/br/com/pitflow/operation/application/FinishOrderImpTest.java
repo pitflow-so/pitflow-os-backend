@@ -1,8 +1,9 @@
 package br.com.pitflow.operation.application;
 
-import br.com.pitflow.operation.application.usecase.NotificationService;
-import br.com.pitflow.operation.domain.ServiceOrder;
-import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
+import br.com.pitflow.operation.core.gateway.NotificationGateway;
+import br.com.pitflow.operation.core.entity.ServiceOrder;
+import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.usecase.FinishOrderImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,15 +16,15 @@ import static org.mockito.Mockito.*;
 
 class FinishOrderImpTest {
 
-    private NotificationService notificationService;
-    private ServiceOrderRepository repository;
+    private NotificationGateway notificationGateway;
+    private ServiceOrderGateway gateway;
     private FinishOrderImp finishOrder;
 
     @BeforeEach
     void setUp() {
-        repository = mock(ServiceOrderRepository.class);
-        notificationService = mock(NotificationService.class);
-        finishOrder = new FinishOrderImp(notificationService, repository);
+        gateway = mock(ServiceOrderGateway.class);
+        notificationGateway = mock(NotificationGateway.class);
+        finishOrder = new FinishOrderImp(notificationGateway, gateway);
     }
 
     @Test
@@ -37,7 +38,7 @@ class FinishOrderImpTest {
         os.completeDiagnosis();
         os.approve();
 
-        when(repository.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findById(osId)).thenReturn(Optional.of(os));
 
         // Act
         finishOrder.execute(osId);
@@ -45,8 +46,8 @@ class FinishOrderImpTest {
         // Assert
         assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.FINISHED);
         assertThat(os.getFinishedAt()).isNotNull();
-        verify(repository).save(os);
-        verify(notificationService).send(eq(os.getId()), anyString());
+        verify(gateway).save(os);
+        verify(notificationGateway).send(eq(os.getId()), anyString());
     }
 
     @Test
@@ -56,7 +57,7 @@ class FinishOrderImpTest {
         UUID osId = UUID.randomUUID();
         var os = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Troca de filtros");
 
-        when(repository.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findById(osId)).thenReturn(Optional.of(os));
 
         // Act & Assert
         assertThatThrownBy(() -> finishOrder.execute(osId))

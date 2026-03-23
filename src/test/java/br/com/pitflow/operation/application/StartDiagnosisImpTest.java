@@ -1,7 +1,8 @@
 package br.com.pitflow.operation.application;
 
-import br.com.pitflow.operation.domain.ServiceOrder;
-import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
+import br.com.pitflow.operation.core.entity.ServiceOrder;
+import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.usecase.StartDiagnosisImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,13 +14,13 @@ import static org.mockito.Mockito.*;
 
 class StartDiagnosisImpTest {
 
-    private ServiceOrderRepository repository;
+    private ServiceOrderGateway gateway;
     private StartDiagnosisImp startDiagnosis;
 
     @BeforeEach
     void setUp() {
-        repository = mock(ServiceOrderRepository.class);
-        startDiagnosis = new StartDiagnosisImp(repository);
+        gateway = mock(ServiceOrderGateway.class);
+        startDiagnosis = new StartDiagnosisImp(gateway);
     }
 
     @Test
@@ -29,7 +30,7 @@ class StartDiagnosisImpTest {
         UUID osId = UUID.randomUUID();
         var os = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Dummy problem");
 
-        when(repository.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findById(osId)).thenReturn(Optional.of(os));
 
         // Act
         startDiagnosis.execute(osId);
@@ -37,7 +38,7 @@ class StartDiagnosisImpTest {
         // Assert
         assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.IN_DIAGNOSIS);
         assertThat(os.getDiagnosisStartedAt()).isNotNull();
-        verify(repository).save(os);
+        verify(gateway).save(os);
     }
 
     @Test
@@ -48,7 +49,7 @@ class StartDiagnosisImpTest {
         var os = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Dummy problem");
         os.cancel("Dummy reason");
 
-        when(repository.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findById(osId)).thenReturn(Optional.of(os));
 
         // Act & Assert
         assertThatThrownBy(() -> startDiagnosis.execute(osId))

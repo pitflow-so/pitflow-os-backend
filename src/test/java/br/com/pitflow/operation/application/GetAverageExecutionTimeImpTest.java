@@ -1,7 +1,8 @@
 package br.com.pitflow.operation.application;
 
-import br.com.pitflow.operation.domain.repository.ServiceOrderRepository;
-import br.com.pitflow.operation.infrastructure.api.dto.ExecutionTimeMetricsResponse;
+import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.usecase.GetAverageExecutionTimeImp;
+import br.com.pitflow.operation.core.usecase.outputData.ExecutionTimeMetrics;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,45 +10,46 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class GetAverageExecutionTimeImpTest {
 
-    private ServiceOrderRepository repository;
+    private ServiceOrderGateway gateway;
     private GetAverageExecutionTimeImp useCase;
 
     @BeforeEach
     void setUp() {
-        repository = mock(ServiceOrderRepository.class);
-        useCase = new GetAverageExecutionTimeImp(repository);
+        gateway = mock(ServiceOrderGateway.class);
+        useCase = new GetAverageExecutionTimeImp(gateway);
     }
 
     @Test
     @DisplayName("Deve retornar métrica zerada quando o repositório retornar null")
     void shouldReturnZeroWhenRepositoryReturnsNull() {
         // Arrange
-        when(repository.getAverageExecutionTimeInSeconds()).thenReturn(null);
+        when(gateway.getAverageExecutionTimeInSeconds()).thenReturn(null);
 
         // Act
-        ExecutionTimeMetricsResponse response = useCase.execute();
+        ExecutionTimeMetrics metrics = useCase.execute();
 
         // Assert
-        assertThat(response.averageTimeInMinutes()).isEqualTo(0.0);
-        assertThat(response.formattedTime()).isEqualTo("0min");
+        assertThat(metrics.averageMinutes()).isEqualTo(0.0);
+        assertThat(metrics.formatted()).isEqualTo("0min");
     }
 
     @Test
     @DisplayName("Deve retornar métrica zerada quando o repositório retornar zero")
     void shouldReturnZeroWhenRepositoryReturnsZero() {
         // Arrange
-        when(repository.getAverageExecutionTimeInSeconds()).thenReturn(0.0);
+        when(gateway.getAverageExecutionTimeInSeconds()).thenReturn(0.0);
 
         // Act
-        ExecutionTimeMetricsResponse response = useCase.execute();
+        ExecutionTimeMetrics metrics = useCase.execute();
 
         // Assert
-        assertThat(response.averageTimeInMinutes()).isEqualTo(0.0);
-        assertThat(response.formattedTime()).isEqualTo("0min");
+        assertThat(metrics.averageMinutes()).isEqualTo(0.0);
+        assertThat(metrics.formatted()).isEqualTo("0min");
     }
 
     @ParameterizedTest
@@ -60,13 +62,13 @@ class GetAverageExecutionTimeImpTest {
     })
     void shouldFormatAverageTimeCorrectly(Double seconds, Double expectedMinutes, String expectedFormatted) {
         // Arrange
-        when(repository.getAverageExecutionTimeInSeconds()).thenReturn(seconds);
+        when(gateway.getAverageExecutionTimeInSeconds()).thenReturn(seconds);
 
         // Act
-        ExecutionTimeMetricsResponse response = useCase.execute();
+        ExecutionTimeMetrics metrics = useCase.execute();
 
         // Assert
-        assertThat(response.averageTimeInMinutes()).isEqualTo(expectedMinutes);
-        assertThat(response.formattedTime()).isEqualTo(expectedFormatted);
+        assertThat(metrics.averageMinutes()).isEqualTo(expectedMinutes);
+        assertThat(metrics.formatted()).isEqualTo(expectedFormatted);
     }
 }
