@@ -1,14 +1,10 @@
 package br.com.pitflow.inventory.infrastructure.web;
 
-import br.com.pitflow.inventory.application.dto.CreateServiceDto;
-import br.com.pitflow.inventory.application.dto.UpdateServiceDto;
-import br.com.pitflow.inventory.core.usecase.service.inputPort.CreateService;
-import br.com.pitflow.inventory.core.usecase.service.inputPort.DeleteService;
-import br.com.pitflow.inventory.core.usecase.service.inputPort.FindServiceById;
-import br.com.pitflow.inventory.core.usecase.service.inputPort.ListServices;
-import br.com.pitflow.inventory.core.usecase.service.inputPort.UpdateService;
+import br.com.pitflow.inventory.infrastructure.web.dto.CreateServiceRequest;
+import br.com.pitflow.inventory.infrastructure.web.dto.UpdateServiceRequest;
+import br.com.pitflow.inventory.controller.ServiceController;
 import br.com.pitflow.inventory.core.entity.Service;
-import br.com.pitflow.inventory.infrastructure.web.dto.ServiceResponse;
+import br.com.pitflow.inventory.presenter.dto.ServiceResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,70 +26,44 @@ import java.util.UUID;
 @Tag(name = "Inventory - Services", description = "Endpoints para gestão do catálogo de serviços (Mão de Obra)")
 public class ServiceRestAdapter {
 
-    private final CreateService createService;
-    private final FindServiceById findServiceById;
-    private final ListServices listServices;
-    private final UpdateService updateService;
-    private final DeleteService deleteService;
+    private final ServiceController controller;
 
     public ServiceRestAdapter(
-            CreateService createService,
-            FindServiceById findServiceById,
-            ListServices listServices,
-            UpdateService updateService,
-            DeleteService deleteService
+            ServiceController controller
     ) {
-        this.createService = createService;
-        this.findServiceById = findServiceById;
-        this.listServices = listServices;
-        this.updateService = updateService;
-        this.deleteService = deleteService;
+        this.controller = controller;
     }
 
     @PostMapping
     @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Criar um novo serviço", description = "Registra um serviço de mão de obra no catálogo de serviços da oficina.")
-    public ResponseEntity<ServiceResponse> create(@RequestBody CreateServiceDto dto) {
-        var service = createService.execute(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(service));
+    public ResponseEntity<ServiceResponse> create(@RequestBody CreateServiceRequest dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(controller.create(dto));
     }
 
     @GetMapping("/{id}")
     @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Buscar serviço por ID", description = "Recupera os detalhes de um serviço específico usando seu identificador único.")
     public ResponseEntity<ServiceResponse> getById(@PathVariable UUID id) {
-        var service = findServiceById.execute(id);
-        return ResponseEntity.ok(toResponse(service));
+        return ResponseEntity.ok(controller.findById(id));
     }
 
     @GetMapping
     @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Listar todos os serviços", description = "Retorna uma lista de todos os serviços cadastrados no catálogo.")
     public ResponseEntity<java.util.List<ServiceResponse>> listAll() {
-        var services = listServices.execute();
-        var response = services.stream().map(this::toResponse).toList();
         //TODO: Implement pagination
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(controller.findAll());
     }
 
     @PutMapping("/{id}")
     @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Atualizar serviço", description = "Atualiza o nome, descrição ou preço de um serviço de mão de obra.")
-    public ResponseEntity<ServiceResponse> update(@PathVariable UUID id, @RequestBody UpdateServiceDto dto) {
-        updateService.execute(id, dto);
-        var updatedService = findServiceById.execute(id);
-        return ResponseEntity.ok(toResponse(updatedService));
+    public ResponseEntity<ServiceResponse> update(@PathVariable UUID id, @RequestBody UpdateServiceRequest dto) {
+        return ResponseEntity.ok(controller.update(id,dto));
     }
 
     @DeleteMapping("/{id}")
     @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Excluir serviço", description = "Remove um serviço do catálogo de mão de obra.")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        deleteService.execute(id);
+        controller.delete(id);
         return ResponseEntity.noContent().build();
     }
 
-    private ServiceResponse toResponse(Service service) {
-        return new ServiceResponse(
-                service.getId(),
-                service.getName(),
-                service.getDescription(),
-                service.getPrice()
-        );
-    }
 }

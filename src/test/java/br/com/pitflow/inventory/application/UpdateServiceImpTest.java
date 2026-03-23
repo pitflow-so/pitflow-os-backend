@@ -1,6 +1,6 @@
 package br.com.pitflow.inventory.application;
 
-import br.com.pitflow.inventory.application.dto.UpdateServiceDto;
+import br.com.pitflow.inventory.infrastructure.web.dto.UpdateServiceRequest;
 import br.com.pitflow.inventory.core.entity.Service;
 import br.com.pitflow.inventory.core.gateway.ServiceGateway;
 import br.com.pitflow.inventory.core.usecase.service.UpdateServiceImp;
@@ -28,7 +28,7 @@ class UpdateServiceImpTest {
     void shouldUpdateServiceSuccessfully() {
         UUID id = UUID.randomUUID();
         var service = new Service("Old", "Desc", new BigDecimal("50"));
-        var dto = new UpdateServiceDto("New", "New Desc", new BigDecimal("100"));
+        var dto = new UpdateServiceRequest("New", "New Desc", new BigDecimal("100"));
 
         when(repository.findById(id)).thenReturn(Optional.of(service));
 

@@ -1,11 +1,11 @@
-package br.com.pitflow.inventory.application.dto;
+package br.com.pitflow.inventory.infrastructure.web.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
 
 @Schema(description = "Dados para cadastro de um novo serviço no catálogo")
-public record CreateServiceDto(
+public record CreateServiceRequest(
         @Schema(description = "Nome do serviço de mão de obra", example = "Alinhamento e Balanceamento")
         String name,
 

@@ -1,6 +1,6 @@
 package br.com.pitflow.inventory.application;
 
-import br.com.pitflow.inventory.application.dto.CreateServiceDto;
+import br.com.pitflow.inventory.infrastructure.web.dto.CreateServiceRequest;
 import br.com.pitflow.inventory.core.entity.Service;
 import br.com.pitflow.inventory.core.gateway.ServiceGateway;
 import br.com.pitflow.inventory.core.usecase.service.CreateServiceImp;
@@ -34,7 +34,7 @@ public class CreateServiceImpTest {
     @DisplayName("Should create service successfully")
     void shouldCreateServiceSuccessfully() {
         // Arrange
-        var dto = new CreateServiceDto(
+        var dto = new CreateServiceRequest(
                 "Troca de Pastilhas",
                 "Substituição das pastilhas de travão dianteiras",
                 new BigDecimal("120.00")
@@ -57,7 +57,7 @@ public class CreateServiceImpTest {
     @DisplayName("Should throw exception when price is negative")
     void shouldThrowExceptionWhenPriceIsNegative() {
         // Arrange
-        var dto = new CreateServiceDto(
+        var dto = new CreateServiceRequest(
                 "Serviço Inválido",
                 "Descrição",
                 new BigDecimal("-50.00")
@@ -76,7 +76,7 @@ public class CreateServiceImpTest {
     @DisplayName("Should throw exception when name is empty")
     void shouldThrowExceptionWhenNameIsEmpty() {
         // Arrange
-        var dto = new CreateServiceDto(
+        var dto = new CreateServiceRequest(
                 "",
                 "Descrição",
                 new BigDecimal("100.00")
