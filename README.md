@@ -1,13 +1,13 @@
 # PitFlow OS - Backend 🛠️ (Fase 2)
 
-O **PitFlow OS** é uma solução robusta para a gestão de ordens de serviço (OS), clientes, veículos e estoque em oficinas mecânicas. Desenvolvido para o **Tech Challenge (Fase 2)** da Pós-Graduação em Software Architecture da FIAP, o projeto evoluiu para incorporar **Clean Architecture**, alta disponibilidade em nuvem (Kubernetes), infraestrutura como código (Terraform) e automação de entregas (CI/CD).
+Aplicação backend orientada a domínio (DDD), baseada em Clean Architecture, executando em ambiente cloud-native (Kubernetes), com infraestrutura como código (Terraform) e pipeline CI/CD automatizado.
 
 📌 **Links Importantes:**
 * 🎬 **Vídeo Demonstrativo:** [Link do Vídeo no YouTube/Vimeo aqui]
 * 📚 **Collection / Swagger API:** A documentação interativa (OpenAPI) fica disponível em `http://localhost:8080/swagger-ui.html` quando a aplicação está em execução, localmente.
 
 ---
-⚒️ **Requisitos**
+## ⚒️ Requisitos
 * **Java 21** (openjdk 21.0.2)
 * **Docker/Docker-compose** ( version 29.1.4-rd)
 * **aws cli** (aws-cli/2.34.11)
@@ -24,11 +24,19 @@ O código está estruturado em quatro Bounded Contexts principais:
 3. **`inventory`**: Catálogo de peças e serviços.
 4. **`operation`**: Máquina de estados e ciclo de vida das Ordens de Serviço (Abertura, Diagnóstico, Aprovação, Execução e Finalização).
 
+## 🧠 Decisões Arquiteturais
+
+- Separação entre Controller (Application) e REST Adapter (Infrastructure)
+- Uso de Gateways para inversão de dependência
+- DTOs para isolamento de boundary
+- Kubernetes para escalabilidade horizontal
+
 ### O Fluxo de Dependência
 A regra de dependência aponta sempre para o centro (`core`):
-* **Core (Domínio/Aplicação):** Contém *Entities*, *Value Objects* e *Use Cases* puros (Java puro, sem anotações de Spring).
+* **Core:** Contém *Entities*, *Value Objects* e *Use Cases* puros (Java puro, sem anotações de Spring).
 * **Infrastructure:** Contém os *Adapters* que implementam as interfaces (Gateways) do Core. Aqui residem a implementação de Frameworks e Drivers, como as lógicas de JPA, Security, Webhooks, REST e mapeamento relacional.
-* **Controller / Presenter:** Isola a entrada (orquestrando Comandos) e a saída (formatando DTOs), totalmente apartada do orquestrador de negócio.
+* **Controllers:** Responsáveis por receber a entrada, transformar em comandos e delegar aos casos de uso.
+* **Presenters:** Responsáveis por formatar a saída (DTOs) para o mundo externo. <br>
 
 ![img.png](doc/img/components_aplicacao.png)
 
@@ -37,7 +45,7 @@ A regra de dependência aponta sempre para o centro (`core`):
 ```mermaid
 %%{init: { "theme": "base" }}%%
 flowchart LR
-    subgraph Infrastructure1 ["Frameworks / Drivers Layer"]
+    subgraph Frameworks ["Frameworks / Drivers Layer"]
         REST[ServiceOrderRestAdapter]
     end
 
@@ -51,7 +59,7 @@ flowchart LR
         GATEWAY["ServiceOrderGateway (interface)"]
     end
 
-    subgraph Infrastructure2 ["Infrastructure Layer"]
+    subgraph Infrastructure ["Infrastructure Layer"]
         JPA[JpaServiceOrderGatewayAdapter]
         REPO["Spring Data Repository"]
         DB[(PostgreSQL)]
@@ -81,11 +89,61 @@ Localizado na pasta `infra/terraform`, o IaC provisiona:
 
 ### Orquestração (Kubernetes)
 Localizado na pasta `infra/k8s`, os manifestos definem a topologia:
-* **Deployment & Service:** Aplicação stateless expondo a porta 8080 via LoadBalancer.
+* **Deployment:** Responsável por manter os pods da aplicação.
+* **Service:** Exposição da aplicação via Service do tipo LoadBalancer.
 * **ConfigMaps e Secrets:** Injeção de variáveis de ambiente (`DB_HOST`, senhas e JWT) desacopladas da imagem da aplicação.
 * **Probes (Liveness/Readiness/Startup):** Garantem a autorrecuperação dos pods usando o Spring Actuator (`/actuator/health`).
 * **HPA (Horizontal Pod Autoscaler):** Escalonamento automático de 1 para até 3 réplicas com base no consumo de CPU (alvo: 70%).
 
+Segue a representação da estrutura:
+```mermaid
+%%{init: { "theme": "base" }}%%
+flowchart TB
+
+    %% ===== AWS =====
+    subgraph AWS["AWS Cloud"]
+        S3[(S3 - Terraform State)]
+        ECR[(ECR - Docker Images)]
+        EKS[(EKS - Kubernetes Cluster)]
+        RDS[(RDS - PostgreSQL)]
+    end
+
+    %% ===== KUBERNETES =====
+    subgraph Kubernetes["Kubernetes Cluster (EKS)"]
+        POD[Spring Boot Pod]
+        SVC[Service]
+        HPA[Horizontal Pod Autoscaler]
+        CM[ConfigMap]
+        SECRET[Secrets]
+    end
+
+    %% ===== RELAÇÕES =====
+    ECR --> POD
+    POD --> RDS
+
+    CM --> POD
+    SECRET --> POD
+
+    POD --> SVC
+    SVC --> HPA
+
+    EKS --> POD
+
+    %% ===== ESTILOS =====
+    
+    %% AWS
+    style S3 fill:#4CAF50,stroke:#2E7D32,color:#ffffff
+    style ECR fill:#9E9E9E,stroke:#616161,color:#ffffff
+    style EKS fill:#607D8B,stroke:#37474F,color:#ffffff
+    style RDS fill:#FF9800,stroke:#E65100,color:#ffffff
+
+    %% Kubernetes
+    style POD fill:#2196F3,stroke:#0D47A1,color:#ffffff
+    style SVC fill:#64B5F6,stroke:#1976D2,color:#000000
+    style HPA fill:#BBDEFB,stroke:#1976D2,color:#000000
+    style CM fill:#FFF176,stroke:#FBC02D,color:#000000
+    style SECRET fill:#F06292,stroke:#AD1457,color:#ffffff
+```
 
 ---
 
