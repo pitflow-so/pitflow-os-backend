@@ -16,7 +16,7 @@ Aplicação backend orientada a domínio (DDD), baseada em Clean Architecture, e
 
 A aplicação foi completamente refatorada seguindo os princípios da **[Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)** (Arquitetura Limpa), garantindo que as regras de negócio sejam o coração do sistema, independentes de frameworks, bancos de dados ou interfaces web.
 
-### Organização em Módulos (Screaming Architecture)
+### Organização em Módulos
 O código está estruturado em quatro Bounded Contexts principais:
 1. **`common`**: Elementos transversais (Filtros JWT, Gateways abstratos como `TransactionGateway`, Handlers de exceção).
 2. **`registry`**: Gestão de clientes, veículos e autenticação de mecânicos.
