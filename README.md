@@ -26,9 +26,9 @@ O código está estruturado em quatro Bounded Contexts principais:
 ## 🧠 Decisões Arquiteturais
 
 - Separação entre Controller (Application) e REST Adapter (Infrastructure)
-- Uso de Gateways para inversão de dependência
-- DTOs para isolamento de boundary
-- Kubernetes para escalabilidade horizontal
+- Uso de Gateways para inversão de dependência.
+- DTOs para isolamento e controle de contexto no transporte de dados.
+- Kubernetes para escalabilidade horizontal.
 
 ### O Fluxo de Dependência
 A regra de dependência aponta sempre para o centro (`core`):
