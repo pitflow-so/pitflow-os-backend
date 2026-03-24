@@ -30,6 +30,44 @@ A regra de dependência aponta sempre para o centro (`core`):
 * **Infrastructure:** Contém os *Adapters* que implementam as interfaces (Gateways) do Core. Aqui residem a implementação de Frameworks e Drivers, como as lógicas de JPA, Security, Webhooks, REST e mapeamento relacional.
 * **Controller / Presenter:** Isola a entrada (orquestrando Comandos) e a saída (formatando DTOs), totalmente apartada do orquestrador de negócio.
 
+![img.png](doc/img/components_aplicacao.png)
+
+**Exemplo de caso de uso:**
+
+```mermaid
+%%{init: { "theme": "base" }}%%
+flowchart LR
+
+    subgraph Infrastructure [Frameworks / Drivers Layer]
+        REST[ServiceOrderRestAdapter]
+    end
+
+    subgraph Interfaces [Interfaces Adapters Layer]
+        CTRL[ServiceOrderController]
+        USECASE[Use Cases<br/>Create / Approve / Cancel / etc]
+    end
+
+    subgraph Core [Core Layer]
+        ENTITY[ServiceOrder Entity]
+        GATEWAY[ServiceOrderGateway (interface)]
+    end
+
+    subgraph Infrastructure [Infrastructure Layer]
+        JPA[JpaServiceOrderGatewayAdapter]
+        REPO[Spring Data Repository]
+        DB[(PostgreSQL)]
+    end
+
+    REST --> CTRL
+    CTRL --> USECASE
+    USECASE --> ENTITY
+    USECASE --> GATEWAY
+    GATEWAY --> JPA
+    JPA --> REPO
+    REPO --> DB
+
+```
+
 ---
 
 ## ☁️ 2. Infraestrutura e Orquestração (Cloud & IaC)
