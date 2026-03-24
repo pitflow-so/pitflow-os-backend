@@ -24,7 +24,6 @@ import br.com.pitflow.operation.infrastructure.web.dto.BudgetApprovalRequest;
 import br.com.pitflow.operation.infrastructure.web.dto.CreateServiceOrderAllDataRequest;
 import br.com.pitflow.operation.infrastructure.web.dto.CreateServiceOrderRequest;
 import br.com.pitflow.operation.infrastructure.web.dto.ExternalStatusUpdateRequest;
-import br.com.pitflow.operation.infrastructure.web.dto.ExternalStatusUpdateRequest.ExternalStatusEvent;
 import br.com.pitflow.operation.presenter.ServiceOrderPresenter;
 import br.com.pitflow.operation.presenter.dto.ExecutionTimeMetricsResponse;
 import br.com.pitflow.operation.presenter.dto.OrderDurationResponse;
@@ -35,7 +34,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static br.com.pitflow.operation.controller.dto.CreateServiceOrderAllDataCommand.ServiceOrderItemCommand;
-import static br.com.pitflow.operation.infrastructure.web.dto.ExternalStatusUpdateRequest.ExternalStatusEvent.APPROVED;
 
 public class ServiceOrderController {
     private final AddOrderItem addOrderItem;
@@ -154,8 +152,6 @@ public class ServiceOrderController {
         return ServiceOrderPresenter.toResponse(metrics);
     }
 
-    //TODO: Identifiquei um problema transacional aqui (Erro ao inserir algum item gerar inconsistência na OS),
-    // preciso pensar como resolver sem utilizar o @Transactional aqui
     public ServiceOrderResponse getServiceOrderWithAllData(CreateServiceOrderAllDataRequest dto){
 
         var orderItemsCommand = new ArrayList<ServiceOrderItemCommand>();

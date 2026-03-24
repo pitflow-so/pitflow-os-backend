@@ -31,6 +31,9 @@ public class CreateServiceOrderWithAllDataImp implements CreateServiceOrderWithA
     @Override
     public ServiceOrder execute(CreateServiceOrderAllDataCommand command) {
         return transactionGateway.execute(() -> {
+            if(command.orderItems().isEmpty())
+                throw new IllegalArgumentException("Order must have at least one item");
+
             var os = createServiceOrder.execute(
                     new CreateServiceOrderCommand(
                             command.customerId(),
@@ -38,8 +41,6 @@ public class CreateServiceOrderWithAllDataImp implements CreateServiceOrderWithA
                             command.orderDescription()
                     )
             );
-            if(command.orderItems().isEmpty())
-                throw new IllegalArgumentException("Order must have at least one item");
 
             for (var item: command.orderItems()) {
                 addOrderItem.execute(
