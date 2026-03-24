@@ -236,12 +236,18 @@ response:
   "cancellationDescription": null
 }
 ```
-### 11 - Cliente aprova a OS
+### 11 - Cliente aprova a OS (Decisão do Orçamento)
 ```curl
 curl -X 'PATCH' \
-  'http://localhost:8080/operation/service-orders/afdeced8-58d0-4f6a-8355-614e160aa834/approve' \
-  -H 'accept: */*'
+  'http://localhost:8080/operation/service-orders/v2/afdeced8-58d0-4f6a-8355-614e160aa834/budget-decision' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+      "approved": true,
+      "reason": ""
+  }'
 ```
+
 ### 12 - Mecânico lista as ordens aprovadas para iniciar o serviço
 A listagem ocorre da mais antiga para a mais recente.
 ```curl
