@@ -56,6 +56,7 @@ public class SecurityConfig {
                         .requestMatchers(PATCH, "/operation/service-orders/{id}/approve").permitAll()
                         .requestMatchers(PATCH, "/operation/service-orders/{id}/cancel").permitAll() //TODO: Rever depois
                         .requestMatchers(GET, "/operation/service-orders/{id}").permitAll()
+                        .requestMatchers(GET, "/operation/service-orders/status/{id}").permitAll()
                         .requestMatchers(GET, "/operation/service-orders/{id}/duration").permitAll()
 
                         // Endpoints do Swagger UI e API Docs

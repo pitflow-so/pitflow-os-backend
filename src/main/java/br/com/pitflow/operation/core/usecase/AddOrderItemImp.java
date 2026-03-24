@@ -10,6 +10,7 @@ import br.com.pitflow.operation.core.usecase.inputPort.AddOrderItem;
 public class AddOrderItemImp implements AddOrderItem {
 
     private final ServiceOrderGateway serviceOrderGateway;
+    //TODO: In future i need create catalog gateway in operation to Part and Service
     private final PartGateway partGateway;
     private final ServiceGateway serviceGateway;
 

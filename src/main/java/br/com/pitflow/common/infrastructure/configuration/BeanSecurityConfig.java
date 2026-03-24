@@ -1,8 +1,10 @@
 package br.com.pitflow.common.infrastructure.configuration;
 
 import br.com.pitflow.common.core.gateway.TokenGateway;
+import br.com.pitflow.common.core.gateway.TransactionGateway;
 import br.com.pitflow.common.infrastructure.security.JwtServiceImp;
 import br.com.pitflow.common.infrastructure.security.SecurityFilter;
+import br.com.pitflow.common.infrastructure.transaction.SpringTransactionAdapter;
 import br.com.pitflow.registry.core.gateway.MechanicGateway;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -25,5 +27,10 @@ public class BeanSecurityConfig {
     @Bean
     public SecurityFilter securityFilter(TokenGateway tokenGateway, MechanicGateway mechanicGateway) {
         return new SecurityFilter(tokenGateway, mechanicGateway);
+    }
+
+    @Bean
+    public TransactionGateway transactionGateway() {
+        return new SpringTransactionAdapter();
     }
 }

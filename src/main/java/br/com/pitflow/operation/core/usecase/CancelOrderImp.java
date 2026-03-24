@@ -14,6 +14,10 @@ public class CancelOrderImp implements CancelOrder {
 
     @Override
     public void execute(CancelOrderCommand dto) {
+        if (dto.reason() == null || dto.reason().isBlank()) {
+            throw new IllegalArgumentException("Cancellation reason is required");
+        }
+
         var os = repository.findById(dto.serviceOrderId())
                 .orElseThrow(() -> new IllegalArgumentException("Service Order not found with ID: " + dto.serviceOrderId()));
 

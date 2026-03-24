@@ -1,8 +1,5 @@
 package br.com.pitflow.operation.presenter.dto;
 
-import br.com.pitflow.operation.core.entity.ServiceOrder.Status;
-import br.com.pitflow.operation.infrastructure.web.dto.ServiceOrderItemResponse;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,7 +10,7 @@ public record ServiceOrderResponse(
         UUID customerId,
         UUID vehicleId,
         String description,
-        Status status,
+        String status,
 
         BigDecimal totalAmount,
 

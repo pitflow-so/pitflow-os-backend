@@ -1,6 +1,6 @@
 package br.com.pitflow.registry.core.usecase.vehicle;
 
-import br.com.pitflow.common.valueobject.LicensePlate;
+import br.com.pitflow.registry.core.valueObject.LicensePlate;
 import br.com.pitflow.registry.controller.dto.UpdateVehicleCommand;
 import br.com.pitflow.registry.core.gateway.VehicleGateway;
 import br.com.pitflow.registry.core.usecase.vehicle.inputPort.UpdateVehicle;

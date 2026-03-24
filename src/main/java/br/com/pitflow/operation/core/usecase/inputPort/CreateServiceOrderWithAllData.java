@@ -1,4 +1,8 @@
 package br.com.pitflow.operation.core.usecase.inputPort;
 
-public class CreateServiceOrderWithAllData {
+import br.com.pitflow.operation.controller.dto.CreateServiceOrderAllDataCommand;
+import br.com.pitflow.operation.core.entity.ServiceOrder;
+
+public interface CreateServiceOrderWithAllData {
+    ServiceOrder execute(CreateServiceOrderAllDataCommand command);
 }

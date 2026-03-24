@@ -1,4 +1,4 @@
-package br.com.pitflow.common.valueobject;
+package br.com.pitflow.registry.core.valueObject;
 
 import java.util.Objects;
 

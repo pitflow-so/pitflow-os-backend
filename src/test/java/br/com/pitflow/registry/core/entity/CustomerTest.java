@@ -1,7 +1,7 @@
 package br.com.pitflow.registry.core.entity;
 
-import br.com.pitflow.common.valueobject.CpfCnpj;
-import br.com.pitflow.common.valueobject.LicensePlate;
+import br.com.pitflow.registry.core.valueObject.CpfCnpj;
+import br.com.pitflow.registry.core.valueObject.LicensePlate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

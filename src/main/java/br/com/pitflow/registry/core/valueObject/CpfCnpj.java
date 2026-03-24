@@ -1,4 +1,4 @@
-package br.com.pitflow.common.valueobject;
+package br.com.pitflow.registry.core.valueObject;
 
 import br.com.caelum.stella.validation.CNPJValidator;
 import br.com.caelum.stella.validation.CPFValidator;

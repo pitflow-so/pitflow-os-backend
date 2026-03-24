@@ -1,6 +1,6 @@
 package br.com.pitflow.registry.core.gateway;
 
-import br.com.pitflow.common.valueobject.CpfCnpj;
+import br.com.pitflow.registry.core.valueObject.CpfCnpj;
 import br.com.pitflow.registry.core.entity.Customer;
 
 import java.util.List;

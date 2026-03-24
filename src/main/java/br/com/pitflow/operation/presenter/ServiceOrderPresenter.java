@@ -3,7 +3,7 @@ package br.com.pitflow.operation.presenter;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.usecase.outputData.ExecutionTimeMetrics;
 import br.com.pitflow.operation.core.usecase.outputData.OrderDurationMetrics;
-import br.com.pitflow.operation.infrastructure.web.dto.ServiceOrderItemResponse;
+import br.com.pitflow.operation.presenter.dto.ServiceOrderItemResponse;
 import br.com.pitflow.operation.presenter.dto.ExecutionTimeMetricsResponse;
 import br.com.pitflow.operation.presenter.dto.OrderDurationResponse;
 import br.com.pitflow.operation.presenter.dto.ServiceOrderResponse;
@@ -21,7 +21,7 @@ public class ServiceOrderPresenter {
                 entity.getCustomerId(),
                 entity.getVehicleId(),
                 entity.getDescription(),
-                entity.getStatus(),
+                entity.getStatus().name(),
                 entity.getTotalAmount(),
                 entity.getCreatedAt(),
                 entity.getFinishedAt(),

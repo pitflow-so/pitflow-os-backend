@@ -2,12 +2,14 @@ package br.com.pitflow.operation.controller;
 
 import br.com.pitflow.operation.controller.dto.AddOrderItemCommand;
 import br.com.pitflow.operation.controller.dto.CancelOrderCommand;
+import br.com.pitflow.operation.controller.dto.CreateServiceOrderAllDataCommand;
 import br.com.pitflow.operation.controller.dto.CreateServiceOrderCommand;
 import br.com.pitflow.operation.core.usecase.inputPort.AddOrderItem;
 import br.com.pitflow.operation.core.usecase.inputPort.ApproveOrder;
 import br.com.pitflow.operation.core.usecase.inputPort.CancelOrder;
 import br.com.pitflow.operation.core.usecase.inputPort.CompleteDiagnosis;
 import br.com.pitflow.operation.core.usecase.inputPort.CreateServiceOrder;
+import br.com.pitflow.operation.core.usecase.inputPort.CreateServiceOrderWithAllData;
 import br.com.pitflow.operation.core.usecase.inputPort.DeliverOrder;
 import br.com.pitflow.operation.core.usecase.inputPort.FindAllServiceOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.FinishOrder;
@@ -15,16 +17,22 @@ import br.com.pitflow.operation.core.usecase.inputPort.GetAverageExecutionTime;
 import br.com.pitflow.operation.core.usecase.inputPort.GetServiceOrderById;
 import br.com.pitflow.operation.core.usecase.inputPort.GetServiceOrderDuration;
 import br.com.pitflow.operation.core.usecase.inputPort.ListInExecutionOrders;
+import br.com.pitflow.operation.core.usecase.inputPort.ListPrioritizedServiceOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.StartDiagnosis;
 import br.com.pitflow.operation.infrastructure.web.dto.AddOrderItemRequest;
+import br.com.pitflow.operation.infrastructure.web.dto.BudgetApprovalRequest;
+import br.com.pitflow.operation.infrastructure.web.dto.CreateServiceOrderAllDataRequest;
 import br.com.pitflow.operation.infrastructure.web.dto.CreateServiceOrderRequest;
 import br.com.pitflow.operation.presenter.ServiceOrderPresenter;
 import br.com.pitflow.operation.presenter.dto.ExecutionTimeMetricsResponse;
 import br.com.pitflow.operation.presenter.dto.OrderDurationResponse;
 import br.com.pitflow.operation.presenter.dto.ServiceOrderResponse;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import static br.com.pitflow.operation.controller.dto.CreateServiceOrderAllDataCommand.ServiceOrderItemCommand;
 
 public class ServiceOrderController {
     private final AddOrderItem addOrderItem;
@@ -40,8 +48,26 @@ public class ServiceOrderController {
     private final ListInExecutionOrders listInExecutionOrders;
     private final GetAverageExecutionTime getAverageExecutionTime;
     private final GetServiceOrderDuration getServiceOrderDuration;
+    private final CreateServiceOrderWithAllData createServiceOrderWithAllData;
+    private final ListPrioritizedServiceOrders listPrioritizedServiceOrders;
 
-    public ServiceOrderController(CreateServiceOrder createServiceOrder, AddOrderItem addOrderItem, StartDiagnosis startDiagnosis, CompleteDiagnosis completeDiagnosis, ApproveOrder approveOrder, FinishOrder finishOrder, DeliverOrder deliverOrder, CancelOrder cancelOrder, GetServiceOrderById getServiceOrderById, FindAllServiceOrders findAllServiceOrders, ListInExecutionOrders listInExecutionOrders, GetAverageExecutionTime getAverageExecutionTime, GetServiceOrderDuration getServiceOrderDuration) {
+    public ServiceOrderController(
+            CreateServiceOrder createServiceOrder,
+            AddOrderItem addOrderItem,
+            StartDiagnosis startDiagnosis,
+            CompleteDiagnosis completeDiagnosis,
+            ApproveOrder approveOrder,
+            FinishOrder finishOrder,
+            DeliverOrder deliverOrder,
+            CancelOrder cancelOrder,
+            GetServiceOrderById getServiceOrderById,
+            FindAllServiceOrders findAllServiceOrders,
+            ListInExecutionOrders listInExecutionOrders,
+            GetAverageExecutionTime getAverageExecutionTime,
+            GetServiceOrderDuration getServiceOrderDuration,
+            CreateServiceOrderWithAllData createServiceOrderWithAllData,
+            ListPrioritizedServiceOrders listPrioritizedServiceOrders
+    ) {
         this.createServiceOrder = createServiceOrder;
         this.addOrderItem = addOrderItem;
         this.startDiagnosis = startDiagnosis;
@@ -55,6 +81,8 @@ public class ServiceOrderController {
         this.listInExecutionOrders = listInExecutionOrders;
         this.getAverageExecutionTime = getAverageExecutionTime;
         this.getServiceOrderDuration = getServiceOrderDuration;
+        this.createServiceOrderWithAllData = createServiceOrderWithAllData;
+        this.listPrioritizedServiceOrders = listPrioritizedServiceOrders;
     }
 
     public ServiceOrderResponse create(CreateServiceOrderRequest dto){
@@ -98,6 +126,11 @@ public class ServiceOrderController {
         return ServiceOrderPresenter.toResponse(entity);
     }
 
+    public String getServiceOrderStatus(UUID id){
+        var entity = getServiceOrderById.execute(id);
+        return entity.getStatus().name();
+    }
+
     public List<ServiceOrderResponse> getServiceOrders(){
         var list = findAllServiceOrders.execute();
         return list.stream().map(ServiceOrderPresenter::toResponse).toList();
@@ -116,5 +149,49 @@ public class ServiceOrderController {
     public OrderDurationResponse getDuration(UUID id){
         var metrics = getServiceOrderDuration.execute(id);
         return ServiceOrderPresenter.toResponse(metrics);
+    }
+
+    //TODO: Identifiquei um problema transacional aqui (Erro ao inserir algum item gerar inconsistência na OS),
+    // preciso pensar como resolver sem utilizar o @Transactional aqui
+    public ServiceOrderResponse getServiceOrderWithAllData(CreateServiceOrderAllDataRequest dto){
+
+        var orderItemsCommand = new ArrayList<ServiceOrderItemCommand>();
+
+        for(var item : dto.orderItems() ){
+            orderItemsCommand.add(
+                    new ServiceOrderItemCommand(
+                    item.catalogId(),
+                    item.quantity(),
+                    item.type()
+                    )
+            );
+        }
+
+        var command = new CreateServiceOrderAllDataCommand(
+                dto.customerId(),
+                dto.vehicleId(),
+                dto.orderDescription(),
+                orderItemsCommand
+        );
+
+        var serviceOrder = createServiceOrderWithAllData.execute(command);
+
+        return ServiceOrderPresenter.toResponse(serviceOrder);
+    }
+
+    public List<ServiceOrderResponse> getPrioritizedOrders() {
+        var list = listPrioritizedServiceOrders.execute();
+        return list.stream()
+                .map(ServiceOrderPresenter::toResponse)
+                .toList();
+    }
+
+    public void processBudgetDecision(UUID id, BudgetApprovalRequest request) {
+
+        if (request.approved()) {
+            approveOrder.execute(id);
+        } else {
+            cancelOrder.execute(new CancelOrderCommand(id, request.reason()));
+        }
     }
 }

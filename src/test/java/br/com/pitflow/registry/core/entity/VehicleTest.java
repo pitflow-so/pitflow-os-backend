@@ -1,7 +1,6 @@
 package br.com.pitflow.registry.core.entity;
 
-import br.com.pitflow.common.valueobject.LicensePlate;
-import br.com.pitflow.registry.core.entity.Vehicle;
+import br.com.pitflow.registry.core.valueObject.LicensePlate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

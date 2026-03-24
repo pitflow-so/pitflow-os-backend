@@ -1,6 +1,6 @@
 package br.com.pitflow.registry.infrastructure.persistence.adapter;
 
-import br.com.pitflow.common.valueobject.CpfCnpj;
+import br.com.pitflow.registry.core.valueObject.CpfCnpj;
 import br.com.pitflow.registry.core.entity.Customer;
 import br.com.pitflow.registry.core.gateway.CustomerGateway;
 import br.com.pitflow.registry.infrastructure.persistence.mapper.CustomerMapper;

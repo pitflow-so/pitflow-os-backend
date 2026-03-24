@@ -1,5 +1,6 @@
 package br.com.pitflow.common.valueobject;
 
+import br.com.pitflow.registry.core.valueObject.LicensePlate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

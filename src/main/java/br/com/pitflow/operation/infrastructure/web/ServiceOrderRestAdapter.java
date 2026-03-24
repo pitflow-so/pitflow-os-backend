@@ -2,6 +2,8 @@ package br.com.pitflow.operation.infrastructure.web;
 
 import br.com.pitflow.operation.infrastructure.web.dto.AddOrderItemRequest;
 import br.com.pitflow.operation.controller.ServiceOrderController;
+import br.com.pitflow.operation.infrastructure.web.dto.BudgetApprovalRequest;
+import br.com.pitflow.operation.infrastructure.web.dto.CreateServiceOrderAllDataRequest;
 import br.com.pitflow.operation.infrastructure.web.dto.CreateServiceOrderRequest;
 import br.com.pitflow.operation.presenter.dto.ExecutionTimeMetricsResponse;
 import br.com.pitflow.operation.presenter.dto.OrderDurationResponse;
@@ -39,6 +41,12 @@ public class ServiceOrderRestAdapter {
         return ResponseEntity.status(HttpStatus.CREATED).body(controller.create(dto));
     }
 
+    @PostMapping("/v2")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Abre uma nova Ordem de Serviço já com os itens do catálago (Peça ou Serviço)", description = "Status inicial: RECEIVED")
+    public ResponseEntity<ServiceOrderResponse> create(@RequestBody CreateServiceOrderAllDataRequest dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(controller.getServiceOrderWithAllData(dto));
+    }
+
     @PostMapping("/{id}/items")
     @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Adiciona peça ou serviço à OS", description = "Permitido apenas nos status RECEIVED ou IN_DIAGNOSIS")
     public ResponseEntity<Void> addItem(@PathVariable UUID id, @RequestBody AddOrderItemRequest dto) {
@@ -60,8 +68,13 @@ public class ServiceOrderRestAdapter {
         return ResponseEntity.noContent().build();
     }
 
+    @Deprecated
     @PatchMapping("/{id}/approve")
-    @Operation(summary = "Aprova o orçamento", description = "Muda status para IN_EXECUTION")
+    @Operation(
+            summary = "Aprova o orçamento - Endpoint deprecado, utilizar ** /{id}/budget-decision **",
+            description = "Muda status para IN_EXECUTION ",
+            deprecated = true
+    )
     public ResponseEntity<Void> approve(@PathVariable UUID id) {
         controller.approve(id);
         return ResponseEntity.noContent().build();
@@ -94,6 +107,12 @@ public class ServiceOrderRestAdapter {
         return ResponseEntity.ok(controller.getServiceOrderById(id));
     }
 
+    @GetMapping("/status/{id}")
+    @Operation(summary = "Busca o status da OS específica")
+    public ResponseEntity<String> getStatusById(@PathVariable UUID id) {
+        return ResponseEntity.ok(controller.getServiceOrderStatus(id));
+    }
+
     @GetMapping
     @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Lista todas as Ordens de Serviço da oficina, em ordem do mais antigo para o mais novo", description = "Mecânico pode vistualizar todas as ordens")
     public ResponseEntity<List<ServiceOrderResponse>> getAll() {
@@ -117,5 +136,25 @@ public class ServiceOrderRestAdapter {
     @Operation(summary = "Obter duração da OS", description = "Retorna o tempo decorrido desde o início da execução. Se a OS não foi finalizada, calcula o tempo até o momento atual.")
     public ResponseEntity<OrderDurationResponse> getDuration(@PathVariable UUID id) {
         return ResponseEntity.ok(controller.getDuration(id));
+    }
+
+    @GetMapping("v2/prioritized")
+    @Operation(
+            security = @SecurityRequirement(name = "bearerAuth"),
+            summary = "Lista ordens priorizadas",
+            description = "Ordena por prioridade de status e data de criação"
+    )
+    public ResponseEntity<List<ServiceOrderResponse>> getPrioritized() {
+        return ResponseEntity.ok(controller.getPrioritizedOrders());
+    }
+
+    @PatchMapping("v2/{id}/budget-decision")
+    @Operation(
+            summary = "Recebe decisão do cliente sobre o orçamento",
+            description = "Endpoint externo para aprovação ou recusa"
+    )
+    public ResponseEntity<Void> budgetDecision(@PathVariable UUID id, @RequestBody BudgetApprovalRequest request) {
+        controller.processBudgetDecision(id, request);
+        return ResponseEntity.noContent().build();
     }
 }

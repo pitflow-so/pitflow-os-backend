@@ -1,5 +1,6 @@
 package br.com.pitflow.operation.infrastructure.config;
 
+import br.com.pitflow.common.core.gateway.TransactionGateway;
 import br.com.pitflow.inventory.core.gateway.PartGateway;
 import br.com.pitflow.inventory.core.gateway.ServiceGateway;
 import br.com.pitflow.operation.controller.ServiceOrderController;
@@ -10,6 +11,7 @@ import br.com.pitflow.operation.core.usecase.ApproveOrderImp;
 import br.com.pitflow.operation.core.usecase.CancelOrderImp;
 import br.com.pitflow.operation.core.usecase.CompleteDiagnosisImp;
 import br.com.pitflow.operation.core.usecase.CreateServiceOrderImp;
+import br.com.pitflow.operation.core.usecase.CreateServiceOrderWithAllDataImp;
 import br.com.pitflow.operation.core.usecase.DeliverOrderImp;
 import br.com.pitflow.operation.core.usecase.FindAllServiceOrdersImp;
 import br.com.pitflow.operation.core.usecase.FinishOrderImp;
@@ -17,12 +19,14 @@ import br.com.pitflow.operation.core.usecase.GetAverageExecutionTimeImp;
 import br.com.pitflow.operation.core.usecase.GetServiceOrderByIdImp;
 import br.com.pitflow.operation.core.usecase.GetServiceOrderDurationImp;
 import br.com.pitflow.operation.core.usecase.ListInExecutionOrdersImp;
+import br.com.pitflow.operation.core.usecase.ListPrioritizedServiceOrdersImp;
 import br.com.pitflow.operation.core.usecase.StartDiagnosisImp;
 import br.com.pitflow.operation.core.usecase.inputPort.AddOrderItem;
 import br.com.pitflow.operation.core.usecase.inputPort.ApproveOrder;
 import br.com.pitflow.operation.core.usecase.inputPort.CancelOrder;
 import br.com.pitflow.operation.core.usecase.inputPort.CompleteDiagnosis;
 import br.com.pitflow.operation.core.usecase.inputPort.CreateServiceOrder;
+import br.com.pitflow.operation.core.usecase.inputPort.CreateServiceOrderWithAllData;
 import br.com.pitflow.operation.core.usecase.inputPort.DeliverOrder;
 import br.com.pitflow.operation.core.usecase.inputPort.FindAllServiceOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.FinishOrder;
@@ -30,6 +34,7 @@ import br.com.pitflow.operation.core.usecase.inputPort.GetAverageExecutionTime;
 import br.com.pitflow.operation.core.usecase.inputPort.GetServiceOrderById;
 import br.com.pitflow.operation.core.usecase.inputPort.GetServiceOrderDuration;
 import br.com.pitflow.operation.core.usecase.inputPort.ListInExecutionOrders;
+import br.com.pitflow.operation.core.usecase.inputPort.ListPrioritizedServiceOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.StartDiagnosis;
 import br.com.pitflow.operation.infrastructure.notifications.LogNotificationAdapterMock;
 import br.com.pitflow.operation.infrastructure.persistence.adapter.JpaServiceOrderGatewayAdapter;
@@ -126,7 +131,43 @@ public class BeanOperationConfig {
     }
 
     @Bean
-    public ServiceOrderController serviceOrderController(CreateServiceOrder createServiceOrder, AddOrderItem addOrderItem, StartDiagnosis startDiagnosis, CompleteDiagnosis completeDiagnosis, ApproveOrder approveOrder, FinishOrder finishOrder, DeliverOrder deliverOrder, CancelOrder cancelOrder, GetServiceOrderById getServiceOrderById, FindAllServiceOrders findAllServiceOrders, ListInExecutionOrders listInExecutionOrders, GetAverageExecutionTime getAverageExecutionTime, GetServiceOrderDuration getServiceOrderDuration) {
+    public ListPrioritizedServiceOrders listPrioritizedServiceOrders(ServiceOrderGateway gateway) {
+        return new ListPrioritizedServiceOrdersImp(gateway);
+    }
+
+    @Bean
+    public CreateServiceOrderWithAllData createServiceOrderWithAllData(
+            CreateServiceOrder createServiceOrder,
+            AddOrderItem addOrderItem,
+            GetServiceOrderById getServiceOrderById,
+            TransactionGateway transactionGateway
+    ){
+        return new CreateServiceOrderWithAllDataImp(
+                createServiceOrder,
+                addOrderItem,
+                getServiceOrderById,
+                transactionGateway
+        );
+    }
+
+    @Bean
+    public ServiceOrderController serviceOrderController(
+            CreateServiceOrder createServiceOrder,
+            AddOrderItem addOrderItem,
+            StartDiagnosis startDiagnosis,
+            CompleteDiagnosis completeDiagnosis,
+            ApproveOrder approveOrder,
+            FinishOrder finishOrder,
+            DeliverOrder deliverOrder,
+            CancelOrder cancelOrder,
+            GetServiceOrderById getServiceOrderById,
+            FindAllServiceOrders findAllServiceOrders,
+            ListInExecutionOrders listInExecutionOrders,
+            GetAverageExecutionTime getAverageExecutionTime,
+            GetServiceOrderDuration getServiceOrderDuration,
+            CreateServiceOrderWithAllData createServiceOrderWithAllData,
+            ListPrioritizedServiceOrders listPrioritizedServiceOrders
+    ) {
         return new ServiceOrderController(
                 createServiceOrder,
                 addOrderItem,
@@ -140,7 +181,9 @@ public class BeanOperationConfig {
                 findAllServiceOrders,
                 listInExecutionOrders,
                 getAverageExecutionTime,
-                getServiceOrderDuration
+                getServiceOrderDuration,
+                createServiceOrderWithAllData,
+                listPrioritizedServiceOrders
         );
     }
 }

@@ -1,6 +1,6 @@
 package br.com.pitflow.registry.infrastructure.persistence.adapter;
 
-import br.com.pitflow.common.valueobject.LicensePlate;
+import br.com.pitflow.registry.core.valueObject.LicensePlate;
 import br.com.pitflow.registry.core.entity.Vehicle;
 import br.com.pitflow.registry.core.gateway.VehicleGateway;
 import br.com.pitflow.registry.infrastructure.persistence.mapper.VehicleMapper;

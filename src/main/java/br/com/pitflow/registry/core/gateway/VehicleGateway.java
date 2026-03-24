@@ -1,6 +1,6 @@
 package br.com.pitflow.registry.core.gateway;
 
-import br.com.pitflow.common.valueobject.LicensePlate;
+import br.com.pitflow.registry.core.valueObject.LicensePlate;
 import br.com.pitflow.registry.core.entity.Vehicle;
 
 import java.util.List;

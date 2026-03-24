@@ -1,6 +1,6 @@
 package br.com.pitflow.registry.core.usecase.customer;
 
-import br.com.pitflow.common.valueobject.CpfCnpj;
+import br.com.pitflow.registry.core.valueObject.CpfCnpj;
 import br.com.pitflow.registry.controller.dto.UpdateCustomerCommand;
 import br.com.pitflow.registry.core.gateway.CustomerGateway;
 import br.com.pitflow.registry.core.usecase.customer.inputPort.UpdateCustomer;
