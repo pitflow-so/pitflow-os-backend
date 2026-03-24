@@ -23,6 +23,8 @@ import br.com.pitflow.operation.infrastructure.web.dto.AddOrderItemRequest;
 import br.com.pitflow.operation.infrastructure.web.dto.BudgetApprovalRequest;
 import br.com.pitflow.operation.infrastructure.web.dto.CreateServiceOrderAllDataRequest;
 import br.com.pitflow.operation.infrastructure.web.dto.CreateServiceOrderRequest;
+import br.com.pitflow.operation.infrastructure.web.dto.ExternalStatusUpdateRequest;
+import br.com.pitflow.operation.infrastructure.web.dto.ExternalStatusUpdateRequest.ExternalStatusEvent;
 import br.com.pitflow.operation.presenter.ServiceOrderPresenter;
 import br.com.pitflow.operation.presenter.dto.ExecutionTimeMetricsResponse;
 import br.com.pitflow.operation.presenter.dto.OrderDurationResponse;
@@ -33,6 +35,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static br.com.pitflow.operation.controller.dto.CreateServiceOrderAllDataCommand.ServiceOrderItemCommand;
+import static br.com.pitflow.operation.infrastructure.web.dto.ExternalStatusUpdateRequest.ExternalStatusEvent.APPROVED;
 
 public class ServiceOrderController {
     private final AddOrderItem addOrderItem;
@@ -192,6 +195,22 @@ public class ServiceOrderController {
             approveOrder.execute(id);
         } else {
             cancelOrder.execute(new CancelOrderCommand(id, request.reason()));
+        }
+    }
+
+    public void processExternalStatusUpdate(ExternalStatusUpdateRequest request) {
+
+        switch (request.event()) {
+
+            case APPROVED -> approveOrder.execute(request.serviceOrderId());
+
+            case REJECTED -> cancelOrder.execute(
+                    new CancelOrderCommand(request.serviceOrderId(), request.reason())
+            );
+
+            case FINISHED -> finishOrder.execute(request.serviceOrderId());
+
+            default -> throw new IllegalArgumentException("Unknown event");
         }
     }
 }

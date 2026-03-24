@@ -150,8 +150,8 @@ public class ServiceOrderRestAdapter {
 
     @PatchMapping("v2/{id}/budget-decision")
     @Operation(
-            summary = "Recebe decisão do cliente sobre o orçamento",
-            description = "Endpoint externo para aprovação ou recusa"
+            summary = "Recebe decisão do cliente sobre o orçamento, aceitar ou recusar",
+            description = "Para integrações externas, utilize /external/events"
     )
     public ResponseEntity<Void> budgetDecision(@PathVariable UUID id, @RequestBody BudgetApprovalRequest request) {
         controller.processBudgetDecision(id, request);
