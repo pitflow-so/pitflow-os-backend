@@ -37,24 +37,23 @@ A regra de dependência aponta sempre para o centro (`core`):
 ```mermaid
 %%{init: { "theme": "base" }}%%
 flowchart LR
-
-    subgraph Infrastructure [Frameworks / Drivers Layer]
+    subgraph Infrastructure1 ["Frameworks / Drivers Layer"]
         REST[ServiceOrderRestAdapter]
     end
 
-    subgraph Interfaces [Interfaces Adapters Layer]
+    subgraph Interfaces ["Interfaces Adapters Layer"]
         CTRL[ServiceOrderController]
-        USECASE[Use Cases<br/>Create / Approve / Cancel / etc]
+        USECASE["Use Cases<br/>Create / Approve / Cancel / etc"]
     end
 
-    subgraph Core [Core Layer]
+    subgraph Core ["Core Layer"]
         ENTITY[ServiceOrder Entity]
-        GATEWAY[ServiceOrderGateway (interface)]
+        GATEWAY["ServiceOrderGateway (interface)"]
     end
 
-    subgraph Infrastructure [Infrastructure Layer]
+    subgraph Infrastructure2 ["Infrastructure Layer"]
         JPA[JpaServiceOrderGatewayAdapter]
-        REPO[Spring Data Repository]
+        REPO["Spring Data Repository"]
         DB[(PostgreSQL)]
     end
 
