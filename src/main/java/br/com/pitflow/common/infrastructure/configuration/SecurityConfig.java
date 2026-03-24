@@ -40,8 +40,12 @@ public class SecurityConfig {
 
                         // Endpoints de Autenticação
                         .requestMatchers("/registry/auth/**").permitAll()
+
                         //Cadastro do mecânico
                         .requestMatchers(POST, "/registry/mechanics").permitAll()
+
+                        // Hooks
+                        .requestMatchers(PATCH, "/external/events/service-orders/**").permitAll()
 
                         //Cadastro veículo
                         .requestMatchers(POST, "/registry/vehicles").permitAll()
@@ -58,6 +62,7 @@ public class SecurityConfig {
                         .requestMatchers(GET, "/operation/service-orders/{id}").permitAll()
                         .requestMatchers(GET, "/operation/service-orders/status/{id}").permitAll()
                         .requestMatchers(GET, "/operation/service-orders/{id}/duration").permitAll()
+                        .requestMatchers(PATCH, "/operation/service-orders/v2/{id}/budget-decision").permitAll()
 
                         // Endpoints do Swagger UI e API Docs
                         .requestMatchers("/v3/api-docs/**").permitAll()
