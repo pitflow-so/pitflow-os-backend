@@ -50,30 +50,62 @@ Localizado na pasta `infra/k8s`, os manifestos definem a topologia:
 * **Probes (Liveness/Readiness/Startup):** Garantem a autorrecuperação dos pods usando o Spring Actuator (`/actuator/health`).
 * **HPA (Horizontal Pod Autoscaler):** Escalonamento automático de 1 para até 3 réplicas com base no consumo de CPU (alvo: 70%).
 
-```mermaid
-sequenceDiagram
-    participant Dev as Developer
-    participant GH as GitHub Actions
-    participant TF as Terraform
-    participant ECR as Amazon ECR
-    participant EKS as Amazon EKS
-
-    Dev->>GH: push na main
-    GH->>TF: terraform apply (ECR, EKS, RDS)
-    GH->>GH: mvn clean package + testes
-    GH->>ECR: docker build + push
-    GH->>EKS: kubectl apply (deployment, service, hpa)
-```
 
 ---
 
 ## 🚀 3. Pipeline CI/CD (GitHub Actions)
 
-A esteira de entrega contínua (`.github/workflows/main.yaml`) automatiza todo o processo, da infraestrutura ao deploy:
-1. **Provision Infrastructure:** Valida e aplica o Terraform, gerando o RDS, EKS e ECR, e exportando as credenciais/endpoints.
-2. **Build and Push:** Roda os testes unitários (`mvn clean package`), constrói a imagem via *multi-stage build* (Docker) e envia para o Amazon ECR.
-3. **Deploy to Kubernetes:** Atualiza o kubeconfig, instala o `metrics-server` (pré-requisito do HPA), substitui os placeholders via `envsubst` injetando secrets do GitHub, e faz o *apply* dos manifestos no EKS.
+A esteira de entrega contínua (`.github/workflows/main.yaml`) automatiza todo o
+processo em três jobs sequenciais:
 
+1. **Provision Infrastructure:** Garante a existência do bucket S3 para o estado
+   remoto do Terraform, executa `terraform init`, `plan` e `apply`, provisionando
+   ECR, EKS e RDS. Exporta os endpoints e nomes como outputs para os jobs seguintes.
+
+2. **Build and Push:** Executa `mvn clean package` (compila, testa e empacota),
+   autentica no Amazon ECR e envia a imagem Docker com duas tags: o SHA do commit
+   e `latest`.
+
+3. **Deploy to Kubernetes:** Atualiza o kubeconfig do EKS, instala o
+   `metrics-server` (pré-requisito do HPA), substitui os placeholders dos
+   manifestos via `envsubst` injetando secrets do GitHub, aplica todos os
+   manifestos e valida o rollout do deployment.
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant GH as GitHub Actions
+    participant S3 as Amazon S3
+    participant TF as Terraform
+    participant ECR as Amazon ECR
+    participant EKS as Amazon EKS
+    participant RDS as Amazon RDS
+
+    Dev->>GH: push na main
+
+    rect rgb(200, 220, 240)
+        note over GH,RDS: Job 1 — Provision Infrastructure
+        GH->>S3: cria bucket para tfstate (se não existe)
+        GH->>TF: terraform init + plan
+        TF->>ECR: provisiona repositório de imagens
+        TF->>EKS: provisiona cluster Kubernetes
+        TF->>RDS: provisiona banco PostgreSQL
+        TF-->>GH: exporta rds_endpoint, ecr_url, eks_cluster_name
+    end
+
+    rect rgb(220, 240, 220)
+        note over GH,ECR: Job 2 — Build and Push (needs: Job 1)
+        GH->>GH: mvn clean package (compila, testa, empacota)
+        GH->>ECR: docker build + push (tag sha + latest)
+    end
+
+    rect rgb(240, 220, 200)
+        note over GH,EKS: Job 3 — Deploy (needs: Job 1 + Job 2)
+        GH->>EKS: atualiza kubeconfig
+        GH->>EKS: instala metrics-server
+        GH->>EKS: envsubst + kubectl apply (configmap, secrets, deployment, service, hpa)
+        EKS-->>GH: rollout status OK
+    end
+```
 ---
 
 ## 📦 4. Como Executar o Projeto
