@@ -71,6 +71,16 @@ processo em três jobs sequenciais:
    manifestos via `envsubst` injetando secrets do GitHub, aplica todos os
    manifestos e valida o rollout do deployment.
 ```mermaid
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryTextColor": "#000000",
+    "secondaryTextColor": "#000000",
+    "tertiaryTextColor": "#000000",
+    "lineColor": "#333333",
+    "fontSize": "14px"
+  }
+}}%%
 sequenceDiagram
     participant Dev as Developer
     participant GH as GitHub Actions
@@ -82,28 +92,28 @@ sequenceDiagram
 
     Dev->>GH: push na main
 
-    rect rgb(200, 220, 240)
+    rect rgb(220, 235, 255)
         note over GH,RDS: Job 1 — Provision Infrastructure
-        GH->>S3: cria bucket para tfstate (se não existe)
+        GH->>S3: cria bucket tfstate
         GH->>TF: terraform init + plan
-        TF->>ECR: provisiona repositório de imagens
-        TF->>EKS: provisiona cluster Kubernetes
-        TF->>RDS: provisiona banco PostgreSQL
-        TF-->>GH: exporta rds_endpoint, ecr_url, eks_cluster_name
+        TF->>ECR: cria repositório
+        TF->>EKS: cria cluster
+        TF->>RDS: cria PostgreSQL
+        TF-->>GH: outputs (rds, ecr, eks)
     end
 
-    rect rgb(220, 240, 220)
-        note over GH,ECR: Job 2 — Build and Push (needs: Job 1)
-        GH->>GH: mvn clean package (compila, testa, empacota)
-        GH->>ECR: docker build + push (tag sha + latest)
+    rect rgb(220, 255, 220)
+        note over GH,ECR: Job 2 — Build and Push
+        GH->>GH: mvn clean package
+        GH->>ECR: docker build + push
     end
 
-    rect rgb(240, 220, 200)
-        note over GH,EKS: Job 3 — Deploy (needs: Job 1 + Job 2)
-        GH->>EKS: atualiza kubeconfig
-        GH->>EKS: instala metrics-server
-        GH->>EKS: envsubst + kubectl apply (configmap, secrets, deployment, service, hpa)
-        EKS-->>GH: rollout status OK
+    rect rgb(255, 235, 220)
+        note over GH,EKS: Job 3 — Deploy
+        GH->>EKS: update kubeconfig
+        GH->>EKS: install metrics-server
+        GH->>EKS: apply manifests (envsubst)
+        EKS-->>GH: rollout OK
     end
 ```
 ---
