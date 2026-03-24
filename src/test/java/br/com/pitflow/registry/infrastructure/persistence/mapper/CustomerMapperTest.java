@@ -1,7 +1,7 @@
 package br.com.pitflow.registry.infrastructure.persistence.mapper;
 
-import br.com.pitflow.common.valueobject.CpfCnpj;
-import br.com.pitflow.registry.domain.Customer;
+import br.com.pitflow.registry.core.valueObject.CpfCnpj;
+import br.com.pitflow.registry.core.entity.Customer;
 import br.com.pitflow.registry.infrastructure.persistence.entity.CustomerJpa;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

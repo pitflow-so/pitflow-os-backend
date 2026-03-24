@@ -1,9 +1,11 @@
 package br.com.pitflow.common.infrastructure.configuration;
 
-import br.com.pitflow.common.infrastructure.security.JwtService;
+import br.com.pitflow.common.core.gateway.TokenGateway;
+import br.com.pitflow.common.core.gateway.TransactionGateway;
 import br.com.pitflow.common.infrastructure.security.JwtServiceImp;
 import br.com.pitflow.common.infrastructure.security.SecurityFilter;
-import br.com.pitflow.registry.domain.repository.MechanicRepository;
+import br.com.pitflow.common.infrastructure.transaction.SpringTransactionAdapter;
+import br.com.pitflow.registry.core.gateway.MechanicGateway;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,12 +20,17 @@ public class BeanSecurityConfig {
     private Integer expirationHours;
 
     @Bean
-    public JwtService jwtService() {
+    public TokenGateway tokenGateway() {
         return new JwtServiceImp(secret, expirationHours);
     }
 
     @Bean
-    public SecurityFilter securityFilter(JwtService jwtService, MechanicRepository mechanicRepository) {
-        return new SecurityFilter(jwtService, mechanicRepository);
+    public SecurityFilter securityFilter(TokenGateway tokenGateway, MechanicGateway mechanicGateway) {
+        return new SecurityFilter(tokenGateway, mechanicGateway);
+    }
+
+    @Bean
+    public TransactionGateway transactionGateway() {
+        return new SpringTransactionAdapter();
     }
 }

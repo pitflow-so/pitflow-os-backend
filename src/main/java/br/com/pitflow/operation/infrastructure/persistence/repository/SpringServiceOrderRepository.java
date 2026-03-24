@@ -1,6 +1,6 @@
 package br.com.pitflow.operation.infrastructure.persistence.repository;
 
-import br.com.pitflow.operation.domain.ServiceOrder;
+import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.infrastructure.persistence.entity.ServiceOrderJpa;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

@@ -1,6 +1,6 @@
 package br.com.pitflow.operation.infrastructure.persistence.entity;
 
-import br.com.pitflow.operation.domain.ServiceOrder;
+import br.com.pitflow.operation.core.entity.ServiceOrder;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;

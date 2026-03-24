@@ -1,6 +1,6 @@
 package br.com.pitflow.registry.infrastructure.persistence.mapper;
 
-import br.com.pitflow.registry.domain.Mechanic;
+import br.com.pitflow.registry.core.entity.Mechanic;
 import br.com.pitflow.registry.infrastructure.persistence.entity.MechanicJpa;
 
 public final class MechanicMapper {

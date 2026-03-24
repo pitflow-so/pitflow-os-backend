@@ -1,6 +1,6 @@
 package br.com.pitflow.inventory.infrastructure.persistence.mapper;
 
-import br.com.pitflow.inventory.domain.Part;
+import br.com.pitflow.inventory.core.entity.Part;
 import br.com.pitflow.inventory.infrastructure.persistence.entity.PartJpa;
 
 public final class PartMapper {

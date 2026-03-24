@@ -1,7 +1,7 @@
 package br.com.pitflow.common.infrastructure.configuration;
 
 import br.com.pitflow.common.infrastructure.security.SecurityFilter;
-import br.com.pitflow.registry.domain.repository.MechanicRepository;
+import br.com.pitflow.registry.core.gateway.MechanicGateway;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -56,6 +56,7 @@ public class SecurityConfig {
                         .requestMatchers(PATCH, "/operation/service-orders/{id}/approve").permitAll()
                         .requestMatchers(PATCH, "/operation/service-orders/{id}/cancel").permitAll() //TODO: Rever depois
                         .requestMatchers(GET, "/operation/service-orders/{id}").permitAll()
+                        .requestMatchers(GET, "/operation/service-orders/status/{id}").permitAll()
                         .requestMatchers(GET, "/operation/service-orders/{id}/duration").permitAll()
 
                         // Endpoints do Swagger UI e API Docs
@@ -77,7 +78,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService(MechanicRepository repository) {
+    public UserDetailsService userDetailsService(MechanicGateway repository) {
         return username -> {
             var mechanic = repository.findByUsername(username)
                     .orElseThrow(() -> new UsernameNotFoundException("Mechanic not found: " + username));

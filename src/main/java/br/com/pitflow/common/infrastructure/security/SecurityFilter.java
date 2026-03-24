@@ -1,6 +1,7 @@
 package br.com.pitflow.common.infrastructure.security;
 
-import br.com.pitflow.registry.domain.repository.MechanicRepository;
+import br.com.pitflow.common.core.gateway.TokenGateway;
+import br.com.pitflow.registry.core.gateway.MechanicGateway;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,12 +15,12 @@ import java.io.IOException;
 
 public class SecurityFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
-    private final MechanicRepository mechanicRepository;
+    private final TokenGateway tokenGateway;
+    private final MechanicGateway mechanicGateway;
 
-    public SecurityFilter(JwtService jwtService, MechanicRepository mechanicRepository) {
-        this.jwtService = jwtService;
-        this.mechanicRepository = mechanicRepository;
+    public SecurityFilter(TokenGateway tokenGateway, MechanicGateway mechanicGateway) {
+        this.tokenGateway = tokenGateway;
+        this.mechanicGateway = mechanicGateway;
     }
 
     @Override
@@ -31,10 +32,10 @@ public class SecurityFilter extends OncePerRequestFilter {
         var token = this.recoverToken(request);
 
         if (token != null) {
-            var username = jwtService.validateToken(token);
+            var username = tokenGateway.validateToken(token);
 
             if (username != null) {
-                var mechanic = mechanicRepository.findByUsername(username)
+                var mechanic = mechanicGateway.findByUsername(username)
                         .orElseThrow(() -> new RuntimeException("Mechanic not found"));
 
                 var userDetails = User.builder()
