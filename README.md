@@ -43,10 +43,10 @@ flowchart LR
 
     subgraph Interfaces ["Interfaces Adapters Layer"]
         CTRL[ServiceOrderController]
-        USECASE["Use Cases<br/>Create / Approve / Cancel / etc"]
     end
 
     subgraph Core ["Core Layer"]
+        USECASE["Use Cases<br/>Create / Approve / Cancel / etc"]
         ENTITY[ServiceOrder Entity]
         GATEWAY["ServiceOrderGateway (interface)"]
     end
@@ -64,7 +64,6 @@ flowchart LR
     GATEWAY --> JPA
     JPA --> REPO
     REPO --> DB
-
 ```
 
 ---
