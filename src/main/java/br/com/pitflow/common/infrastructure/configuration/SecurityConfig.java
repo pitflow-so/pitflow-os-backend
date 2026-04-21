@@ -71,7 +71,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui.html").permitAll()
 
                         //TODO: removed it
-                        .requestMatchers(GET,"/api/url").permitAll()
+                        .requestMatchers(GET,"/external/events/service-orders/api/url").permitAll()
 
                         //.requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated()
