@@ -130,7 +130,7 @@ jobs:
       - name: Update Kubeconfig (EKS)
         run: aws eks update-kubeconfig --name ${{ needs.infrastructure.outputs.eks_cluster_name }} --region us-east-1
 
-      - name: Install Metrics ServerF
+      - name: Install Metrics Server
         run: |
           kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
           kubectl rollout status deployment/metrics-server -n kube-system --timeout=120s
