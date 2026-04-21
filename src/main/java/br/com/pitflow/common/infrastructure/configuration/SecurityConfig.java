@@ -46,6 +46,7 @@ public class SecurityConfig {
 
                         // Hooks
                         .requestMatchers(PATCH, "/external/events/service-orders/**").permitAll()
+                        .requestMatchers(GET, "/external/events/service-orders/decision").permitAll()
 
                         //Cadastro veículo
                         .requestMatchers(POST, "/registry/vehicles").permitAll()
@@ -68,6 +69,9 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()
+
+                        //TODO: removed it
+                        .requestMatchers(GET,"/api/url").permitAll()
 
                         //.requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated()

@@ -67,6 +67,11 @@ spec:
                 secretKeyRef:
                   name: pitflow-secrets
                   key: jwt-secret
+            - name: API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: pitflow-config
+                  key: API_PUBLIC_URL
           startupProbe:
             httpGet:
               path: /actuator/health

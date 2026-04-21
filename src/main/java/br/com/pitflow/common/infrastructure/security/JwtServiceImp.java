@@ -49,7 +49,23 @@ public class JwtServiceImp implements TokenGateway {
                     .getPayload()
                     .getSubject();
         } catch (JwtException e) {
-            return null;
+            throw  new RuntimeException("Invalid token", e);
+        }
+    }
+
+    @Override
+    public Map<String, Object> getClaims(String token) {
+        try {
+            SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+
+            return Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+        } catch (JwtException e) {
+            throw new RuntimeException("Invalid token", e);
         }
     }
 

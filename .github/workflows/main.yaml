@@ -130,7 +130,7 @@ jobs:
       - name: Update Kubeconfig (EKS)
         run: aws eks update-kubeconfig --name ${{ needs.infrastructure.outputs.eks_cluster_name }} --region us-east-1
 
-      - name: Install Metrics Server
+      - name: Install Metrics ServerF
         run: |
           kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
           kubectl rollout status deployment/metrics-server -n kube-system --timeout=120s
@@ -142,14 +142,56 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
-          # Substituindo placeholders nos arquivos YAML dos manifestos
+          # 1. Aplica o Service primeiro para a AWS começar a criar o LoadBalancer
+          kubectl apply -f infra/k8s/service.yaml
+          
+          # 2. Loop para aguardar o DNS do LoadBalancer estar disponível
+          echo "Aguardando DNS do LoadBalancer..."
+          for i in {1..20}; do
+            API_URL=$(kubectl get service pitflow-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+            if [ -n "$API_URL" ]; then
+              break
+            fi
+            echo "Tentativa $i: DNS ainda não disponível, aguardando 10s..."
+            sleep 10
+          done
+
+          if [ -z "$API_URL" ]; then
+            echo "Erro: LoadBalancer não gerou DNS a tempo."
+            exit 1
+          fi
+          
+          export API_PUBLIC_URL="http://$API_URL"
+          echo "URL da API capturada: $API_PUBLIC_URL
+          
+          # 3. Substituindo placeholders nos arquivos YAML dos manifestos de ConfigMap, Secrets e Deployment
           envsubst < infra/k8s/configmap.yaml | kubectl apply -f -
           envsubst < infra/k8s/secrets.yaml | kubectl apply -f -
           envsubst < infra/k8s/deployment.yaml | kubectl apply -f -
           
-          # Aplicando o restante dos manifestos
+          # 4. Por último aplico o HPA
           kubectl apply -f infra/k8s/service.yaml
           kubectl apply -f infra/k8s/hpa.yaml
 
       - name: Verify Rollout
         run: kubectl rollout status deployment/pitflow-backend --timeout=300s
+
+      - name: Get API LoadBalancer URL
+        id: get-url
+        run: |
+          # Aguarda o LoadBalancer receber o Hostname da AWS
+          echo "Aguardando DNS do LoadBalancer..."
+          MAX_RETRIES=10
+          COUNT=0
+          until [ "$COUNT" -ge "$MAX_RETRIES" ]; do
+            API_URL=$(kubectl get service pitflow-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+            if [ -n "$API_URL" ]; then
+              echo "API_URL=http://$API_URL" >> $GITHUB_ENV
+              echo "api_endpoint=http://$API_URL" >> $GITHUB_OUTPUT
+              echo "URL encontrada: http://$API_URL"
+              break
+            fi
+            echo "Ainda não disponível, tentando novamente em 10s... ($COUNT/$MAX_RETRIES)"
+            sleep 10
+            COUNT=$((COUNT+1))
+          done

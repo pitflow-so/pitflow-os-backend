@@ -1,6 +1,5 @@
 package br.com.pitflow.common.infrastructure.security;
 
-import br.com.pitflow.common.infrastructure.security.JwtServiceImp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -8,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class JwtServiceImpTest {
 
@@ -63,10 +63,9 @@ public class JwtServiceImpTest {
         // Arrange
         String invalidToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.invalid-signature";
 
-        // Act
-        String subject = jwtService.validateToken(invalidToken);
-
-        // Assert
-        assertThat(subject).isNull();
+        // Act and Assert
+        assertThatThrownBy(() -> jwtService.validateToken(invalidToken))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Invalid token");
     }
 }

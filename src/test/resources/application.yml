@@ -22,3 +22,4 @@ api:
     token:
       secret: test-secret-key-para-testes-apenas-nao-usar-em-producao-123456789
       expiration-hours: 3
+  url: http://localhost:8080

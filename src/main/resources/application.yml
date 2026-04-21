@@ -32,6 +32,7 @@ api:
     token:
       secret: ${JWT_SECRET}
       expiration-hours: 3
+  url: ${API_URL:http://localhost:8080}
 
 management:
   endpoints:

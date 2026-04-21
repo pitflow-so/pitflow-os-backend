@@ -1,6 +1,7 @@
 package br.com.pitflow.registry.core.usecase.vehicle;
 
 import br.com.pitflow.registry.core.valueObject.CpfCnpj;
+import br.com.pitflow.registry.core.valueObject.Email;
 import br.com.pitflow.registry.core.valueObject.LicensePlate;
 import br.com.pitflow.registry.controller.dto.AddVehicleCommand;
 import br.com.pitflow.registry.core.entity.Customer;
@@ -44,7 +45,12 @@ public class AddVehicleImpTest {
         // Arrange
         UUID customerId = UUID.randomUUID();
         var dto = new AddVehicleCommand(customerId, "ABC1D23", "Toyota", "Corolla", 2024);
-        var customer = new Customer("Rafael Moreira", new CpfCnpj("06678477073"), "11996195936");
+        var customer = new Customer(
+                "Rafael Moreira",
+                "11996195936",
+                new Email("rafael@gmail.com"),
+                new CpfCnpj("06678477073")
+        );
 
         when(customerGateway.findById(customerId)).thenReturn(Optional.of(customer));
         when(vehicleGateway.findByLicensePlate(any(LicensePlate.class))).thenReturn(Optional.empty());
@@ -83,7 +89,12 @@ public class AddVehicleImpTest {
         // Arrange
         UUID customerId = UUID.randomUUID();
         var dto = new AddVehicleCommand(customerId, "ABC1D23", "Toyota", "Corolla", 2024);
-        var customer = new Customer("Rafael Moreira", new CpfCnpj("06678477073"), "11996195936");
+        var customer = new Customer(
+                "Rafael Moreira",
+                "11996195936",
+                new Email("rafael@gmail.com"),
+                new CpfCnpj("06678477073")
+        );
         var existingVehicle = new Vehicle(customerId, new LicensePlate("ABC1D23"), "Fiat", "Uno", 2010);
 
         when(customerGateway.findById(customerId)).thenReturn(Optional.of(customer));
@@ -102,7 +113,12 @@ public class AddVehicleImpTest {
         // Arrange
         UUID customerId = UUID.randomUUID();
         var dto = new AddVehicleCommand(customerId, "INVALID", "Toyota", "Corolla", 2024);
-        var customer = new Customer("Rafael Moreira", new CpfCnpj("06678477073"), "11996195936");
+        var customer = new Customer(
+                "Rafael Moreira",
+                "11996195936",
+                new Email("rafael@gmail.com"),
+                new CpfCnpj("06678477073")
+        );
 
         when(customerGateway.findById(customerId)).thenReturn(Optional.of(customer));
 
