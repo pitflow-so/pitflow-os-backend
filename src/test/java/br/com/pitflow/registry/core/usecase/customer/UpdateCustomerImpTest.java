@@ -5,6 +5,7 @@ import br.com.pitflow.registry.controller.dto.UpdateCustomerCommand;
 import br.com.pitflow.registry.core.entity.Customer;
 import br.com.pitflow.registry.core.gateway.CustomerGateway;
 import br.com.pitflow.registry.core.usecase.customer.inputPort.UpdateCustomer;
+import br.com.pitflow.registry.core.valueObject.Email;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,8 +34,13 @@ class UpdateCustomerImpTest {
     void shouldUpdateCustomerSuccessfully() {
         // Arrange
         UUID id = UUID.randomUUID();
-        var customer = new Customer("Antigo", new CpfCnpj("12345678909"), "111");
-        var dto = new UpdateCustomerCommand("Novo", "98765432100", "222");
+        var customer = new Customer(
+                "Antigo",
+                "111",
+                new Email("dummy-older@gmail.com"),
+                new CpfCnpj("12345678909")
+        );
+        var dto = new UpdateCustomerCommand("Novo", "98765432100", "222", "dummy-new@gmail.com");
 
         when(gateway.findById(id)).thenReturn(Optional.of(customer));
         when(gateway.findByDocument(any())).thenReturn(Optional.empty());
@@ -54,9 +60,9 @@ class UpdateCustomerImpTest {
     void shouldThrowExceptionWhenDocumentConflict() {
         // Arrange
         UUID id = UUID.randomUUID();
-        var customer = new Customer("Cliente A", new CpfCnpj("27278293022"), "111");
-        var another = new Customer("Cliente B", new CpfCnpj("42634554010"), "222");
-        var dto = new UpdateCustomerCommand("Cliente A", "42634554010", "111");
+        var customer = new Customer("Cliente A", "111", new Email("a@gmail.com"), new CpfCnpj("27278293022"));
+        var another = new Customer("Cliente B", "222", new Email("a@gmail.com"), new CpfCnpj("42634554010"));
+        var dto = new UpdateCustomerCommand("Cliente A", "42634554010", "111", "a-new@gmail.com");
 
         when(gateway.findById(id)).thenReturn(Optional.of(customer));
         when(gateway.findByDocument(new CpfCnpj("42634554010"))).thenReturn(Optional.of(another));

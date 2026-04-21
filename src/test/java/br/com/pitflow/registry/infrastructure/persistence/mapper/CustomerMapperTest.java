@@ -2,6 +2,7 @@ package br.com.pitflow.registry.infrastructure.persistence.mapper;
 
 import br.com.pitflow.registry.core.valueObject.CpfCnpj;
 import br.com.pitflow.registry.core.entity.Customer;
+import br.com.pitflow.registry.core.valueObject.Email;
 import br.com.pitflow.registry.infrastructure.persistence.entity.CustomerJpa;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,8 +21,9 @@ class CustomerMapperTest {
         var id = UUID.randomUUID();
         var domain = new Customer(
                 "João Silva",
-                new CpfCnpj("06678477073"),
-                "11999999999"
+                "11999999999",
+                new Email("joao@gmail.com"),
+                new CpfCnpj("06678477073")
         );
         domain.setId(id);
 
@@ -33,6 +35,7 @@ class CustomerMapperTest {
         assertThat(entity.getId()).isEqualTo(id);
         assertThat(entity.getName()).isEqualTo("João Silva");
         assertThat(entity.getDocument()).isEqualTo("06678477073");
+        assertThat(domain.getEmail().value()).isEqualTo("joao@gmail.com");
         assertThat(entity.getPhone()).isEqualTo("11999999999");
         assertThat(entity.getCreatedAt()).isNotNull();
     }
@@ -47,6 +50,7 @@ class CustomerMapperTest {
                 "João Silva",
                 "06678477073",
                 "11999999999",
+                "joao@gmail.com",
                 LocalDateTime.now()
         );
 
@@ -58,6 +62,7 @@ class CustomerMapperTest {
         assertThat(domain.getId()).isEqualTo(id);
         assertThat(domain.getName()).isEqualTo("João Silva");
         assertThat(domain.getDocument().value()).isEqualTo("06678477073");
+        assertThat(domain.getEmail().value()).isEqualTo("joao@gmail.com");
         assertThat(domain.getPhone()).isEqualTo("11999999999");
     }
 

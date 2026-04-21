@@ -3,6 +3,7 @@ package br.com.pitflow.registry.core.usecase.customer;
 import br.com.pitflow.registry.core.valueObject.CpfCnpj;
 import br.com.pitflow.registry.core.entity.Customer;
 import br.com.pitflow.registry.core.gateway.CustomerGateway;
+import br.com.pitflow.registry.core.valueObject.Email;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,12 @@ class FindCustomerByIdImpTest {
     void shouldReturnCustomerWhenIdExists() {
         // Arrange
         UUID id = UUID.randomUUID();
-        var customer = new Customer("Fulano de Tal", new CpfCnpj("42634554010"), "11988887777");
+        var customer = new Customer(
+                "Fulano de Tal",
+                "11988887777",
+                new Email("fulano@gmail.com"),
+                new CpfCnpj("42634554010")
+        );
         customer.setId(id);
 
         when(gateway.findById(id)).thenReturn(Optional.of(customer));

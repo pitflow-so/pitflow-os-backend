@@ -40,13 +40,13 @@ public class CustomerController {
     }
 
     public CustomerResponse create(CreateCustomerRequest request) {
-        var command = new CreateCustomerCommand(request.name(), request.document(), request.phone());
+        var command = new CreateCustomerCommand(request.name(), request.document(), request.phone(), request.email());
         var customer = createCustomer.execute(command);
         return CustomerPresenter.toResponse(customer);
     }
 
     public CustomerResponse update(UUID id, UpdateCustomerRequest request) {
-        var command = new UpdateCustomerCommand(request.name(), request.document(), request.phone());
+        var command = new UpdateCustomerCommand(request.name(), request.document(), request.phone(), request.email());
         updateCustomer.execute(id, command);
         var updated = findCustomerById.execute(id);
         return CustomerPresenter.toResponse(updated);

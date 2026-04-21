@@ -2,6 +2,7 @@ package br.com.pitflow.registry.infrastructure.persistence.mapper;
 
 import br.com.pitflow.registry.core.valueObject.CpfCnpj;
 import br.com.pitflow.registry.core.entity.Customer;
+import br.com.pitflow.registry.core.valueObject.Email;
 import br.com.pitflow.registry.infrastructure.persistence.entity.CustomerJpa;
 
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ public final class CustomerMapper {
                 domain.getName(),
                 domain.getDocument().value(),
                 domain.getPhone(),
+                domain.getEmail().value(),
                 LocalDateTime.now()
         );
     }
@@ -26,8 +28,9 @@ public final class CustomerMapper {
         if (entity == null) return null;
         Customer domain = new Customer(
                 entity.getName(),
-                new CpfCnpj(entity.getDocument()),
-                entity.getPhone()
+                entity.getPhone(),
+                new Email(entity.getEmail()),
+                new CpfCnpj(entity.getDocument())
         );
 
         // Importante sempre utilizar o setId para manter a consistência do ID

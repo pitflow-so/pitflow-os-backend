@@ -1,5 +1,6 @@
 package br.com.pitflow.operation.core.usecase;
 
+import br.com.pitflow.common.core.gateway.TokenGateway;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
@@ -17,13 +18,15 @@ class CompleteDiagnosisImpTest {
 
     private ServiceOrderGateway gateway;
     private NotificationGateway notificationGateway;
+    private TokenGateway tokenGateway;
     private CompleteDiagnosisImp completeDiagnosis;
 
     @BeforeEach
     void setUp() {
         gateway = mock(ServiceOrderGateway.class);
         notificationGateway = mock(NotificationGateway.class);
-        completeDiagnosis = new CompleteDiagnosisImp(gateway, notificationGateway);
+        tokenGateway = mock(TokenGateway.class);
+        completeDiagnosis = new CompleteDiagnosisImp(gateway, notificationGateway, tokenGateway, "dummyURL");
     }
 
     @Test
@@ -88,12 +91,13 @@ class CompleteDiagnosisImpTest {
 
         when(gateway.findById(osId)).thenReturn(Optional.of(os));
         NotificationGateway notificationGateway = mock(NotificationGateway.class);
-        var interactor = new CompleteDiagnosisImp(gateway, notificationGateway);
+        var interactor = new CompleteDiagnosisImp(gateway, notificationGateway, tokenGateway, "dummyURL");
 
         // Act
         interactor.execute(osId);
 
         // Assert
+        //TODO: fix erro from token
         assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.AWAITING_APPROVAL);
         verify(gateway).save(os);
         verify(notificationGateway).send(eq(os.getId()), anyString());

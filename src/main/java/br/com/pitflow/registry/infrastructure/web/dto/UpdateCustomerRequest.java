@@ -11,5 +11,8 @@ public record UpdateCustomerRequest(
         String document,
 
         @Schema(description = "Telefone de contato", example = "11988887777")
-        String phone
+        String phone,
+
+        @Schema(description = "Email para contato", example = "joao@gmail.com")
+        String email
 ) {}
