@@ -50,10 +50,6 @@ public class ExternalEventRestAdapter {
     }
 
     @GetMapping("/api/url")
-    @Operation(
-            summary = "Webhook para atualização de status da OS por e-mail, com validação via token",
-            description = "Recebe eventos externos (ex: APPROVED, REJECTED) e atualiza o status da Ordem de Serviço conforme as regras de negócio."
-    )
     public ResponseEntity<String> url() {
         var apiUrl = controller.getURL();
         return ResponseEntity.ok(apiUrl);
