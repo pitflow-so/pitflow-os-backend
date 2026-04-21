@@ -11,6 +11,9 @@ public record CreateCustomerRequest(
         String document,
 
         @Schema(example = "11996195936", description = "Telefone de contato com DDD")
-        String phone
+        String phone,
+
+        @Schema(example = "fulano@gmail.com", description = "E-mail para contato, que seja válido!")
+        String email
 
 ) {}

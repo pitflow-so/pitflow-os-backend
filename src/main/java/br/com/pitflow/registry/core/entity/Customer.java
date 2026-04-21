@@ -1,6 +1,7 @@
 package br.com.pitflow.registry.core.entity;
 
 import br.com.pitflow.registry.core.valueObject.CpfCnpj;
+import br.com.pitflow.registry.core.valueObject.Email;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,16 +12,19 @@ public class Customer {
 
     private UUID id;
     private String name;
-    private CpfCnpj document;
     private String phone;
+
+    private Email email;
+    private CpfCnpj document;
     private List<Vehicle> vehicles;
 
-    public Customer(String name, CpfCnpj document, String phone) {
+    public Customer(String name, String phone, Email email, CpfCnpj document) {
         validateName(name);
         this.id = UUID.randomUUID();
         this.name = name;
-        this.document = document;
         this.phone = phone;
+        this.email = email;
+        this.document = document;
         this.vehicles = new ArrayList<>();
     }
 
@@ -38,6 +42,7 @@ public class Customer {
     public String getName() { return name; }
     public CpfCnpj getDocument() { return document; }
     public String getPhone() { return phone; }
+    public Email getEmail() { return email; }
 
     // Ensure immutability of the vehicles list
     public List<Vehicle> getVehicles() {

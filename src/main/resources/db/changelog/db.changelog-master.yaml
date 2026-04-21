@@ -11,3 +11,7 @@ databaseChangeLog:
       file: db/changelog/migrations/005-create-mechanics-table.sql
   - include:
       file: db/changelog/migrations/006-base-inserts-to-homologate.sql
+  - include:
+      file: db/changelog/migrations/007-alter-table-customer-add-email.sql
+  - include:
+      file: db/changelog/migrations/008-updated-email-in-customer.sql

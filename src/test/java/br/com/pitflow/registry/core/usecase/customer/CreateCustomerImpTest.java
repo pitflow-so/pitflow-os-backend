@@ -4,6 +4,7 @@ import br.com.pitflow.registry.core.valueObject.CpfCnpj;
 import br.com.pitflow.registry.controller.dto.CreateCustomerCommand;
 import br.com.pitflow.registry.core.entity.Customer;
 import br.com.pitflow.registry.core.gateway.CustomerGateway;
+import br.com.pitflow.registry.core.valueObject.Email;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,7 @@ public class CreateCustomerImpTest {
     @DisplayName("Should create customer with success")
     void shouldCreateCustomerWithSuccess() {
         // Arrange
-        var dto = new CreateCustomerCommand("Rafael Moreira", "06678477073", "11996195936");
+        var dto = new CreateCustomerCommand("Rafael Moreira", "06678477073", "11996195936", "rafael@gmail.com");
         when(gateway.findByDocument(any(CpfCnpj.class))).thenReturn(Optional.empty());
 
         // Act
@@ -56,8 +57,8 @@ public class CreateCustomerImpTest {
     @DisplayName("Should Throw Exception When Document Already Exists")
     void shouldThrowExceptionWhenDocumentAlreadyExists() {
         // Arrange
-        var dto = new CreateCustomerCommand("Rafael Moreira", "06678477073", "11996195936");
-        var existingCustomer = new Customer("Outro Nome", new CpfCnpj("06678477073"), "11000000000");
+        var dto = new CreateCustomerCommand("Rafael Moreira", "06678477073", "11996195936", "rafael@gmail.com");
+        var existingCustomer = new Customer("Outro Nome", "11000000000", new Email("rafael@gmail.com"), new CpfCnpj("06678477073"));
         var exceptionMessage = String.format("Customer with document %s already exists.", existingCustomer.getDocument().value());
 
         when(gateway.findByDocument(any(CpfCnpj.class))).thenReturn(Optional.of(existingCustomer));
@@ -74,7 +75,7 @@ public class CreateCustomerImpTest {
     @DisplayName("Should Throw Exception When Document Is Invalid")
     void shouldThrowExceptionWhenDocumentIsInvalid() {
         // Arrange
-        var dto = new CreateCustomerCommand("Rafael Moreira", "123", "11996195936");
+        var dto = new CreateCustomerCommand("Rafael Moreira", "123", "11996195936", "rafael@gmail.com");
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> createCustomer.execute(dto));
