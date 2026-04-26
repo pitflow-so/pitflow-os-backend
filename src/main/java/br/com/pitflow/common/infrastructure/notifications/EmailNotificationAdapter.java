@@ -2,10 +2,11 @@ package br.com.pitflow.common.infrastructure.notifications;
 
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
 import br.com.pitflow.operation.core.gateway.dto.Notification;
+import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 
 import java.util.UUID;
 
@@ -26,13 +27,15 @@ public class EmailNotificationAdapter implements NotificationGateway {
         String to = notification.to().value();
 
         try {
-            SimpleMailMessage mail = new SimpleMailMessage();
-            mail.setFrom(from);
-            mail.setTo(to);
-            mail.setSubject("Pitflow - Orçamento da Ordem de Serviço");
-            mail.setText(notification.message());
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-            mailSender.send(mail);
+            helper.setFrom(from);
+            helper.setTo(to);
+            helper.setSubject("Pitflow - Orçamento da Ordem de Serviço");
+            helper.setText(notification.message(), true); // true used to handle with HTML
+
+            mailSender.send(mimeMessage);
 
             logger.info("[EMAIL SENT] OS ID: {} - To: {}", serviceOrderId, to);
 

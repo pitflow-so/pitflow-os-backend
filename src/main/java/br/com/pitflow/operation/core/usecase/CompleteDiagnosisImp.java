@@ -18,6 +18,7 @@ public class CompleteDiagnosisImp implements CompleteDiagnosis {
     private final TokenGateway tokenGateway;
     private static final String APPROVED_DECISION = "APPROVED";
     private static final String REJECTED_DECISION = "REJECTED";
+    private static final String PATH_DECISION = "/external/events/service-orders/decision";
     private final String apiURL;
 
     public CompleteDiagnosisImp(
@@ -60,26 +61,10 @@ public class CompleteDiagnosisImp implements CompleteDiagnosis {
     }
 
     private String makeMessage(String approveToken, String rejectToken, ServiceOrder os) {
-        String baseUrl = this.apiURL;
+        String approveLink = this.apiURL + PATH_DECISION + "?token=" + approveToken;
+        String rejectLink  = this.apiURL + PATH_DECISION + "?token=" + rejectToken;
 
-        String approveLink = baseUrl + "?token=" + approveToken;
-        String rejectLink = baseUrl + "?token=" + rejectToken;
-
-        return String.format("""
-                Seu orçamento para a OS %s está pronto.
-                Valor total: R$ %s.
-
-                Aprovar:
-                %s
-
-                Rejeitar:
-                %s
-                """,
-                os.getId(),
-                os.getTotalAmount(),
-                approveLink,
-                rejectLink
-        );
+        return layoutEmail(approveLink, rejectLink, os);
     }
 
     private String getTokenToMessage(String osId, String decision){
@@ -89,5 +74,103 @@ public class CompleteDiagnosisImp implements CompleteDiagnosis {
         );
 
         return tokenGateway.generateToken("external-decision", claims);
+    }
+
+    private String layoutEmail(String aprove, String reject,  ServiceOrder os){
+        return String.format("""
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+          <table width="100%%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td align="center" style="padding:40px 0;">
+                <table width="600" cellpadding="0" cellspacing="0"
+                       style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+                  <!-- Header -->
+                  <tr>
+                    <td style="background:#1a1a2e;padding:32px;text-align:center;">
+                      <h1 style="margin:0;color:#ffffff;font-size:24px;letter-spacing:1px;">PITFLOW</h1>
+                      <p style="margin:6px 0 0;color:#a0a0c0;font-size:13px;">Gestão de Ordens de Serviço</p>
+                    </td>
+                  </tr>
+
+                  <!-- Body -->
+                  <tr>
+                    <td style="padding:40px 48px;">
+                      <h2 style="margin:0 0 8px;color:#1a1a2e;font-size:20px;">Orçamento disponível</h2>
+                      <p style="margin:0 0 24px;color:#666;font-size:14px;">
+                        O diagnóstico da sua ordem de serviço foi concluído e o orçamento está pronto para sua aprovação.
+                      </p>
+
+                      <!-- OS Info -->
+                      <table width="100%%" cellpadding="0" cellspacing="0"
+                             style="background:#f8f8fb;border-radius:6px;margin-bottom:32px;">
+                        <tr>
+                          <td style="padding:16px 20px;">
+                            <p style="margin:0 0 6px;color:#999;font-size:12px;text-transform:uppercase;letter-spacing:1px;">
+                              Ordem de Serviço
+                            </p>
+                            <p style="margin:0;color:#1a1a2e;font-size:13px;font-family:monospace;">%s</p>
+                          </td>
+                          <td style="padding:16px 20px;text-align:right;">
+                            <p style="margin:0 0 6px;color:#999;font-size:12px;text-transform:uppercase;letter-spacing:1px;">
+                              Valor Total
+                            </p>
+                            <p style="margin:0;color:#1a1a2e;font-size:22px;font-weight:bold;">R$ %s</p>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <p style="margin:0 0 20px;color:#444;font-size:14px;text-align:center;">
+                        Escolha uma das opções abaixo para prosseguir:
+                      </p>
+
+                      <!-- Buttons -->
+                      <table width="100%%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td align="center" style="padding:0 8px 0 0;">
+                            <a href="%s"
+                               style="display:block;background:#2e7d32;color:#ffffff;text-decoration:none;
+                                      padding:16px 0;border-radius:6px;font-size:16px;font-weight:bold;
+                                      text-align:center;">
+                              ✔ Aprovar Orçamento
+                            </a>
+                          </td>
+                          <td align="center" style="padding:0 0 0 8px;">
+                            <a href="%s"
+                               style="display:block;background:#c62828;color:#ffffff;text-decoration:none;
+                                      padding:16px 0;border-radius:6px;font-size:16px;font-weight:bold;
+                                      text-align:center;">
+                              ✘ Rejeitar Orçamento
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background:#f8f8fb;padding:24px 48px;text-align:center;
+                               border-top:1px solid #eeeeee;">
+                      <p style="margin:0;color:#999;font-size:12px;">
+                        Este link expira em <strong>3 horas</strong>. Caso tenha dúvidas, entre em contato com a oficina.
+                      </p>
+                    </td>
+                  </tr>
+
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+        """,
+                os.getId(),
+                os.getTotalAmount(),
+                aprove,
+                reject
+        );
     }
 }
