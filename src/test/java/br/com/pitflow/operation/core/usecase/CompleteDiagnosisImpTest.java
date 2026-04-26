@@ -4,6 +4,7 @@ import br.com.pitflow.common.core.gateway.TokenGateway;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.gateway.dto.Notification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,10 @@ class CompleteDiagnosisImpTest {
         os.startDiagnosis(); // Muda para IN_DIAGNOSIS
         os.addService(UUID.randomUUID(), "Limpeza", new BigDecimal("100.0")); // Adiciona item obrigatório
 
+        var dummyEmail = "dummy@email.com";
+
         when(gateway.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findEmail(osId)).thenReturn(Optional.of(dummyEmail));
 
         // Act
         completeDiagnosis.execute(osId);
@@ -47,7 +51,7 @@ class CompleteDiagnosisImpTest {
         // Assert
         assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.AWAITING_APPROVAL);
         verify(gateway).save(os);
-        verify(notificationGateway).send(eq(osId), anyString());
+        verify(notificationGateway).send(eq(osId), any(Notification.class));
     }
 
     @Test
@@ -70,9 +74,12 @@ class CompleteDiagnosisImpTest {
         UUID osId = UUID.randomUUID();
         var os = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Dummy");
         os.startDiagnosis();
+
+        var dummyEmail = "dummy@email.com";
         // Items not added
 
         when(gateway.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findEmail(osId)).thenReturn(Optional.of(dummyEmail));
 
         // Act & Assert
         assertThatThrownBy(() -> completeDiagnosis.execute(osId))
@@ -89,7 +96,11 @@ class CompleteDiagnosisImpTest {
         os.startDiagnosis();
         os.addService(UUID.randomUUID(), "Reparo", new BigDecimal("100"));
 
+        var dummyEmail = "dummy@email.com";
+
         when(gateway.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findEmail(osId)).thenReturn(Optional.of(dummyEmail));
+
         NotificationGateway notificationGateway = mock(NotificationGateway.class);
         var interactor = new CompleteDiagnosisImp(gateway, notificationGateway, tokenGateway, "dummyURL");
 
@@ -100,6 +111,6 @@ class CompleteDiagnosisImpTest {
         //TODO: fix erro from token
         assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.AWAITING_APPROVAL);
         verify(gateway).save(os);
-        verify(notificationGateway).send(eq(os.getId()), anyString());
+        verify(notificationGateway).send(eq(os.getId()), any(Notification.class));
     }
 }

@@ -9,5 +9,4 @@ public class PitflowOsBackendApplication {
     public static void main(String[] args) {
         SpringApplication.run(PitflowOsBackendApplication.class, args);
     }
-
 }

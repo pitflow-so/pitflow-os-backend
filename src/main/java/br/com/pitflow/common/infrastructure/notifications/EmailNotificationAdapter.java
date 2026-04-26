@@ -1,6 +1,7 @@
-package br.com.pitflow.operation.infrastructure.notifications;
+package br.com.pitflow.common.infrastructure.notifications;
 
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
+import br.com.pitflow.operation.core.gateway.dto.Notification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.SimpleMailMessage;
@@ -20,17 +21,16 @@ public class EmailNotificationAdapter implements NotificationGateway {
     }
 
     @Override
-    public void send(UUID serviceOrderId, String message) {
+    public void send(UUID serviceOrderId, Notification notification) {
 
-        // ⚠️ TEMP: enviando para o próprio remetente (para testes)
-        String to = "rafaelsmoreiras@gmail.com";
+        String to = notification.to().value();
 
         try {
             SimpleMailMessage mail = new SimpleMailMessage();
             mail.setFrom(from);
             mail.setTo(to);
             mail.setSubject("Pitflow - Orçamento da Ordem de Serviço");
-            mail.setText(message);
+            mail.setText(notification.message());
 
             mailSender.send(mail);
 

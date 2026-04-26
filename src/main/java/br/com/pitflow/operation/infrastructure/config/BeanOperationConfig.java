@@ -38,7 +38,6 @@ import br.com.pitflow.operation.core.usecase.inputPort.GetServiceOrderDuration;
 import br.com.pitflow.operation.core.usecase.inputPort.ListInExecutionOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.ListPrioritizedServiceOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.StartDiagnosis;
-import br.com.pitflow.operation.infrastructure.notifications.LogNotificationAdapterMock;
 import br.com.pitflow.operation.infrastructure.persistence.adapter.JpaServiceOrderGatewayAdapter;
 import br.com.pitflow.operation.infrastructure.persistence.repository.SpringServiceOrderRepository;
 import br.com.pitflow.registry.core.gateway.CustomerGateway;
@@ -108,11 +107,6 @@ public class BeanOperationConfig {
     @Bean
     public GetServiceOrderById getServiceOrderById(ServiceOrderGateway repository) {
         return new GetServiceOrderByIdImp(repository);
-    }
-
-    @Bean
-    public NotificationGateway notificationService() {
-        return new LogNotificationAdapterMock();
     }
 
     @Bean

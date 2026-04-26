@@ -4,7 +4,9 @@ import br.com.pitflow.common.core.gateway.TokenGateway;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.gateway.dto.Notification;
 import br.com.pitflow.operation.core.usecase.inputPort.CompleteDiagnosis;
+import br.com.pitflow.registry.core.valueObject.Email;
 
 import java.util.Map;
 import java.util.UUID;
@@ -35,6 +37,9 @@ public class CompleteDiagnosisImp implements CompleteDiagnosis {
         var os = repository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Service Order not found with ID: " + orderId));
 
+        var emailAddress = repository.findEmail(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Email to notification not found with OS ID: " + orderId));
+
         os.completeDiagnosis();
         repository.save(os);
 
@@ -44,7 +49,9 @@ public class CompleteDiagnosisImp implements CompleteDiagnosis {
 
         String message = makeMessage(approveToken, rejectToken, os);
 
-        notificationGateway.send(os.getId(), message);
+        var email = new Email(emailAddress);
+        var notification = new Notification(message, email);
+        notificationGateway.send(os.getId(), notification);
     }
 
     @Override
