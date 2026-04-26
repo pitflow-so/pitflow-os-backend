@@ -70,4 +70,13 @@ public class JpaServiceOrderGatewayAdapter implements ServiceOrderGateway {
     public Double getAverageExecutionTimeInSeconds() {
         return springRepository.getAverageExecutionTimeInSeconds();
     }
+
+    @Override
+    public Optional<String> findEmail(UUID serviceOrderId) {
+        var email = springRepository.getEmail(serviceOrderId);
+        if (email.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(email);
+    }
 }

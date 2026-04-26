@@ -1,6 +1,7 @@
-package br.com.pitflow.operation.infrastructure.notifications;
+package br.com.pitflow.common.infrastructure.notifications;
 
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
+import br.com.pitflow.operation.core.gateway.dto.Notification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +13,7 @@ public class LogNotificationAdapterMock implements NotificationGateway {
     public LogNotificationAdapterMock() {
     }
     @Override
-    public void send(UUID serviceOrderId, String message) {
-        logger.info("[NOTIFICATION] - OS ID: {} - Message: {}", serviceOrderId, message);
+    public void send(UUID serviceOrderId, Notification notification) {
+        logger.info("[NOTIFICATION] - OS ID: {} - Message: {}", serviceOrderId, notification.message());
     }
 }

@@ -67,6 +67,26 @@ spec:
                 secretKeyRef:
                   name: pitflow-secrets
                   key: jwt-secret
+            - name: API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: pitflow-config
+                  key: API_PUBLIC_URL
+            - name: MOCK_MESSAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: pitflow-config
+                  key: MOCK_MESSAGE
+            - name: MAIL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: pitflow-secrets
+                  key: mail-username
+            - name: MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pitflow-secrets
+                  key: mail-password
           startupProbe:
             httpGet:
               path: /actuator/health

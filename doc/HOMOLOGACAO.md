@@ -14,7 +14,8 @@ curl -X 'POST' \
   -d '{
   "name": "Pedro Santos",
   "document": "42184902012",
-  "phone": "2799550255"
+  "phone": "2799550255",
+  "email": "dummy@gmail.com"
 }'
 ```
 Response:
@@ -23,7 +24,8 @@ Response:
   "id": "7079af59-5921-4e60-96b3-63f7ed49404f",
   "name": "Pedro Santos",
   "document": "42184902012",
-  "phone": "2799550255"
+  "phone": "2799550255",
+  "dummy": "dummy@gmail.com"
 }
 ```
 ### 2 - Cadastro de veículo

@@ -1,8 +1,10 @@
 package br.com.pitflow.operation.infrastructure.config;
 
+import br.com.pitflow.common.core.gateway.TokenGateway;
 import br.com.pitflow.common.core.gateway.TransactionGateway;
 import br.com.pitflow.inventory.core.gateway.PartGateway;
 import br.com.pitflow.inventory.core.gateway.ServiceGateway;
+import br.com.pitflow.operation.controller.ExternalDecisionController;
 import br.com.pitflow.operation.controller.ServiceOrderController;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
@@ -36,11 +38,11 @@ import br.com.pitflow.operation.core.usecase.inputPort.GetServiceOrderDuration;
 import br.com.pitflow.operation.core.usecase.inputPort.ListInExecutionOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.ListPrioritizedServiceOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.StartDiagnosis;
-import br.com.pitflow.operation.infrastructure.notifications.LogNotificationAdapterMock;
 import br.com.pitflow.operation.infrastructure.persistence.adapter.JpaServiceOrderGatewayAdapter;
 import br.com.pitflow.operation.infrastructure.persistence.repository.SpringServiceOrderRepository;
 import br.com.pitflow.registry.core.gateway.CustomerGateway;
 import br.com.pitflow.registry.core.gateway.VehicleGateway;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -73,8 +75,10 @@ public class BeanOperationConfig {
     @Bean
     public CompleteDiagnosis completeDiagnosis(
             ServiceOrderGateway repository,
-            NotificationGateway notificationGateway) {
-        return new CompleteDiagnosisImp(repository, notificationGateway);
+            NotificationGateway notificationGateway,
+            TokenGateway tokenGateway,
+            @Value("${api.url}") String apiUrl) {
+        return new CompleteDiagnosisImp(repository, notificationGateway, tokenGateway, apiUrl);
     }
 
     @Bean
@@ -103,11 +107,6 @@ public class BeanOperationConfig {
     @Bean
     public GetServiceOrderById getServiceOrderById(ServiceOrderGateway repository) {
         return new GetServiceOrderByIdImp(repository);
-    }
-
-    @Bean
-    public NotificationGateway notificationService() {
-        return new LogNotificationAdapterMock();
     }
 
     @Bean
@@ -186,4 +185,10 @@ public class BeanOperationConfig {
                 listPrioritizedServiceOrders
         );
     }
+
+    @Bean
+    public ExternalDecisionController externalDecisionController(TokenGateway  tokenGateway, ServiceOrderController serviceOrderController) {
+        return new  ExternalDecisionController(tokenGateway, serviceOrderController);
+    }
 }
+

@@ -15,4 +15,5 @@ public interface ServiceOrderGateway {
     List<ServiceOrder> findByVehicleId(UUID vehicleId);
     List<ServiceOrder> findByStatusOrderByCreatedAtAsc(ServiceOrder.Status status);
     Double getAverageExecutionTimeInSeconds();
+    Optional<String> findEmail(UUID serviceOrderId);
 }

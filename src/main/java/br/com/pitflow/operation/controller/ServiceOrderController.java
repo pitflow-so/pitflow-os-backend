@@ -4,6 +4,7 @@ import br.com.pitflow.operation.controller.dto.AddOrderItemCommand;
 import br.com.pitflow.operation.controller.dto.CancelOrderCommand;
 import br.com.pitflow.operation.controller.dto.CreateServiceOrderAllDataCommand;
 import br.com.pitflow.operation.controller.dto.CreateServiceOrderCommand;
+import br.com.pitflow.operation.controller.dto.ExternalDecisionCommand;
 import br.com.pitflow.operation.core.usecase.inputPort.AddOrderItem;
 import br.com.pitflow.operation.core.usecase.inputPort.ApproveOrder;
 import br.com.pitflow.operation.core.usecase.inputPort.CancelOrder;
@@ -208,5 +209,20 @@ public class ServiceOrderController {
 
             default -> throw new IllegalArgumentException("Unknown event");
         }
+    }
+
+    public void processExternalDecision(ExternalDecisionCommand command) {
+        processExternalStatusUpdate(
+                new ExternalStatusUpdateRequest(
+                        command.serviceOrderId(),
+                        command.event(),
+                        command.reason()
+                )
+        );
+    }
+
+    //TODO: remove it
+    public String getURL(){
+        return completeDiagnosis.getApiURl();
     }
 }

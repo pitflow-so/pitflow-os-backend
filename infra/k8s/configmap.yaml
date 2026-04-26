@@ -9,3 +9,5 @@ data:
   DB_PORT: "5432"
   DB_NAME: "pitflow_os"
   DB_USER: "pitflow"
+  API_PUBLIC_URL: "${API_PUBLIC_URL}"
+  MOCK_MESSAGE: "${MOCK_MESSAGE}"

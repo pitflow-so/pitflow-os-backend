@@ -22,6 +22,15 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     enabled: true
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:pitflow.notifications@gmail.com}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
 logging:
   level:
     org:
@@ -32,6 +41,7 @@ api:
     token:
       secret: ${JWT_SECRET}
       expiration-hours: 3
+  url: ${API_URL:http://localhost:8080}
 
 management:
   endpoints:
@@ -41,3 +51,6 @@ management:
   endpoint:
     health:
       show-details: never
+
+mock:
+  send-message: ${MOCK_MESSAGE:true}

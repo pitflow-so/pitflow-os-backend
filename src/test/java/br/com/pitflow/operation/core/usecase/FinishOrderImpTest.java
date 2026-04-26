@@ -3,6 +3,7 @@ package br.com.pitflow.operation.core.usecase;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.gateway.dto.Notification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,10 @@ class FinishOrderImpTest {
         os.completeDiagnosis();
         os.approve();
 
+        var dummyEmail = "dummy@email.com";
+
         when(gateway.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findEmail(osId)).thenReturn(Optional.of(dummyEmail));
 
         // Act
         finishOrder.execute(osId);
@@ -46,7 +50,7 @@ class FinishOrderImpTest {
         assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.FINISHED);
         assertThat(os.getFinishedAt()).isNotNull();
         verify(gateway).save(os);
-        verify(notificationGateway).send(eq(os.getId()), anyString());
+        verify(notificationGateway).send(eq(os.getId()), any(Notification.class));
     }
 
     @Test
@@ -55,8 +59,10 @@ class FinishOrderImpTest {
         // Arrange
         UUID osId = UUID.randomUUID();
         var os = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Troca de filtros");
+        var dummyEmail = "dummy@email.com";
 
         when(gateway.findById(osId)).thenReturn(Optional.of(os));
+        when(gateway.findEmail(osId)).thenReturn(Optional.of(dummyEmail));
 
         // Act & Assert
         assertThatThrownBy(() -> finishOrder.execute(osId))

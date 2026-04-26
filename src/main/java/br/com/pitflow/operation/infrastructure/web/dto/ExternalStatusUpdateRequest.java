@@ -1,5 +1,6 @@
 package br.com.pitflow.operation.infrastructure.web.dto;
 
+import br.com.pitflow.operation.core.enums.ExternalStatusEvent;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.UUID;
@@ -22,12 +23,4 @@ public record ExternalStatusUpdateRequest(
         )
         String reason
 ) {
-
-    @Schema(description = "Eventos externos permitidos para atualização de status da OS")
-    public enum ExternalStatusEvent {
-
-        APPROVED,
-        REJECTED,
-        FINISHED
-    }
 }
