@@ -5,6 +5,10 @@ on:
     branches: [ "main" ]
   workflow_dispatch: # Habilitar execução manual
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   # -------------------------------------------------------------------------
   # JOB 1: INFRAESTRUTURA AWS
@@ -48,6 +52,9 @@ jobs:
 
       - name: Terraform Init
         run: cd infra/terraform && terraform init
+
+      - name: Terraform Validate
+        run: cd infra/terraform && terraform validate
 
       - name: Terraform Plan
         run: |
@@ -135,63 +142,72 @@ jobs:
           kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
           kubectl rollout status deployment/metrics-server -n kube-system --timeout=120s
 
-      - name: Prepare and Apply Manifests
+      - name: Deploy Application Manifests
         env:
           RDS_ENDPOINT: ${{ needs.infrastructure.outputs.rds_endpoint }}
           CONTAINER_IMAGE: ${{ needs.infrastructure.outputs.ecr_url }}:${{ github.sha }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          MOCK_MESSAGE: ${{ secrets.MOCK_MESSAGE }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
         run: |
-          # 1. Aplica o Service primeiro para a AWS começar a criar o LoadBalancer
+          # 1. Aplica Secrets.
+          envsubst < infra/k8s/secrets.yaml | kubectl apply -f -
+          
+          # 2. Aplica Service
           kubectl apply -f infra/k8s/service.yaml
           
-          # 2. Loop para aguardar o DNS do LoadBalancer estar disponível
+          # 3. Aguarda e captura o DNS do LoadBalancer
           echo "Aguardando DNS do LoadBalancer..."
-          for i in {1..20}; do
+          ATTEMPTS=0
+          MAX_ATTEMPTS=30
+          while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
             API_URL=$(kubectl get service pitflow-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-            if [ -n "$API_URL" ]; then
+            if [ -n "$API_URL" ] && [ "$API_URL" != "<pending>" ]; then
+              echo "✅ LoadBalancer DNS obtido: $API_URL"
+              API_PUBLIC_URL="http://$API_URL"
               break
             fi
-            echo "Tentativa $i: DNS ainda não disponível, aguardando 10s..."
+            echo "⏳ Tentativa $((ATTEMPTS+1))/$MAX_ATTEMPTS - Aguardando LoadBalancer..."
             sleep 10
+            ATTEMPTS=$((ATTEMPTS+1))
           done
-
-          if [ -z "$API_URL" ]; then
-            echo "Erro: LoadBalancer não gerou DNS a tempo."
+          
+          if [ -z "$API_URL" ] || [ "$API_URL" = "<pending>" ]; then
+            echo "❌ Erro: LoadBalancer não gerou DNS a tempo"
             exit 1
           fi
           
-          export API_PUBLIC_URL="http://$API_URL"
-          echo "URL da API capturada: $API_PUBLIC_URL
-          
-          # 3. Substituindo placeholders nos arquivos YAML dos manifestos de ConfigMap, Secrets e Deployment
+          # 4. Cria ConfigMap com a URL 
+          export API_PUBLIC_URL
+          echo "Criando ConfigMap com API_URL=$API_PUBLIC_URL"
           envsubst < infra/k8s/configmap.yaml | kubectl apply -f -
-          envsubst < infra/k8s/secrets.yaml | kubectl apply -f -
+          
+          # 5. Aplica deployment
+          echo "Aplicando Deployment com ConfigMap pronto..."
           envsubst < infra/k8s/deployment.yaml | kubectl apply -f -
           
-          # 4. Por último aplico o HPA
-          kubectl apply -f infra/k8s/service.yaml
-          kubectl apply -f infra/k8s/hpa.yaml
+          # 6. Aguarda Deployment ficar pronto
+          kubectl rollout status deployment/pitflow-backend --timeout=300s
+          
+          # 7. Apply HPA (por último, baseado no Deployment funcionando)
+          kubectl apply -f infra/k8s/hpa.yaml  
 
-      - name: Verify Rollout
-        run: kubectl rollout status deployment/pitflow-backend --timeout=300s
-
-      - name: Get API LoadBalancer URL
-        id: get-url
+      - name: Verify Final Deployment
         run: |
-          # Aguarda o LoadBalancer receber o Hostname da AWS
-          echo "Aguardando DNS do LoadBalancer..."
-          MAX_RETRIES=10
-          COUNT=0
-          until [ "$COUNT" -ge "$MAX_RETRIES" ]; do
+          echo "✅ Deployment final verificado:"
+          kubectl get pods
+          kubectl get svc pitflow-service
+          kubectl get hpa
+
+      - name: Get API Endpoint URL
+        id: get-api-url
+        run: |
             API_URL=$(kubectl get service pitflow-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
             if [ -n "$API_URL" ]; then
-              echo "API_URL=http://$API_URL" >> $GITHUB_ENV
               echo "api_endpoint=http://$API_URL" >> $GITHUB_OUTPUT
-              echo "URL encontrada: http://$API_URL"
-              break
+              echo "✅ API disponível em: http://$API_URL"
+            else
+              echo "⚠️ LoadBalancer ainda pendente, verifique manualmente"
             fi
-            echo "Ainda não disponível, tentando novamente em 10s... ($COUNT/$MAX_RETRIES)"
-            sleep 10
-            COUNT=$((COUNT+1))
-          done
