@@ -9,5 +9,7 @@ public record CustomerResponse (
 
         String document,
 
-        String phone
+        String phone,
+
+        String email
 ) {}

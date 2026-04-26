@@ -11,7 +11,8 @@ public class CustomerPresenter {
                 customer.getId(),
                 customer.getName(),
                 customer.getDocument().value(),
-                customer.getPhone()
+                customer.getPhone(),
+                customer.getEmail().value()
         );
     }
 }
