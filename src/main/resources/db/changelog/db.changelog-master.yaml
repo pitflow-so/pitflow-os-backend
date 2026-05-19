@@ -17,3 +17,5 @@ databaseChangeLog:
       file: db/changelog/migrations/008-updated-email-in-customer.sql
   - include:
       file: db/changelog/migrations/009-update-email-other-base-customers.sql
+  - include:
+      file: db/changelog/migrations/010-alter-table-customer-add-status.sql

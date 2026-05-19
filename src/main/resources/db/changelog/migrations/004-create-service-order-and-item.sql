@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS service_order_items (
     quantity INTEGER NOT NULL,
     item_type VARCHAR(50) NOT NULL,
 
+    PRIMARY KEY (service_order_id, catalog_id),
     CONSTRAINT fk_service_order FOREIGN KEY (service_order_id) REFERENCES service_orders (id) ON DELETE CASCADE
 );
 

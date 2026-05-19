@@ -14,14 +14,17 @@ public final class CustomerMapper {
     public static CustomerJpa toEntity(Customer domain) {
         if (domain == null) return null;
 
-        return new CustomerJpa(
+        CustomerJpa entity = new CustomerJpa(
                 domain.getId(),
                 domain.getName(),
                 domain.getDocument().value(),
                 domain.getPhone(),
                 domain.getEmail().value(),
+                domain.geStatus(),
                 LocalDateTime.now()
         );
+
+        return entity;
     }
 
     public static Customer toDomain(CustomerJpa entity) {
@@ -36,6 +39,8 @@ public final class CustomerMapper {
         // Importante sempre utilizar o setId para manter a consistência do ID
         // entre a entidade JPA e o domínio
         domain.setId(entity.getId());
+        domain.setStatus(entity.getStatus());
+
         return domain;
     }
 }

@@ -51,6 +51,7 @@ class CustomerMapperTest {
                 "06678477073",
                 "11999999999",
                 "joao@gmail.com",
+                "ACTIVE",
                 LocalDateTime.now()
         );
 

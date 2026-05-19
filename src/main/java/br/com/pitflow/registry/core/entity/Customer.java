@@ -3,9 +3,6 @@ package br.com.pitflow.registry.core.entity;
 import br.com.pitflow.registry.core.valueObject.CpfCnpj;
 import br.com.pitflow.registry.core.valueObject.Email;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 public class Customer {
@@ -13,19 +10,19 @@ public class Customer {
     private UUID id;
     private String name;
     private String phone;
+    private String status;
 
     private Email email;
     private CpfCnpj document;
-    private List<Vehicle> vehicles;
 
     public Customer(String name, String phone, Email email, CpfCnpj document) {
         validateName(name);
         this.id = UUID.randomUUID();
         this.name = name;
         this.phone = phone;
+        this.status = "ACTIVE";
         this.email = email;
         this.document = document;
-        this.vehicles = new ArrayList<>();
     }
 
     private void validateName(String name) {
@@ -34,20 +31,12 @@ public class Customer {
         }
     }
 
-    public void addVehicle(Vehicle vehicle) {
-        this.vehicles.add(vehicle);
-    }
 
     public UUID getId() { return id; }
     public String getName() { return name; }
     public CpfCnpj getDocument() { return document; }
     public String getPhone() { return phone; }
     public Email getEmail() { return email; }
-
-    // Ensure immutability of the vehicles list
-    public List<Vehicle> getVehicles() {
-        return Collections.unmodifiableList(vehicles);
-    }
 
     public void setId(UUID id) { this.id = id; }
     public void setName(String name) {
@@ -62,4 +51,11 @@ public class Customer {
     public void setPhone(String phone) {
         this.phone = phone;
     }
+
+    public String geStatus() {
+        return this.status;
+    }
+
+    public void setStatus(String status) { this.status = status; }
+
 }
