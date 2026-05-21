@@ -80,6 +80,13 @@ jobs:
             echo "❌ ECR_URL está vazia no output!"
             exit 1
           fi
+
+      - name: Debug Outputs Raw
+        run: |
+          echo "RAW ecr_url: ${{ steps.fetch-infra.outputs.ecr_url }}"
+          echo "RAW eks_cluster_name: ${{ steps.fetch-infra.outputs.eks_cluster_name }}"
+          echo "RAW ecr_url length: ${{ len(steps.fetch-infra.outputs.ecr_url) }}"
+
   # -------------------------------------------------------------------------
   # JOB 2: BUILD E PUSH DA IMAGEM
   # -------------------------------------------------------------------------
@@ -118,24 +125,33 @@ jobs:
           ECR_URL: ${{ needs.fetch-secrets.outputs.ecr_url }}
         run: |
           set -eo pipefail
-          
-          echo "🔍 Debug: ECR_URL = '${ECR_URL}'"
-          
+
+          echo "=== DEBUG INFO ==="
+          echo "ECR_URL from env: '${ECR_URL}'"
+          echo "ECR_URL length: ${#ECR_URL}"
+          echo "needs context: ${{ toJson(needs.fetch-secrets.outputs) }}"
+          echo "================="
+
+          # Se vazio, tenta usar o valor direto
+          if [ -z "${ECR_URL}" ]; then
+            echo "❌ ECR_URL vazia no env, tentando usar direto..."
+            DIRECT_URL="${{ needs.fetch-secrets.outputs.ecr_url }}"
+            echo "DIRECT_URL: '${DIRECT_URL}'"
+            export ECR_URL="${DIRECT_URL}"
+          fi
+
           if [ -z "${ECR_URL}" ] || [ "${ECR_URL}" = "null" ]; then
-            echo "❌ ECR_URL não está definida ou é nula"
-            echo "Valor: '${ECR_URL}'"
-            echo "Output do fetch-secrets: ${{ needs.fetch-secrets.outputs.ecr_url }}"
+            echo "❌ ECR_URL ainda está vazia após tentativas"
             exit 1
           fi
-          
+
           IMAGE_TAG="${{ github.sha }}"
           echo "🏗️ Construindo imagem: ${ECR_URL}:${IMAGE_TAG}"
-          
-          
-          docker build -t "${ECR_URL}":"${IMAGE_TAG}" -t "${ECR_URL}:latest" .
+
+          docker build -t "${ECR_URL}:${IMAGE_TAG}" -t "${ECR_URL}:latest" .
           docker push "${ECR_URL}:${IMAGE_TAG}"
           docker push "${ECR_URL}:latest"
-          
+
           echo "✅ Imagem publicada com sucesso"
 
   # -------------------------------------------------------------------------
