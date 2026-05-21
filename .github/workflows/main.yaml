@@ -17,8 +17,8 @@ jobs:
     name: Fetch Secrets from AWS Secrets Manager
     runs-on: ubuntu-latest
     outputs:
-      ecr_url:          ${{ steps.fetch-infra.outputs.ecr_url }}
-      eks_cluster_name: ${{ steps.fetch-infra.outputs.eks_cluster_name }}
+      ecr_url: ${{ steps['fetch-infra'].outputs.ecr_url }}
+      eks_cluster_name: ${{ steps['fetch-infra'].outputs.eks_cluster_name }}
 
     steps:
       - name: Configure AWS Credentials
@@ -46,40 +46,25 @@ jobs:
               exit 1
             }
           
-          # DEBUG: Mostrar as keys disponíveis
-          echo "📋 Keys disponíveis no secret:"
-          echo "$INFRA_JSON" | jq 'keys'
-          
           ECR_URL=$(echo "$INFRA_JSON"          | jq -r '.ECR_URL')
           EKS_CLUSTER_NAME=$(echo "$INFRA_JSON" | jq -r '.EKS_CLUSTER_NAME')
           
-          # DEBUG: Mostrar valores (já mascarados)
-          echo "ECR_URL len: ${#ECR_URL}"
-          echo "EKS_CLUSTER_NAME len: ${#EKS_CLUSTER_NAME}"
-          
-          for VAR_NAME in ECR_URL EKS_CLUSTER_NAME; do
-            VAL="${!VAR_NAME}"
-            if [ -z "$VAL" ] || [ "$VAL" = "null" ]; then
-              echo "❌ Chave '$VAR_NAME' não encontrada ou vazia em 'pitflow/bootstrap'."
-              exit 1
-            fi
-            echo "::add-mask::$VAL"
-          done
-
-          echo "ecr_url=$ECR_URL"                   >> $GITHUB_OUTPUT
-          echo "eks_cluster_name=$EKS_CLUSTER_NAME" >> $GITHUB_OUTPUT
-          echo "✅ Secret de infraestrutura obtido e mascarado com sucesso."
-
-      - name: Validate Outputs
-        run: |
-          set -eo pipefail
-          
-          echo "ecr_url: ${{ steps.fetch-infra.outputs.ecr_url }}"
-          echo "eks_cluster_name: ${{ steps.fetch-infra.outputs.eks_cluster_name }}"
-          if [ -z "${{ steps.fetch-infra.outputs.ecr_url }}" ]; then
-            echo "❌ ECR_URL está vazia no output!"
+          # Validação
+          if [ -z "$ECR_URL" ] || [ "$ECR_URL" = "null" ]; then
+            echo "❌ ECR_URL não encontrada"
             exit 1
           fi
+        
+          if [ -z "$EKS_CLUSTER_NAME" ] || [ "$EKS_CLUSTER_NAME" = "null" ]; then
+            echo "❌ EKS_CLUSTER_NAME não encontrada"
+            exit 1
+          fi
+          
+          echo "ecr_url=${ECR_URL}" >> $GITHUB_OUTPUT
+          echo "eks_cluster_name=${EKS_CLUSTER_NAME}" >> $GITHUB_OUTPUT
+          
+          echo "✅ Secret de infraestrutura obtido e mascarado com sucesso."
+
   # -------------------------------------------------------------------------
   # JOB 2: BUILD E PUSH DA IMAGEM
   # -------------------------------------------------------------------------
@@ -115,27 +100,31 @@ jobs:
 
       - name: Build & Push Docker Image
         env:
-          ECR_URL: ${{ needs.fetch-secrets.outputs.ecr_url }}
+          ECR_URL: ${{ needs['fetch-secrets'].outputs.ecr_url }}
         run: |
           set -eo pipefail
-          
-          echo "🔍 Debug: ECR_URL = '${ECR_URL}'"
-          
+
+          # Se vazio, tenta usar o valor direto
+          if [ -z "${ECR_URL}" ]; then
+            echo "❌ ECR_URL vazia no env, tentando usar direto..."
+            DIRECT_URL="${{ needs['fetch-secrets'].outputs.ecr_url }}"
+            echo "DIRECT_URL: '${DIRECT_URL}'"
+            export ECR_URL="${DIRECT_URL}"
+          fi
+
           if [ -z "${ECR_URL}" ] || [ "${ECR_URL}" = "null" ]; then
-            echo "❌ ECR_URL não está definida ou é nula"
-            echo "Valor: '${ECR_URL}'"
-            echo "Output do fetch-secrets: ${{ needs.fetch-secrets.outputs.ecr_url }}"
+            echo "ECR_URL from env: '${ECR_URL}'"
+            echo "❌ ECR_URL ainda está vazia ou inválida"
             exit 1
           fi
-          
+
           IMAGE_TAG="${{ github.sha }}"
           echo "🏗️ Construindo imagem: ${ECR_URL}:${IMAGE_TAG}"
-          
-          
-          docker build -t "${ECR_URL}":"${IMAGE_TAG}" -t "${ECR_URL}:latest" .
+
+          docker build -t "${ECR_URL}:${IMAGE_TAG}" -t "${ECR_URL}:latest" .
           docker push "${ECR_URL}:${IMAGE_TAG}"
           docker push "${ECR_URL}:latest"
-          
+
           echo "✅ Imagem publicada com sucesso"
 
   # -------------------------------------------------------------------------
@@ -158,7 +147,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Update Kubeconfig (EKS)
-        run: aws eks update-kubeconfig --name ${{ needs.fetch-secrets.outputs.eks_cluster_name }} --region us-east-1
+        run: aws eks update-kubeconfig --name ${{ needs['fetch-secrets'].outputs.eks_cluster_name }} --region us-east-1
 
       - name: Install jq
         run: sudo apt-get install -y jq
@@ -209,7 +198,7 @@ jobs:
 
       - name: Deploy Application Manifests
         env:
-          CONTAINER_IMAGE: ${{ needs.fetch-secrets.outputs.ecr_url }}:${{ github.sha }}
+          CONTAINER_IMAGE: ${{ needs['fetch-secrets'].outputs.ecr_url }}:${{ github.sha }}
           DB_PASSWORD:     ${{ env.DB_PASSWORD }}
           DB_USERNAME:     ${{ env.DB_USERNAME }}
           DB_NAME:         ${{ env.DB_NAME }}
