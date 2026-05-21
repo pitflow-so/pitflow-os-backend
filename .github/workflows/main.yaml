@@ -60,19 +60,14 @@ jobs:
             exit 1
           fi
           
+          echo "ecr_url=${ECR_URL}" >> $GITHUB_OUTPUT
+          echo "eks_cluster_name=${EKS_CLUSTER_NAME}" >> $GITHUB_OUTPUT
+          
           # Mascara os valores
           echo "::add-mask::$ECR_URL"
           echo "::add-mask::$EKS_CLUSTER_NAME"
           
-          echo "ecr_url=${ECR_URL}" >> $GITHUB_OUTPUT
-          echo "eks_cluster_name=${EKS_CLUSTER_NAME}" >> $GITHUB_OUTPUT
-          
           echo "✅ Secret de infraestrutura obtido e mascarado com sucesso."
-
-      - name: Debug Outputs
-        run: |
-          echo "Output ecr_url: ${{ steps.fetch-infra.outputs.ecr_url }}"
-          echo "Output eks_cluster_name: ${{ steps.fetch-infra.outputs.eks_cluster_name }}"
 
   # -------------------------------------------------------------------------
   # JOB 2: BUILD E PUSH DA IMAGEM
