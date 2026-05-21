@@ -104,12 +104,6 @@ jobs:
         run: |
           set -eo pipefail
 
-          echo "=== DEBUG INFO ==="
-          echo "ECR_URL from env: '${ECR_URL}'"
-          echo "ECR_URL length: ${#ECR_URL}"
-          echo "needs context: ${{ toJson(needs['fetch-secrets'].outputs) }}"
-          echo "================="
-
           # Se vazio, tenta usar o valor direto
           if [ -z "${ECR_URL}" ]; then
             echo "❌ ECR_URL vazia no env, tentando usar direto..."
@@ -119,7 +113,8 @@ jobs:
           fi
 
           if [ -z "${ECR_URL}" ] || [ "${ECR_URL}" = "null" ]; then
-            echo "❌ ECR_URL ainda está vazia após tentativas"
+            echo "ECR_URL from env: '${ECR_URL}'"
+            echo "❌ ECR_URL ainda está vazia ou inválida"
             exit 1
           fi
 
