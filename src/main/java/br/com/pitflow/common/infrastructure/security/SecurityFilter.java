@@ -63,9 +63,9 @@ public class SecurityFilter extends OncePerRequestFilter {
 
         // Estratégia 2: Verificar claims do token
         var claims = tokenGateway.getClaims(token);
-        var userType = (String) claims.get("user_type");
+        var role = (String) claims.get("role");
 
-        if ("CUSTOMER".equals(userType)) {
+        if (CUSTOMER_ROLE.equals(role)) {
             authenticateAsCustomer(subject);
             return;
         }
