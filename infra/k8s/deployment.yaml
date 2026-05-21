@@ -46,11 +46,11 @@ spec:
                 configMapKeyRef:
                   name: pitflow-config
                   key: DB_NAME
-            - name: DB_USER
+            - name: DB_USERNAME
               valueFrom:
                 configMapKeyRef:
                   name: pitflow-config
-                  key: DB_USER
+                  key: DB_USERNAME
             - name: DB_PORT
               valueFrom:
                 configMapKeyRef:
