@@ -63,10 +63,6 @@ jobs:
           echo "ecr_url=${ECR_URL}" >> $GITHUB_OUTPUT
           echo "eks_cluster_name=${EKS_CLUSTER_NAME}" >> $GITHUB_OUTPUT
           
-          # Mascara os valores
-          echo "::add-mask::$ECR_URL"
-          echo "::add-mask::$EKS_CLUSTER_NAME"
-          
           echo "✅ Secret de infraestrutura obtido e mascarado com sucesso."
 
   # -------------------------------------------------------------------------
