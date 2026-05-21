@@ -3,7 +3,7 @@ name: Pitflow Full Pipeline
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: # Habilitar execução manual
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -11,75 +11,63 @@ concurrency:
 
 jobs:
   # -------------------------------------------------------------------------
-  # JOB 1: INFRAESTRUTURA AWS
+  # JOB 1: FETCH SECRETS DO AWS SECRETS MANAGER
   # -------------------------------------------------------------------------
-  infrastructure:
-    name: Provision Infrastructure
+  fetch-secrets:
+    name: Fetch Secrets from AWS Secrets Manager
     runs-on: ubuntu-latest
     outputs:
-      rds_endpoint: ${{ steps.tf-output.outputs.rds_endpoint }}
-      ecr_url: ${{ steps.tf-output.outputs.ecr_url }}
-      eks_cluster_name: ${{ steps.tf-output.outputs.eks_cluster_name }}
-      image_tag: ${{ github.sha }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      ecr_url:          ${{ steps.fetch-infra.outputs.ecr_url }}
+      eks_cluster_name: ${{ steps.fetch-infra.outputs.eks_cluster_name }}
 
+    steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-session-token:     ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
-      - name: Bootstrap S3 for TF State
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Fetch Infrastructure Secrets
+        id: fetch-infra
         run: |
-          if ! aws s3api head-bucket --bucket tfstate-backend-fiap-pitflow 2>/dev/null; then
-            aws s3 mb s3://tfstate-backend-fiap-pitflow --region us-east-1
-          else
-            echo "Bucket já existe nesta conta, continuando..."
-          fi
+          set -eo pipefail
+          echo "🔐 Buscando secret 'pitflow/bootstrap'..."
+          
+          INFRA_JSON=$(aws secretsmanager get-secret-value \
+            --secret-id "pitflow/bootstrap" \
+            --query SecretString \
+            --output text) || {
+              echo "❌ Falha ao buscar secret 'pitflow/bootstrap'. Verifique se o secret existe e se as credenciais têm permissão."
+              exit 1
+            }
 
-      - name: Cache Terraform
-        uses: actions/cache@v4
-        with:
-          path: infra/terraform/.terraform
-          key: terraform-${{ hashFiles('infra/terraform/.terraform.lock.hcl') }}
+          ECR_URL=$(echo "$INFRA_JSON"          | jq -r '.ECR_URL')
+          EKS_CLUSTER_NAME=$(echo "$INFRA_JSON" | jq -r '.EKS_CLUSTER_NAME')
 
-      - name: Terraform Setup
-        uses: hashicorp/setup-terraform@v3
+          for VAR_NAME in ECR_URL EKS_CLUSTER_NAME; do
+            VAL="${!VAR_NAME}"
+            if [ -z "$VAL" ] || [ "$VAL" = "null" ]; then
+              echo "❌ Chave '$VAR_NAME' não encontrada ou vazia em 'pitflow/bootstrap'."
+              exit 1
+            fi
+            echo "::add-mask::$VAL"
+          done
 
-      - name: Terraform Init
-        run: cd infra/terraform && terraform init
-
-      - name: Terraform Validate
-        run: cd infra/terraform && terraform validate
-
-      - name: Terraform Plan
-        run: |
-          cd infra/terraform
-          terraform plan -var="db_password=${{ secrets.DB_PASSWORD }}" -out=main.tfplan
-
-      - name: Terraform Apply
-        run: |
-          cd infra/terraform
-          terraform apply -auto-approve main.tfplan
-
-      - name: Capture Outputs
-        id: tf-output
-        run: |
-          cd infra/terraform
-          echo "rds_endpoint=$(terraform output -raw rds_endpoint)" >> $GITHUB_OUTPUT
-          echo "ecr_url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
-          echo "eks_cluster_name=$(terraform output -raw eks_cluster_name)" >> $GITHUB_OUTPUT
+          echo "ecr_url=$ECR_URL"                   >> $GITHUB_OUTPUT
+          echo "eks_cluster_name=$EKS_CLUSTER_NAME" >> $GITHUB_OUTPUT
+          echo "✅ Secret de infraestrutura obtido e mascarado com sucesso."
 
   # -------------------------------------------------------------------------
-  # JOB 2: BUILD E TESTES
+  # JOB 2: BUILD E PUSH DA IMAGEM
   # -------------------------------------------------------------------------
   build:
     name: Build and Push Image
-    needs: infrastructure
+    needs: [fetch-secrets]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -93,14 +81,14 @@ jobs:
           cache: maven
 
       - name: Build and Test with Maven
-        run: mvn clean package
+        run: mvn -B clean verify
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-session-token:     ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
       - name: Login to ECR
@@ -109,7 +97,7 @@ jobs:
 
       - name: Build & Push Docker Image
         run: |
-          ECR_URL=${{ needs.infrastructure.outputs.ecr_url }}
+          ECR_URL=${{ needs.fetch-secrets.outputs.ecr_url }}
           IMAGE_TAG=${{ github.sha }}
           docker build -t $ECR_URL:$IMAGE_TAG -t $ECR_URL:latest .
           docker push $ECR_URL:$IMAGE_TAG
@@ -120,7 +108,7 @@ jobs:
   # -------------------------------------------------------------------------
   deploy:
     name: Deploy to Kubernetes
-    needs: [infrastructure, build]
+    needs: [fetch-secrets, build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -129,35 +117,81 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-session-token:     ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
       - name: Update Kubeconfig (EKS)
-        run: aws eks update-kubeconfig --name ${{ needs.infrastructure.outputs.eks_cluster_name }} --region us-east-1
+        run: aws eks update-kubeconfig --name ${{ needs.fetch-secrets.outputs.eks_cluster_name }} --region us-east-1
 
-      - name: Install Metrics Server
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Fetch Application Secrets
         run: |
-          kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-          kubectl rollout status deployment/metrics-server -n kube-system --timeout=120s
+          set -eo pipefail
+
+          echo "🔐 Buscando secret 'pitflow/bootstrap'..."
+          
+          APP_JSON=$(aws secretsmanager get-secret-value \
+            --secret-id "pitflow/bootstrap" \
+            --query SecretString \
+            --output text) || {
+              echo "❌ Falha ao buscar secret 'pitflow/bootstrap'. Verifique se o secret existe e se as credenciais têm permissão."
+              exit 1
+            }
+          
+          DB_PASSWORD=$(echo "$APP_JSON"    | jq -r '.DB_PASSWORD')
+          DB_USERNAME=$(echo "$APP_JSON"    | jq -r '.DB_USERNAME')
+          DB_NAME=$(echo "$APP_JSON"        | jq -r '.DB_NAME')
+          DB_HOST=$(echo "$APP_JSON"        | jq -r '.DB_HOST')
+          DB_PORT=$(echo "$APP_JSON"        | jq -r '.DB_PORT')
+          JWT_SECRET=$(echo "$APP_JSON"     | jq -r '.JWT_SECRET')
+          MOCK_MESSAGE=$(echo "$APP_JSON"   | jq -r '.MOCK_MESSAGE')
+          MAIL_USERNAME=$(echo "$APP_JSON"  | jq -r '.MAIL_USERNAME')
+          MAIL_PASSWORD=$(echo "$APP_JSON"  | jq -r '.MAIL_PASSWORD')
+          
+          for VAR_NAME in DB_PASSWORD DB_USERNAME DB_NAME DB_HOST DB_PORT JWT_SECRET MOCK_MESSAGE MAIL_USERNAME MAIL_PASSWORD; do
+            VAL="${!VAR_NAME}"
+            if [ -z "$VAL" ] || [ "$VAL" = "null" ]; then
+              echo "❌ Chave '$VAR_NAME' não encontrada ou vazia em 'pitflow/bootstrap'."
+              exit 1
+            fi
+            echo "::add-mask::$VAL"
+          done
+          
+          echo "DB_PASSWORD=$DB_PASSWORD"   >> $GITHUB_ENV
+          echo "DB_USERNAME=$DB_USERNAME"   >> $GITHUB_ENV
+          echo "DB_NAME=$DB_NAME"           >> $GITHUB_ENV
+          echo "DB_HOST=$DB_HOST"           >> $GITHUB_ENV
+          echo "DB_PORT=$DB_PORT"           >> $GITHUB_ENV
+          echo "JWT_SECRET=$JWT_SECRET"     >> $GITHUB_ENV
+          echo "MOCK_MESSAGE=$MOCK_MESSAGE" >> $GITHUB_ENV
+          echo "MAIL_USERNAME=$MAIL_USERNAME" >> $GITHUB_ENV
+          echo "MAIL_PASSWORD=$MAIL_PASSWORD" >> $GITHUB_ENV
+          
 
       - name: Deploy Application Manifests
         env:
-          RDS_ENDPOINT: ${{ needs.infrastructure.outputs.rds_endpoint }}
-          CONTAINER_IMAGE: ${{ needs.infrastructure.outputs.ecr_url }}:${{ github.sha }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          MOCK_MESSAGE: ${{ secrets.MOCK_MESSAGE }}
-          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
-          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          CONTAINER_IMAGE: ${{ needs.fetch-secrets.outputs.ecr_url }}:${{ github.sha }}
+          DB_PASSWORD:     ${{ env.DB_PASSWORD }}
+          DB_USERNAME:     ${{ env.DB_USERNAME }}
+          DB_NAME:         ${{ env.DB_NAME }}
+          DB_HOST:         ${{ env.DB_HOST }}
+          DB_PORT:         ${{ env.DB_PORT }}
+          JWT_SECRET:      ${{ env.JWT_SECRET }}
+          MOCK_MESSAGE:    ${{ env.MOCK_MESSAGE }}
+          MAIL_USERNAME:   ${{ env.MAIL_USERNAME }}
+          MAIL_PASSWORD:   ${{ env.MAIL_PASSWORD }}
         run: |
-          # 1. Aplica Secrets.
+          set -e
+          # 1. Aplica Secrets
           envsubst < infra/k8s/secrets.yaml | kubectl apply -f -
-          
+
           # 2. Aplica Service
           kubectl apply -f infra/k8s/service.yaml
-          
+
           # 3. Aguarda e captura o DNS do LoadBalancer
           echo "Aguardando DNS do LoadBalancer..."
           ATTEMPTS=0
@@ -173,26 +207,29 @@ jobs:
             sleep 10
             ATTEMPTS=$((ATTEMPTS+1))
           done
-          
+
           if [ -z "$API_URL" ] || [ "$API_URL" = "<pending>" ]; then
             echo "❌ Erro: LoadBalancer não gerou DNS a tempo"
             exit 1
           fi
-          
-          # 4. Cria ConfigMap com a URL 
+
+          # 4. Cria ConfigMap com a URL
           export API_PUBLIC_URL
           echo "Criando ConfigMap com API_URL=$API_PUBLIC_URL"
           envsubst < infra/k8s/configmap.yaml | kubectl apply -f -
-          
-          # 5. Aplica deployment
+
+          # 5. Aplica Deployment
           echo "Aplicando Deployment com ConfigMap pronto..."
           envsubst < infra/k8s/deployment.yaml | kubectl apply -f -
-          
+
           # 6. Aguarda Deployment ficar pronto
-          kubectl rollout status deployment/pitflow-backend --timeout=300s
-          
+          kubectl rollout status deployment/pitflow-backend --timeout=300s || {
+            kubectl rollout undo deployment/pitflow-backend
+            exit 1
+          }
+
           # 7. Apply HPA (por último, baseado no Deployment funcionando)
-          kubectl apply -f infra/k8s/hpa.yaml  
+          kubectl apply -f infra/k8s/hpa.yaml
 
       - name: Verify Final Deployment
         run: |
@@ -204,10 +241,10 @@ jobs:
       - name: Get API Endpoint URL
         id: get-api-url
         run: |
-            API_URL=$(kubectl get service pitflow-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-            if [ -n "$API_URL" ]; then
-              echo "api_endpoint=http://$API_URL" >> $GITHUB_OUTPUT
-              echo "✅ API disponível em: http://$API_URL"
-            else
-              echo "⚠️ LoadBalancer ainda pendente, verifique manualmente"
-            fi
+          API_URL=$(kubectl get service pitflow-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          if [ -n "$API_URL" ]; then
+            echo "api_endpoint=http://$API_URL" >> $GITHUB_OUTPUT
+            echo "✅ API disponível em: http://$API_URL"
+          else
+            echo "⚠️ LoadBalancer ainda pendente, verifique manualmente"
+          fi
