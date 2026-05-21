@@ -17,7 +17,7 @@ jobs:
     name: Fetch Secrets from AWS Secrets Manager
     runs-on: ubuntu-latest
     outputs:
-      ecr_url:          ${{ steps.fetch-infra.outputs.ecr_url }}
+      ecr_url: ${{ steps.fetch-infra.outputs.ecr_url }}
       eks_cluster_name: ${{ steps.fetch-infra.outputs.eks_cluster_name }}
 
     steps:
@@ -46,45 +46,33 @@ jobs:
               exit 1
             }
           
-          # DEBUG: Mostrar as keys disponíveis
-          echo "📋 Keys disponíveis no secret:"
-          echo "$INFRA_JSON" | jq 'keys'
-          
           ECR_URL=$(echo "$INFRA_JSON"          | jq -r '.ECR_URL')
           EKS_CLUSTER_NAME=$(echo "$INFRA_JSON" | jq -r '.EKS_CLUSTER_NAME')
           
-          # DEBUG: Mostrar valores (já mascarados)
-          echo "ECR_URL len: ${#ECR_URL}"
-          echo "EKS_CLUSTER_NAME len: ${#EKS_CLUSTER_NAME}"
-          
-          for VAR_NAME in ECR_URL EKS_CLUSTER_NAME; do
-            VAL="${!VAR_NAME}"
-            if [ -z "$VAL" ] || [ "$VAL" = "null" ]; then
-              echo "❌ Chave '$VAR_NAME' não encontrada ou vazia em 'pitflow/bootstrap'."
-              exit 1
-            fi
-            echo "::add-mask::$VAL"
-          done
-
-          echo "ecr_url=$ECR_URL"                   >> $GITHUB_OUTPUT
-          echo "eks_cluster_name=$EKS_CLUSTER_NAME" >> $GITHUB_OUTPUT
-          echo "✅ Secret de infraestrutura obtido e mascarado com sucesso."
-
-      - name: Validate Outputs
-        run: |
-          set -eo pipefail
-          
-          echo "ecr_url: ${{ steps.fetch-infra.outputs.ecr_url }}"
-          echo "eks_cluster_name: ${{ steps.fetch-infra.outputs.eks_cluster_name }}"
-          if [ -z "${{ steps.fetch-infra.outputs.ecr_url }}" ]; then
-            echo "❌ ECR_URL está vazia no output!"
+          # Validação
+          if [ -z "$ECR_URL" ] || [ "$ECR_URL" = "null" ]; then
+            echo "❌ ECR_URL não encontrada"
             exit 1
           fi
+        
+          if [ -z "$EKS_CLUSTER_NAME" ] || [ "$EKS_CLUSTER_NAME" = "null" ]; then
+            echo "❌ EKS_CLUSTER_NAME não encontrada"
+            exit 1
+          fi
+          
+          # Mascara os valores
+          echo "::add-mask::$ECR_URL"
+          echo "::add-mask::$EKS_CLUSTER_NAME"
+          
+          echo "ecr_url=${ECR_URL}" >> $GITHUB_OUTPUT
+          echo "eks_cluster_name=${EKS_CLUSTER_NAME}" >> $GITHUB_OUTPUT
+          
+          echo "✅ Secret de infraestrutura obtido e mascarado com sucesso."
 
-      - name: Debug Outputs Raw
+      - name: Debug Outputs
         run: |
-          echo "RAW ecr_url: ${{ steps.fetch-infra.outputs.ecr_url }}"
-          echo "RAW eks_cluster_name: ${{ steps.fetch-infra.outputs.eks_cluster_name }}"
+          echo "Output ecr_url: ${{ steps.fetch-infra.outputs.ecr_url }}"
+          echo "Output eks_cluster_name: ${{ steps.fetch-infra.outputs.eks_cluster_name }}"
 
   # -------------------------------------------------------------------------
   # JOB 2: BUILD E PUSH DA IMAGEM
