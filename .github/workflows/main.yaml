@@ -85,7 +85,6 @@ jobs:
         run: |
           echo "RAW ecr_url: ${{ steps.fetch-infra.outputs.ecr_url }}"
           echo "RAW eks_cluster_name: ${{ steps.fetch-infra.outputs.eks_cluster_name }}"
-          echo "RAW ecr_url length: ${{ len(steps.fetch-infra.outputs.ecr_url) }}"
 
   # -------------------------------------------------------------------------
   # JOB 2: BUILD E PUSH DA IMAGEM
