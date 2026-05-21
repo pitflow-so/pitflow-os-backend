@@ -11,5 +11,7 @@ public record CustomerResponse (
 
         String phone,
 
-        String email
+        String email,
+
+        String status
 ) {}

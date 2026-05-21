@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @Embeddable
-@Table(name = "order_item")
 public class OrderItemJpa {
 
     @Column(name = "catalog_id", nullable = false)

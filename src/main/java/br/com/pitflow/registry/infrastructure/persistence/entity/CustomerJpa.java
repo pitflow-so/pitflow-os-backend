@@ -28,17 +28,21 @@ public class CustomerJpa {
     @Column()
     private String email;
 
+    @Column(nullable = false)
+    private String status;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     public CustomerJpa() {}
 
-    public CustomerJpa(UUID id, String name, String document, String phone, String email, LocalDateTime createdAt) {
+    public CustomerJpa(UUID id, String name, String document, String phone, String email, String status, LocalDateTime createdAt) {
         this.id = id;
         this.name = name;
         this.document = document;
         this.phone = phone;
         this.email = email;
+        this.status = status;
         this.createdAt = createdAt;
     }
 
@@ -56,6 +60,9 @@ public class CustomerJpa {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public  String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

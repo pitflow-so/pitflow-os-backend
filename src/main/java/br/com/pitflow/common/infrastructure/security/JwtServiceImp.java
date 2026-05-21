@@ -31,7 +31,7 @@ public class JwtServiceImp implements TokenGateway {
                     .claims(claims)
                     .issuedAt(new Date())
                     .expiration(generateExpirationDate())
-                    .signWith(key)
+                    .signWith(key, Jwts.SIG.HS256)
                     .compact();
         } catch (Exception e) {
             throw new RuntimeException("Error generating JWT token", e);
