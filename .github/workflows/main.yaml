@@ -17,8 +17,8 @@ jobs:
     name: Fetch Secrets from AWS Secrets Manager
     runs-on: ubuntu-latest
     outputs:
-      ecr_url: ${{ steps.fetch-infra.outputs.ecr_url }}
-      eks_cluster_name: ${{ steps.fetch-infra.outputs.eks_cluster_name }}
+      ecr_url: ${{ steps['fetch-infra'].outputs.ecr_url }}
+      eks_cluster_name: ${{ steps['fetch-infra'].outputs.eks_cluster_name }}
 
     steps:
       - name: Configure AWS Credentials
@@ -116,13 +116,13 @@ jobs:
           echo "=== DEBUG INFO ==="
           echo "ECR_URL from env: '${ECR_URL}'"
           echo "ECR_URL length: ${#ECR_URL}"
-          echo "needs context: ${{ toJson(needs.fetch-secrets.outputs) }}"
+          echo "needs context: ${{ toJson(needs['fetch-secrets'].outputs) }}"
           echo "================="
 
           # Se vazio, tenta usar o valor direto
           if [ -z "${ECR_URL}" ]; then
             echo "❌ ECR_URL vazia no env, tentando usar direto..."
-            DIRECT_URL="${{ needs.fetch-secrets.outputs.ecr_url }}"
+            DIRECT_URL="${{ needs['fetch-secrets'].outputs.ecr_url }}"
             echo "DIRECT_URL: '${DIRECT_URL}'"
             export ECR_URL="${DIRECT_URL}"
           fi
@@ -212,7 +212,7 @@ jobs:
 
       - name: Deploy Application Manifests
         env:
-          CONTAINER_IMAGE: ${{ needs.fetch-secrets.outputs.ecr_url }}:${{ github.sha }}
+          CONTAINER_IMAGE: ${{ needs['fetch-secrets'].outputs.ecr_url }}:${{ github.sha }}
           DB_PASSWORD:     ${{ env.DB_PASSWORD }}
           DB_USERNAME:     ${{ env.DB_USERNAME }}
           DB_NAME:         ${{ env.DB_NAME }}
