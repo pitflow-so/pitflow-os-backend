@@ -109,7 +109,7 @@ jobs:
 
       - name: Build & Push Docker Image
         env:
-          ECR_URL: ${{ needs.fetch-secrets.outputs.ecr_url }}
+          ECR_URL: ${{ needs['fetch-secrets'].outputs.ecr_url }}
         run: |
           set -eo pipefail
 
@@ -161,7 +161,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Update Kubeconfig (EKS)
-        run: aws eks update-kubeconfig --name ${{ needs.fetch-secrets.outputs.eks_cluster_name }} --region us-east-1
+        run: aws eks update-kubeconfig --name ${{ needs['fetch-secrets'].outputs.eks_cluster_name }} --region us-east-1
 
       - name: Install jq
         run: sudo apt-get install -y jq
