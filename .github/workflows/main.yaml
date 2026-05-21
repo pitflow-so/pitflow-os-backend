@@ -45,10 +45,18 @@ jobs:
               echo "❌ Falha ao buscar secret 'pitflow/bootstrap'. Verifique se o secret existe e se as credenciais têm permissão."
               exit 1
             }
-
+          
+          # DEBUG: Mostrar as keys disponíveis
+          echo "📋 Keys disponíveis no secret:"
+          echo "$INFRA_JSON" | jq 'keys'
+          
           ECR_URL=$(echo "$INFRA_JSON"          | jq -r '.ECR_URL')
           EKS_CLUSTER_NAME=$(echo "$INFRA_JSON" | jq -r '.EKS_CLUSTER_NAME')
-
+          
+          # DEBUG: Mostrar valores (já mascarados)
+          echo "ECR_URL len: ${#ECR_URL}"
+          echo "EKS_CLUSTER_NAME len: ${#EKS_CLUSTER_NAME}"
+          
           for VAR_NAME in ECR_URL EKS_CLUSTER_NAME; do
             VAL="${!VAR_NAME}"
             if [ -z "$VAL" ] || [ "$VAL" = "null" ]; then
@@ -62,6 +70,16 @@ jobs:
           echo "eks_cluster_name=$EKS_CLUSTER_NAME" >> $GITHUB_OUTPUT
           echo "✅ Secret de infraestrutura obtido e mascarado com sucesso."
 
+      - name: Validate Outputs
+        run: |
+          set -eo pipefail
+          
+          echo "ecr_url: ${{ steps.fetch-infra.outputs.ecr_url }}"
+          echo "eks_cluster_name: ${{ steps.fetch-infra.outputs.eks_cluster_name }}"
+          if [ -z "${{ steps.fetch-infra.outputs.ecr_url }}" ]; then
+            echo "❌ ECR_URL está vazia no output!"
+            exit 1
+          fi
   # -------------------------------------------------------------------------
   # JOB 2: BUILD E PUSH DA IMAGEM
   # -------------------------------------------------------------------------
@@ -96,12 +114,29 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build & Push Docker Image
+        env:
+          ECR_URL: ${{ needs.fetch-secrets.outputs.ecr_url }}
         run: |
-          ECR_URL=${{ needs.fetch-secrets.outputs.ecr_url }}
-          IMAGE_TAG=${{ github.sha }}
-          docker build -t $ECR_URL:$IMAGE_TAG -t $ECR_URL:latest .
-          docker push $ECR_URL:$IMAGE_TAG
-          docker push $ECR_URL:latest
+          set -eo pipefail
+          
+          echo "🔍 Debug: ECR_URL = '${ECR_URL}'"
+          
+          if [ -z "${ECR_URL}" ] || [ "${ECR_URL}" = "null" ]; then
+            echo "❌ ECR_URL não está definida ou é nula"
+            echo "Valor: '${ECR_URL}'"
+            echo "Output do fetch-secrets: ${{ needs.fetch-secrets.outputs.ecr_url }}"
+            exit 1
+          fi
+          
+          IMAGE_TAG="${{ github.sha }}"
+          echo "🏗️ Construindo imagem: ${ECR_URL}:${IMAGE_TAG}"
+          
+          
+          docker build -t "${ECR_URL}":"${IMAGE_TAG}" -t "${ECR_URL}:latest" .
+          docker push "${ECR_URL}:${IMAGE_TAG}"
+          docker push "${ECR_URL}:latest"
+          
+          echo "✅ Imagem publicada com sucesso"
 
   # -------------------------------------------------------------------------
   # JOB 3: DEPLOY (Configuração e Atualização do EKS)
