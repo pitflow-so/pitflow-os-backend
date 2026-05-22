@@ -209,7 +209,7 @@ jobs:
           MAIL_USERNAME:   ${{ env.MAIL_USERNAME }}
           MAIL_PASSWORD:   ${{ env.MAIL_PASSWORD }}
         run: |
-          set -e
+          set -eo pipefail
           # 1. Aplica Secrets
           envsubst < infra/k8s/secrets.yaml | kubectl apply -f -
 
@@ -272,3 +272,26 @@ jobs:
           else
             echo "⚠️ LoadBalancer ainda pendente, verifique manualmente"
           fi
+
+      - name: Update API URL in Secrets Manager
+        env:
+          API_URL: ${{ steps.get-api-url.outputs.api_endpoint }}
+        run: |
+          set -eo pipefail
+          echo "🔄 Atualizando Secret Manager com a URL do Load Balancer: $API_URL"
+          
+          # 1. Busca o JSON atual do Secret Manager
+          CURRENT_SECRET=$(aws secretsmanager get-secret-value \
+            --secret-id "pitflow/bootstrap" \
+            --query SecretString \
+            --output text)
+          
+          # 2. Adiciona ou atualiza a chave API_PUBLIC_URL no JSON
+          UPDATED_SECRET=$(echo "$CURRENT_SECRET" | jq --arg url "$API_URL" '. + {API_PUBLIC_URL: $url}')
+          
+          # 3. Atualiza o Secret na AWS
+          aws secretsmanager update-secret \
+            --secret-id "pitflow/bootstrap" \
+            --secret-string "$UPDATED_SECRET"
+          
+          echo "✅ Secret 'pitflow/bootstrap' atualizado com sucesso!"
