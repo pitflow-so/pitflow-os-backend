@@ -150,7 +150,7 @@ jobs:
         run: aws eks update-kubeconfig --name ${{ needs['fetch-secrets'].outputs.eks_cluster_name }} --region us-east-1
 
       - name: Install jq
-        run: sudo apt-get install -y jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Fetch Application Secrets
         run: |
@@ -195,6 +195,11 @@ jobs:
           echo "MAIL_USERNAME=$MAIL_USERNAME" >> $GITHUB_ENV
           echo "MAIL_PASSWORD=$MAIL_PASSWORD" >> $GITHUB_ENV
           
+          # Lê API_PUBLIC_URL do Secret Manager (vazia no primeiro deploy)
+          API_PUBLIC_URL=$(echo "$APP_JSON" | jq -r '.API_PUBLIC_URL // empty')
+          
+          API_PUBLIC_URL="${API_PUBLIC_URL:-http://pending-first-deploy}"
+          echo "API_PUBLIC_URL=$API_PUBLIC_URL" >> $GITHUB_ENV
 
       - name: Deploy Application Manifests
         env:
@@ -208,67 +213,76 @@ jobs:
           MOCK_MESSAGE:    ${{ env.MOCK_MESSAGE }}
           MAIL_USERNAME:   ${{ env.MAIL_USERNAME }}
           MAIL_PASSWORD:   ${{ env.MAIL_PASSWORD }}
+          API_PUBLIC_URL:  ${{ env.API_PUBLIC_URL }}
         run: |
-          set -e
+          set -eo pipefail
           # 1. Aplica Secrets
           envsubst < infra/k8s/secrets.yaml | kubectl apply -f -
 
           # 2. Aplica Service
           kubectl apply -f infra/k8s/service.yaml
 
-          # 3. Aguarda e captura o DNS do LoadBalancer
-          echo "Aguardando DNS do LoadBalancer..."
-          ATTEMPTS=0
-          MAX_ATTEMPTS=30
-          while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-            API_URL=$(kubectl get service pitflow-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-            if [ -n "$API_URL" ] && [ "$API_URL" != "<pending>" ]; then
-              echo "✅ LoadBalancer DNS obtido: $API_URL"
-              API_PUBLIC_URL="http://$API_URL"
-              break
-            fi
-            echo "⏳ Tentativa $((ATTEMPTS+1))/$MAX_ATTEMPTS - Aguardando LoadBalancer..."
-            sleep 10
-            ATTEMPTS=$((ATTEMPTS+1))
-          done
-
-          if [ -z "$API_URL" ] || [ "$API_URL" = "<pending>" ]; then
-            echo "❌ Erro: LoadBalancer não gerou DNS a tempo"
-            exit 1
-          fi
-
-          # 4. Cria ConfigMap com a URL
+          # 3. Cria ConfigMap com a URL
           export API_PUBLIC_URL
-          echo "Criando ConfigMap com API_URL=$API_PUBLIC_URL"
+          echo "Criando ConfigMap com API_PUBLIC_URL=$API_PUBLIC_URL"
           envsubst < infra/k8s/configmap.yaml | kubectl apply -f -
 
-          # 5. Aplica Deployment
+          # 4. Aplica Deployment
           echo "Aplicando Deployment com ConfigMap pronto..."
           envsubst < infra/k8s/deployment.yaml | kubectl apply -f -
 
-          # 6. Aguarda Deployment ficar pronto
+          # 5. Aguarda Deployment ficar pronto
           kubectl rollout status deployment/pitflow-backend --timeout=300s || {
             kubectl rollout undo deployment/pitflow-backend
             exit 1
           }
 
-          # 7. Apply HPA (por último, baseado no Deployment funcionando)
+          # 6. Apply HPA
           kubectl apply -f infra/k8s/hpa.yaml
 
-      - name: Verify Final Deployment
+      - name: Update Secret Manager with LB_URL
         run: |
-          echo "✅ Deployment final verificado:"
-          kubectl get pods
-          kubectl get svc pitflow-service
-          kubectl get hpa
+          set -eo pipefail
 
-      - name: Get API Endpoint URL
-        id: get-api-url
-        run: |
-          API_URL=$(kubectl get service pitflow-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-          if [ -n "$API_URL" ]; then
-            echo "api_endpoint=http://$API_URL" >> $GITHUB_OUTPUT
-            echo "✅ API disponível em: http://$API_URL"
-          else
-            echo "⚠️ LoadBalancer ainda pendente, verifique manualmente"
+          # 1. Aguarda e captura o DNS do LoadBalancer
+          echo "Aguardando DNS do LoadBalancer..."
+          ATTEMPTS=0
+          MAX_ATTEMPTS=30
+          LB_URL=""
+
+          while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+            LB_URL=$(kubectl get service pitflow-service \
+              -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+
+            if [ -n "$LB_URL" ]; then
+              echo "✅ LoadBalancer DNS obtido: $LB_URL"
+              break
+            fi
+
+            echo "⏳ Tentativa $((ATTEMPTS+1))/$MAX_ATTEMPTS - Aguardando LoadBalancer..."
+            sleep 10
+            ATTEMPTS=$((ATTEMPTS+1))
+          done
+
+          if [ -z "$LB_URL" ]; then
+            echo "❌ Erro: LoadBalancer não gerou DNS a tempo"
+            exit 1
           fi
+
+          # 2. Atualiza o Secret Manager
+          SECRET_ID="pitflow/bootstrap"
+
+          CURRENT_SECRET=$(aws secretsmanager get-secret-value \
+            --secret-id "$SECRET_ID" \
+            --query 'SecretString' \
+            --output text)
+
+          UPDATED_SECRET=$(echo "$CURRENT_SECRET" | \
+            jq --arg LB_URL "$LB_URL" \
+               '.LB_URL = $LB_URL')   # ← bug corrigido aqui
+
+          aws secretsmanager update-secret \
+            --secret-id "$SECRET_ID" \
+            --secret-string "$UPDATED_SECRET" > /dev/null
+
+          echo "✅ Secrets Manager atualizado com sucesso"
