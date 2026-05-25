@@ -278,8 +278,8 @@ jobs:
             --output text)
 
           UPDATED_SECRET=$(echo "$CURRENT_SECRET" | \
-            jq --arg LB_URL "$LB_URL" \
-               '.LB_URL = $LB_URL')   # ← bug corrigido aqui
+            jq --arg LB_URL "http://$LB_URL" \
+               '.LB_URL = $LB_URL')
 
           aws secretsmanager update-secret \
             --secret-id "$SECRET_ID" \
