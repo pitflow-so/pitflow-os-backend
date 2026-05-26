@@ -50,18 +50,30 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,metrics
+
   endpoint:
     health:
       show-details: never
+
   health:
     mail:
       enabled: false
+
+  tracing:
+    enabled: true
+
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      service: pitflow-os-backend
+
   datadog:
     metrics:
       export:
         enabled: ${DATADOG_ENABLED:false}
         api-key: ${DATADOG_API_KEY}
+        uri: https://api.us5.datadoghq.com
         step: 30s
 
 mock:
