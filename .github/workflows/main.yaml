@@ -175,8 +175,9 @@ jobs:
           MOCK_MESSAGE=$(echo "$APP_JSON"   | jq -r '.MOCK_MESSAGE')
           MAIL_USERNAME=$(echo "$APP_JSON"  | jq -r '.MAIL_USERNAME')
           MAIL_PASSWORD=$(echo "$APP_JSON"  | jq -r '.MAIL_PASSWORD')
+          DATADOG_API_KEY=$(echo "$APP_JSON"  | jq -r '.DATADOG_API_KEY')
           
-          for VAR_NAME in DB_PASSWORD DB_USERNAME DB_NAME DB_HOST DB_PORT JWT_SECRET MOCK_MESSAGE MAIL_USERNAME MAIL_PASSWORD; do
+          for VAR_NAME in DB_PASSWORD DB_USERNAME DB_NAME DB_HOST DB_PORT JWT_SECRET MOCK_MESSAGE MAIL_USERNAME MAIL_PASSWORD DATADOG_API_KEY; do
             VAL="${!VAR_NAME}"
             if [ -z "$VAL" ] || [ "$VAL" = "null" ]; then
               echo "❌ Chave '$VAR_NAME' não encontrada ou vazia em 'pitflow/bootstrap'."
@@ -194,6 +195,7 @@ jobs:
           echo "MOCK_MESSAGE=$MOCK_MESSAGE" >> $GITHUB_ENV
           echo "MAIL_USERNAME=$MAIL_USERNAME" >> $GITHUB_ENV
           echo "MAIL_PASSWORD=$MAIL_PASSWORD" >> $GITHUB_ENV
+          echo "DATADOG_API_KEY=$DATADOG_API_KEY" >> $GITHUB_ENV
           
           # Lê API_PUBLIC_URL do Secret Manager (vazia no primeiro deploy)
           API_PUBLIC_URL=$(echo "$APP_JSON" | jq -r '.API_PUBLIC_URL // empty')
@@ -214,6 +216,7 @@ jobs:
           MAIL_USERNAME:   ${{ env.MAIL_USERNAME }}
           MAIL_PASSWORD:   ${{ env.MAIL_PASSWORD }}
           API_PUBLIC_URL:  ${{ env.API_PUBLIC_URL }}
+          DATADOG_API_KEY: ${{ env.DATADOG_API_KEY }}
         run: |
           set -eo pipefail
           # 1. Aplica Secrets

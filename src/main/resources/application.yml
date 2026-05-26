@@ -54,6 +54,12 @@ management:
   health:
     mail:
       enabled: false
+  datadog:
+    metrics:
+      export:
+        enabled: ${DATADOG_ENABLED:false}
+        api-key: ${DATADOG_API_KEY}
+        step: 30s
 
 mock:
   send-message: ${MOCK_MESSAGE:true}

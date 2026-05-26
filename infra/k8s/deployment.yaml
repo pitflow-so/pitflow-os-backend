@@ -96,6 +96,14 @@ spec:
                 secretKeyRef:
                   name: pitflow-secrets
                   key: mail-password
+            - name: DATADOG_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pitflow-secrets
+                  key: datadog-api-key
+            - name: DATADOG_ENABLED
+              value: "true"
+
           startupProbe:
             httpGet:
               path: /actuator/health
