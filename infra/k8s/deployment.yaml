@@ -4,6 +4,9 @@ metadata:
   name: pitflow-backend
   labels:
     app: pitflow-backend
+    tags.datadoghq.com/env: "producao"
+    tags.datadoghq.com/service: "pitflow-os-backend"
+    tags.datadoghq.com/version: "1.0.0"
 spec:
   replicas: 1
   strategy:
@@ -18,6 +21,12 @@ spec:
     metadata:
       labels:
         app: pitflow-backend
+        tags.datadoghq.com/env: "producao"
+        tags.datadoghq.com/service: "pitflow-os-backend"
+        tags.datadoghq.com/version: "1.0.0"
+      annotations:
+        # Injeção do agente do datadag
+        admission.datadoghq.com/java-lib.version: "latest"
     spec:
       containers:
         - name: pitflow-backend
