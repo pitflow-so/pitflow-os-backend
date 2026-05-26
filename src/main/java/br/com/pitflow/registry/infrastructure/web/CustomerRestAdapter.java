@@ -58,7 +58,7 @@ public class CustomerRestAdapter {
     }
 
     @GetMapping("/document/{document}")
-    @Operation(summary = "Buscar por CPF/CNPJ", description = "Busca um cliente pelo seu CPF ou CNPJ.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Buscar por CPF/CNPJ", description = "Busca um cliente pelo seu CPF ou CNPJ.")
     public ResponseEntity<CustomerResponse> getByDocument(@PathVariable String document) {
         return ResponseEntity.ok(controller.getByDocument(document));
     }

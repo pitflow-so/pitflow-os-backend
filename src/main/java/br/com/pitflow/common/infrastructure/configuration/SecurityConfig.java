@@ -49,28 +49,28 @@ public class SecurityConfig {
                         .requestMatchers(GET, "/external/events/service-orders/decision").permitAll()
 
                         //Cadastro veículo
-                        .requestMatchers(POST, "/registry/vehicles").permitAll()
-                        .requestMatchers(GET, "/registry/vehicles/plate/{plate}").permitAll()
+                        //.requestMatchers(POST, "/registry/vehicles").permitAll()
+                        //.requestMatchers(GET, "/registry/vehicles/plate/{plate}").permitAll()
 
                         //Cadastro do cliente
                         .requestMatchers(POST,"/registry/customers").permitAll()
-                        .requestMatchers(GET, "/registry/customers/document/{document}").permitAll()
+                        //.requestMatchers(GET, "/registry/customers/document/{document}").permitAll()
 
                         //Cria a OS
-                        .requestMatchers(POST, "/operation/service-orders").permitAll()
-                        .requestMatchers(PATCH, "/operation/service-orders/{id}/approve").permitAll()
-                        .requestMatchers(PATCH, "/operation/service-orders/{id}/cancel").permitAll() //TODO: Rever depois
-                        .requestMatchers(GET, "/operation/service-orders/{id}").permitAll()
-                        .requestMatchers(GET, "/operation/service-orders/status/{id}").permitAll()
-                        .requestMatchers(GET, "/operation/service-orders/{id}/duration").permitAll()
-                        .requestMatchers(PATCH, "/operation/service-orders/v2/{id}/budget-decision").permitAll()
+                        //.requestMatchers(POST, "/operation/service-orders").permitAll()
+                        //.requestMatchers(PATCH, "/operation/service-orders/{id}/approve").permitAll()
+                        //.requestMatchers(PATCH, "/operation/service-orders/{id}/cancel").permitAll() //TODO: Rever depois
+                        //.requestMatchers(GET, "/operation/service-orders/{id}").permitAll()
+                        //.requestMatchers(GET, "/operation/service-orders/status/{id}").permitAll()
+                        //.requestMatchers(GET, "/operation/service-orders/{id}/duration").permitAll()
+                        //.requestMatchers(PATCH, "/operation/service-orders/v2/{id}/budget-decision").permitAll()
 
                         // Endpoints do Swagger UI e API Docs
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()
 
-                        //TODO: removed it
+                        //TODO: removed it, used to test get API gateway url
                         .requestMatchers(GET,"/external/events/service-orders/api/url").permitAll()
 
                         //.requestMatchers("/h2-console/**").permitAll()
