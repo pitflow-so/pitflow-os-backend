@@ -4,6 +4,7 @@ import br.com.pitflow.common.core.gateway.TokenGateway;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.gateway.ServiceOrderMetricsGateway;
 import br.com.pitflow.operation.core.gateway.dto.Notification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,13 +22,15 @@ class CompleteDiagnosisImpTest {
     private NotificationGateway notificationGateway;
     private TokenGateway tokenGateway;
     private CompleteDiagnosisImp completeDiagnosis;
+    private ServiceOrderMetricsGateway metricsGateway;
 
     @BeforeEach
     void setUp() {
         gateway = mock(ServiceOrderGateway.class);
         notificationGateway = mock(NotificationGateway.class);
+        metricsGateway = mock(ServiceOrderMetricsGateway.class);
         tokenGateway = mock(TokenGateway.class);
-        completeDiagnosis = new CompleteDiagnosisImp(gateway, notificationGateway, tokenGateway, "dummyURL");
+        completeDiagnosis = new CompleteDiagnosisImp(gateway, notificationGateway, metricsGateway, tokenGateway, "dummyURL");
     }
 
     @Test
@@ -102,7 +105,7 @@ class CompleteDiagnosisImpTest {
         when(gateway.findEmail(osId)).thenReturn(Optional.of(dummyEmail));
 
         NotificationGateway notificationGateway = mock(NotificationGateway.class);
-        var interactor = new CompleteDiagnosisImp(gateway, notificationGateway, tokenGateway, "dummyURL");
+        var interactor = new CompleteDiagnosisImp(gateway, notificationGateway, metricsGateway, tokenGateway, "dummyURL");
 
         // Act
         interactor.execute(osId);

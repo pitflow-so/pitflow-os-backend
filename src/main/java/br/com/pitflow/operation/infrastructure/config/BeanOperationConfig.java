@@ -79,9 +79,10 @@ public class BeanOperationConfig {
     public CompleteDiagnosis completeDiagnosis(
             ServiceOrderGateway repository,
             NotificationGateway notificationGateway,
+            ServiceOrderMetricsGateway metricsGateway,
             TokenGateway tokenGateway,
             @Value("${api.url}") String apiUrl) {
-        return new CompleteDiagnosisImp(repository, notificationGateway, tokenGateway, apiUrl);
+        return new CompleteDiagnosisImp(repository, notificationGateway, metricsGateway, tokenGateway, apiUrl);
     }
 
     @Bean
