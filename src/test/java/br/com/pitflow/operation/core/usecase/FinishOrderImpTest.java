@@ -3,11 +3,14 @@ package br.com.pitflow.operation.core.usecase;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.gateway.ServiceOrderMetricsGateway;
 import br.com.pitflow.operation.core.gateway.dto.Notification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,12 +22,14 @@ class FinishOrderImpTest {
     private NotificationGateway notificationGateway;
     private ServiceOrderGateway gateway;
     private FinishOrderImp finishOrder;
+    private ServiceOrderMetricsGateway metricsGatewa;
 
     @BeforeEach
     void setUp() {
         gateway = mock(ServiceOrderGateway.class);
         notificationGateway = mock(NotificationGateway.class);
-        finishOrder = new FinishOrderImp(notificationGateway, gateway);
+        metricsGatewa = mock(ServiceOrderMetricsGateway.class);
+        finishOrder = new FinishOrderImp(notificationGateway, gateway, metricsGatewa);
     }
 
     @Test
@@ -60,6 +65,9 @@ class FinishOrderImpTest {
         UUID osId = UUID.randomUUID();
         var os = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Troca de filtros");
         var dummyEmail = "dummy@email.com";
+
+        // Definir um valor para executionStartedAt, pois o approve() não foi chamado.
+        os.reconstituteExecutionStartedAt(LocalDateTime.now().minusHours(1));
 
         when(gateway.findById(osId)).thenReturn(Optional.of(os));
         when(gateway.findEmail(osId)).thenReturn(Optional.of(dummyEmail));

@@ -105,8 +105,10 @@ public class BeanOperationConfig {
     }
 
     @Bean
-    public FinishOrder finishOrder(NotificationGateway notificationGateway, ServiceOrderGateway repository) {
-        return new FinishOrderImp(notificationGateway, repository);
+    public FinishOrder finishOrder(NotificationGateway notificationGateway,
+                                   ServiceOrderGateway repository,
+                                   ServiceOrderMetricsGateway metricsGateway) {
+        return new FinishOrderImp(notificationGateway, repository, metricsGateway);
     }
 
     @Bean
