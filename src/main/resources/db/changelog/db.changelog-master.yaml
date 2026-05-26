@@ -19,3 +19,5 @@ databaseChangeLog:
       file: db/changelog/migrations/009-update-email-other-base-customers.sql
   - include:
       file: db/changelog/migrations/010-alter-table-customer-add-status.sql
+  - include:
+      file: db/changelog/migrations/011-alter-table-service-order-add-fk-to-customer-id.sql
