@@ -117,8 +117,8 @@ public class BeanOperationConfig {
     }
 
     @Bean
-    public StartDiagnosis startDiagnosis(ServiceOrderGateway repository) {
-        return new StartDiagnosisImp(repository);
+    public StartDiagnosis startDiagnosis(ServiceOrderGateway repository, ServiceOrderMetricsGateway metricsGateway) {
+        return new StartDiagnosisImp(repository, metricsGateway);
     }
 
     @Bean

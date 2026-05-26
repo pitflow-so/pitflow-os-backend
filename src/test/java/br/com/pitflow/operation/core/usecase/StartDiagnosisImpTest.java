@@ -2,6 +2,7 @@ package br.com.pitflow.operation.core.usecase;
 
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.gateway.ServiceOrderMetricsGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,11 +16,13 @@ class StartDiagnosisImpTest {
 
     private ServiceOrderGateway gateway;
     private StartDiagnosisImp startDiagnosis;
+    private ServiceOrderMetricsGateway metricsGateway;
 
     @BeforeEach
     void setUp() {
         gateway = mock(ServiceOrderGateway.class);
-        startDiagnosis = new StartDiagnosisImp(gateway);
+        metricsGateway = mock(ServiceOrderMetricsGateway.class);
+        startDiagnosis = new StartDiagnosisImp(gateway,  metricsGateway);
     }
 
     @Test
