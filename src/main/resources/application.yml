@@ -31,6 +31,9 @@ spring:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
 
+server:
+  forward-headers-strategy: framework
+
 logging:
   level:
     org:
@@ -63,3 +66,4 @@ management:
 
 mock:
   send-message: ${MOCK_MESSAGE:true}
+
