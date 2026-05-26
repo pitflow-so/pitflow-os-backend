@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         // Actuator para health check do Kubernetes
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/metrics").permitAll()
 
                         // Endpoints de Autenticação
                         .requestMatchers("/registry/auth/**").permitAll()
