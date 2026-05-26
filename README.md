@@ -243,6 +243,7 @@ mvn clean test
 ### 📊 Validações e Roteiros de Teste
 A documentação detalhada das provas de conceito e histórico de qualidade encontra-se na pasta `/doc`:
 * 🧪 **Roteiro de Homologação (MVP):** [HOMOLOGACAO.md](doc/HOMOLOGACAO.md)
+* 🛢️ **Justificativa para o uso do banco de dados PostegreSQL:**  [JUSTIFICATIVA_BANCO_DE_DADOS.md](doc/JUSTIFICATIVA_BANCO_DE_DADOS.md)
 * 📈 **Teste de Escalonamento Automático (HPA):** [TESTE_HPA.md](doc/TESTE_HPA.md)
 * 🛡️ **Qualidade e Cobertura (JaCoCo):** [QUALIDADE_SEGURANCA.md](doc/QUALIDADE_SEGURANCA.md)
 * 🔒 **Análise de Vulnerabilidades (OWASP):** [OWASP.md](doc/OWASP.md)
