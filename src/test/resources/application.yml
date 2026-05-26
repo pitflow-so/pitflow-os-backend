@@ -35,3 +35,9 @@ api:
 
 mock:
   send-message: true
+
+management:
+  datadog:
+    metrics:
+      export:
+        enabled: false
