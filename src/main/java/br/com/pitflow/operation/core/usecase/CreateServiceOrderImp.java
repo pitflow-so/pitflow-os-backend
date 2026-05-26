@@ -3,6 +3,7 @@ package br.com.pitflow.operation.core.usecase;
 import br.com.pitflow.operation.controller.dto.CreateServiceOrderCommand;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.gateway.ServiceOrderMetricsGateway;
 import br.com.pitflow.operation.core.usecase.inputPort.CreateServiceOrder;
 import br.com.pitflow.registry.core.gateway.CustomerGateway;
 import br.com.pitflow.registry.core.gateway.VehicleGateway;
@@ -12,14 +13,17 @@ public class CreateServiceOrderImp implements CreateServiceOrder {
     private final ServiceOrderGateway serviceOrderGateway;
     private final CustomerGateway customerGateway;
     private final VehicleGateway vehicleGateway;
+    private final ServiceOrderMetricsGateway metricsGateway;
 
     public CreateServiceOrderImp(
             ServiceOrderGateway serviceOrderGateway,
             CustomerGateway customerGateway,
-            VehicleGateway vehicleGateway) {
+            VehicleGateway vehicleGateway,
+            ServiceOrderMetricsGateway metricsGateway) {
         this.serviceOrderGateway = serviceOrderGateway;
         this.customerGateway = customerGateway;
         this.vehicleGateway = vehicleGateway;
+        this.metricsGateway = metricsGateway;
     }
 
     @Override
@@ -38,6 +42,9 @@ public class CreateServiceOrderImp implements CreateServiceOrder {
         var serviceOrder = new ServiceOrder(dto.customerId(), dto.vehicleId(), dto.description());
 
         serviceOrderGateway.save(serviceOrder);
+
+        // Dispara a métrica de negócio para o Datadog
+        metricsGateway.incrementOrderCreated();
         return serviceOrder;
     }
 }

@@ -3,6 +3,7 @@ package br.com.pitflow.operation.core.usecase;
 import br.com.pitflow.operation.controller.dto.CreateServiceOrderCommand;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.gateway.ServiceOrderMetricsGateway;
 import br.com.pitflow.registry.core.entity.Customer;
 import br.com.pitflow.registry.core.entity.Vehicle;
 import br.com.pitflow.registry.core.gateway.CustomerGateway;
@@ -27,13 +28,15 @@ class CreateServiceOrderImpTest {
     private CustomerGateway customerGateway;
     private VehicleGateway vehicleGateway;
     private CreateServiceOrderImp createServiceOrder;
+    private ServiceOrderMetricsGateway serviceOrderMetricsGateway;
 
     @BeforeEach
     void setUp() {
         serviceOrderGateway = mock(ServiceOrderGateway.class);
         customerGateway = mock(CustomerGateway.class);
         vehicleGateway = mock(VehicleGateway.class);
-        createServiceOrder = new CreateServiceOrderImp(serviceOrderGateway, customerGateway, vehicleGateway);
+        serviceOrderMetricsGateway = mock(ServiceOrderMetricsGateway.class);
+        createServiceOrder = new CreateServiceOrderImp(serviceOrderGateway, customerGateway, vehicleGateway, serviceOrderMetricsGateway);
     }
 
     @Test

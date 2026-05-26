@@ -8,6 +8,7 @@ import br.com.pitflow.operation.controller.ExternalDecisionController;
 import br.com.pitflow.operation.controller.ServiceOrderController;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.gateway.ServiceOrderMetricsGateway;
 import br.com.pitflow.operation.core.usecase.AddOrderItemImp;
 import br.com.pitflow.operation.core.usecase.ApproveOrderImp;
 import br.com.pitflow.operation.core.usecase.CancelOrderImp;
@@ -38,10 +39,12 @@ import br.com.pitflow.operation.core.usecase.inputPort.GetServiceOrderDuration;
 import br.com.pitflow.operation.core.usecase.inputPort.ListInExecutionOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.ListPrioritizedServiceOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.StartDiagnosis;
+import br.com.pitflow.operation.infrastructure.metrics.MicrometerMetricsAdapter;
 import br.com.pitflow.operation.infrastructure.persistence.adapter.JpaServiceOrderGatewayAdapter;
 import br.com.pitflow.operation.infrastructure.persistence.repository.SpringServiceOrderRepository;
 import br.com.pitflow.registry.core.gateway.CustomerGateway;
 import br.com.pitflow.registry.core.gateway.VehicleGateway;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -76,17 +79,20 @@ public class BeanOperationConfig {
     public CompleteDiagnosis completeDiagnosis(
             ServiceOrderGateway repository,
             NotificationGateway notificationGateway,
+            ServiceOrderMetricsGateway metricsGateway,
             TokenGateway tokenGateway,
             @Value("${api.url}") String apiUrl) {
-        return new CompleteDiagnosisImp(repository, notificationGateway, tokenGateway, apiUrl);
+        return new CompleteDiagnosisImp(repository, notificationGateway, metricsGateway, tokenGateway, apiUrl);
     }
 
     @Bean
     public CreateServiceOrder createServiceOrder(
             ServiceOrderGateway repository,
             CustomerGateway customerGateway,
-            VehicleGateway vehicleGateway) {
-        return new CreateServiceOrderImp(repository, customerGateway, vehicleGateway);
+            VehicleGateway vehicleGateway,
+            ServiceOrderMetricsGateway serviceOrderMetricsGateway
+    ) {
+        return new CreateServiceOrderImp(repository, customerGateway, vehicleGateway, serviceOrderMetricsGateway);
     }
 
     @Bean
@@ -100,8 +106,10 @@ public class BeanOperationConfig {
     }
 
     @Bean
-    public FinishOrder finishOrder(NotificationGateway notificationGateway, ServiceOrderGateway repository) {
-        return new FinishOrderImp(notificationGateway, repository);
+    public FinishOrder finishOrder(NotificationGateway notificationGateway,
+                                   ServiceOrderGateway repository,
+                                   ServiceOrderMetricsGateway metricsGateway) {
+        return new FinishOrderImp(notificationGateway, repository, metricsGateway);
     }
 
     @Bean
@@ -110,8 +118,8 @@ public class BeanOperationConfig {
     }
 
     @Bean
-    public StartDiagnosis startDiagnosis(ServiceOrderGateway repository) {
-        return new StartDiagnosisImp(repository);
+    public StartDiagnosis startDiagnosis(ServiceOrderGateway repository, ServiceOrderMetricsGateway metricsGateway) {
+        return new StartDiagnosisImp(repository, metricsGateway);
     }
 
     @Bean
@@ -189,6 +197,11 @@ public class BeanOperationConfig {
     @Bean
     public ExternalDecisionController externalDecisionController(TokenGateway  tokenGateway, ServiceOrderController serviceOrderController) {
         return new  ExternalDecisionController(tokenGateway, serviceOrderController);
+    }
+
+    @Bean
+    public ServiceOrderMetricsGateway serviceOrderMetricsGateway(MeterRegistry meterRegistry) {
+        return new MicrometerMetricsAdapter(meterRegistry);
     }
 }
 

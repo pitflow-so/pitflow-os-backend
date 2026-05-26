@@ -4,10 +4,13 @@ import br.com.pitflow.common.core.gateway.TokenGateway;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
+import br.com.pitflow.operation.core.gateway.ServiceOrderMetricsGateway;
 import br.com.pitflow.operation.core.gateway.dto.Notification;
 import br.com.pitflow.operation.core.usecase.inputPort.CompleteDiagnosis;
 import br.com.pitflow.registry.core.valueObject.Email;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -15,6 +18,7 @@ public class CompleteDiagnosisImp implements CompleteDiagnosis {
 
     private final ServiceOrderGateway repository;
     private final NotificationGateway notificationGateway;
+    private final ServiceOrderMetricsGateway metricsGateway;
     private final TokenGateway tokenGateway;
     private static final String APPROVED_DECISION = "APPROVED";
     private static final String REJECTED_DECISION = "REJECTED";
@@ -24,11 +28,13 @@ public class CompleteDiagnosisImp implements CompleteDiagnosis {
     public CompleteDiagnosisImp(
             ServiceOrderGateway repository,
             NotificationGateway notificationGateway,
+            ServiceOrderMetricsGateway metricsGateway,
             TokenGateway tokenGateway,
             String apiURL
     ) {
         this.repository = repository;
         this.notificationGateway = notificationGateway;
+        this.metricsGateway = metricsGateway;
         this.tokenGateway = tokenGateway;
         this.apiURL = apiURL;
     }
@@ -41,8 +47,13 @@ public class CompleteDiagnosisImp implements CompleteDiagnosis {
         var emailAddress = repository.findEmail(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Email to notification not found with OS ID: " + orderId));
 
+        String previousStatus = os.getStatus().name();
+        Duration timeSpentToCompleteDiagnosis = Duration.between(os.getDiagnosisStartedAt(), LocalDateTime.now());
+
         os.completeDiagnosis();
         repository.save(os);
+
+        metricsGateway.recordTimeInStatus(previousStatus, timeSpentToCompleteDiagnosis);
 
         var approveToken = getTokenToMessage(os.getId().toString(), APPROVED_DECISION);
         var rejectToken = getTokenToMessage(os.getId().toString(), REJECTED_DECISION);
