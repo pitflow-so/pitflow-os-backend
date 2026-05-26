@@ -1,9 +1,9 @@
-# PitFlow OS - Backend 🛠️ (Fase 2)
+# PitFlow OS - Backend 🛠️ (Fase 3)
 
 Aplicação backend orientada a domínio (DDD), baseada em Clean Architecture, executando em ambiente cloud-native (Kubernetes), com infraestrutura como código (Terraform) e pipeline CI/CD automatizado.
 
 📌 **Links Importantes:**
-* 🎬 **Vídeo Demonstrativo:** [Link do Vídeo](https://drive.google.com/file/d/1ljDp4kCbxxXPZbn11ddynvWAL2PC5_7g/view?usp=sharing).
+* 🎬 **Vídeo Demonstrativo:** [Link do Vídeo](i-need-update-it-with-a-new-fase-3-video).
 * 📚 **Collection / Swagger API:** A documentação interativa (OpenAPI) fica disponível em `http://localhost:8080/swagger-ui.html` quando a aplicação está em execução, localmente.
 
 ---
@@ -152,18 +152,16 @@ flowchart TB
 A esteira de entrega contínua (`.github/workflows/main.yaml`) automatiza todo o
 processo em três jobs sequenciais:
 
-1. **Provision Infrastructure:** Garante a existência do bucket S3 para o estado
-   remoto do Terraform, executa `terraform init`, `plan` e `apply`, provisionando
-   ECR, EKS e RDS. Exporta os endpoints e nomes como outputs para os jobs seguintes.
+1. **Fetch Secrets:** Carrega as secrets necessárias para o projeto. Uliza `aws secretsmanager` para obter os dados do secret manager. Exporta como variáveis para outputs para serem utilizadas nos jobs seguintes.
 
 2. **Build and Push:** Executa `mvn clean package` (compila, testa e empacota),
    autentica no Amazon ECR e envia a imagem Docker com duas tags: o SHA do commit
    e `latest`.
 
-3. **Deploy to Kubernetes:** Atualiza o kubeconfig do EKS, instala o
+3. **Deploy:** Atualiza o kubeconfig do EKS, instala o
    `metrics-server` (pré-requisito do HPA), substitui os placeholders dos
    manifestos via `envsubst` injetando secrets do GitHub, aplica todos os
-   manifestos e valida o rollout do deployment.
+   manifestos e valida o rollout do deployment. No final é atualizado o secret manager com a URL do loadbalace (`LB_URL`).
 ```mermaid
 %%{init: {
   "theme": "base",
@@ -178,22 +176,18 @@ processo em três jobs sequenciais:
 sequenceDiagram
     participant Dev as Developer
     participant GH as GitHub Actions
-    participant S3 as Amazon S3
-    participant TF as Terraform
+    participant ASM as Amazon Secret Manager
     participant ECR as Amazon ECR
     participant EKS as Amazon EKS
-    participant RDS as Amazon RDS
 
     Dev->>GH: push na main
 
     rect rgb(220, 235, 255)
-        note over GH,RDS: Job 1 — Provision Infrastructure
-        GH->>S3: cria bucket tfstate
-        GH->>TF: terraform init + plan
-        TF->>ECR: cria repositório
-        TF->>EKS: cria cluster
-        TF->>RDS: cria PostgreSQL
-        TF-->>GH: outputs (rds, ecr, eks)
+        note over GH,ASM: Job 1 — Fetch Secrets
+        GH->>GH: Configure AWS Credentials
+        GH->>GH: Install jq
+        GH->>ASM: Busca secrets e enviar para GITHUB_OUTPUT
+        GH->>GH: E enviar para GITHUB_OUTPUT
     end
 
     rect rgb(220, 255, 220)
@@ -205,8 +199,8 @@ sequenceDiagram
     rect rgb(255, 235, 220)
         note over GH,EKS: Job 3 — Deploy
         GH->>EKS: update kubeconfig
-        GH->>EKS: install metrics-server
         GH->>EKS: apply manifests (envsubst)
+        GH->>ASM: Atualiza loadbalance URL
         EKS-->>GH: rollout OK
     end
 ```
@@ -249,6 +243,7 @@ mvn clean test
 ### 📊 Validações e Roteiros de Teste
 A documentação detalhada das provas de conceito e histórico de qualidade encontra-se na pasta `/doc`:
 * 🧪 **Roteiro de Homologação (MVP):** [HOMOLOGACAO.md](doc/HOMOLOGACAO.md)
+* 🛢️ **Justificativa para o uso do banco de dados PostegreSQL:**  [JUSTIFICATIVA_BANCO_DE_DADOS.md](doc/JUSTIFICATIVA_BANCO_DE_DADOS.md)
 * 📈 **Teste de Escalonamento Automático (HPA):** [TESTE_HPA.md](doc/TESTE_HPA.md)
 * 🛡️ **Qualidade e Cobertura (JaCoCo):** [QUALIDADE_SEGURANCA.md](doc/QUALIDADE_SEGURANCA.md)
 * 🔒 **Análise de Vulnerabilidades (OWASP):** [OWASP.md](doc/OWASP.md)
