@@ -36,7 +36,7 @@ public class ServiceOrderRestAdapter {
     }
 
     @PostMapping
-    @Operation(summary = "Abre uma nova Ordem de Serviço", description = "Status inicial: RECEIVED")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Abre uma nova Ordem de Serviço", description = "Status inicial: RECEIVED")
     public ResponseEntity<ServiceOrderResponse> create(@RequestBody CreateServiceOrderRequest dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(controller.create(dto));
     }
@@ -71,6 +71,7 @@ public class ServiceOrderRestAdapter {
     @Deprecated
     @PatchMapping("/{id}/approve")
     @Operation(
+            security = @SecurityRequirement(name = "bearerAuth"),
             summary = "Aprova o orçamento - Endpoint deprecado, utilizar ** /{id}/budget-decision **",
             description = "Muda status para IN_EXECUTION ",
             deprecated = true
@@ -95,20 +96,20 @@ public class ServiceOrderRestAdapter {
     }
 
     @PatchMapping("/{id}/cancel")
-    @Operation(summary = "Cancela a Ordem de Serviço", description = "Exige motivo para o cancelamento da OS.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Cancela a Ordem de Serviço", description = "Exige motivo para o cancelamento da OS.")
     public ResponseEntity<Void> cancel(@PathVariable UUID id, @RequestBody String reason) {
         controller.cancel(id, reason);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Busca detalhes de uma OS específica")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Busca detalhes de uma OS específica")
     public ResponseEntity<ServiceOrderResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(controller.getServiceOrderById(id));
     }
 
     @GetMapping("/status/{id}")
-    @Operation(summary = "Busca o status da OS específica")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Busca o status da OS específica")
     public ResponseEntity<String> getStatusById(@PathVariable UUID id) {
         return ResponseEntity.ok(controller.getServiceOrderStatus(id));
     }
@@ -133,7 +134,7 @@ public class ServiceOrderRestAdapter {
     }
 
     @GetMapping("/{id}/duration")
-    @Operation(summary = "Obter duração da OS", description = "Retorna o tempo decorrido desde o início da execução. Se a OS não foi finalizada, calcula o tempo até o momento atual.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Obter duração da OS", description = "Retorna o tempo decorrido desde o início da execução. Se a OS não foi finalizada, calcula o tempo até o momento atual.")
     public ResponseEntity<OrderDurationResponse> getDuration(@PathVariable UUID id) {
         return ResponseEntity.ok(controller.getDuration(id));
     }
@@ -150,6 +151,7 @@ public class ServiceOrderRestAdapter {
 
     @PatchMapping("v2/{id}/budget-decision")
     @Operation(
+            security = @SecurityRequirement(name = "bearerAuth"),
             summary = "Recebe decisão do cliente sobre o orçamento, aceitar ou recusar",
             description = "Para integrações externas, utilize /external/events"
     )

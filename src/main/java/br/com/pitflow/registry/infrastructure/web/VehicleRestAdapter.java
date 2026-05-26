@@ -34,7 +34,7 @@ public class VehicleRestAdapter {
     }
 
     @PostMapping
-    @Operation(summary = "Adicionar veículo", description = "Vincula um novo veículo a um cliente existente.")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Adicionar veículo", description = "Vincula um novo veículo a um cliente existente.")
     public ResponseEntity<VehicleResponse> create(@RequestBody AddVehicleRequest dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(vehicleController.create(dto));
     }
@@ -59,7 +59,7 @@ public class VehicleRestAdapter {
     }
 
     @GetMapping("/plate/{plate}")
-    @Operation(summary = "Buscar por Placa", description = "Localiza um veículo no sistema utilizando a placa (License Plate).")
+    @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Buscar por Placa", description = "Localiza um veículo no sistema utilizando a placa (License Plate).")
     public ResponseEntity<VehicleResponse> getByPlate(@PathVariable String plate) {
         return ResponseEntity.ok(vehicleController.findByPlate(plate));
     }
