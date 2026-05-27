@@ -3,7 +3,7 @@
 Aplicação backend orientada a domínio (DDD), baseada em Clean Architecture, executando em ambiente cloud-native (Kubernetes), com infraestrutura como código (Terraform) e pipeline CI/CD automatizado.
 
 📌 **Links Importantes:**
-* 🎬 **Vídeo Demonstrativo:** [Link do Vídeo](i-need-update-it-with-a-new-fase-3-video).
+* 🎬 **Vídeo Demonstrativo:** [Link do Vídeo](**https://drive.google.com/drive/folders/1rKD-R3Cbbh3VkMbq_KHJeAC3ShDwRWPx?usp=sharing**).
 * 📚 **Collection / Swagger API:** A documentação interativa (OpenAPI) fica disponível em `http://localhost:8080/swagger-ui.html` quando a aplicação está em execução, localmente.
 
 ---
