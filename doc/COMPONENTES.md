@@ -1,4 +1,11 @@
 ### Diagrama de componentes
+O ambiente é composto de 5 repositórios:
+- 1 **pitflow-bootstrap:** provisiona S3 e secret manager.
+- 2 **pitflow-database:** provisiona banco de dados.
+- 3 **pitflow-cluster-kubernetes:** provisiona EKS e ECR.
+- 4 **pitflow-os-backend:** provisiona build e deploy da aplicação.
+- 5 **pitflow-lambdas:** provisiona API Gateway e lambdas para autenticação.
+
 ```mermaid
 flowchart TB
     classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:black,font-weight:bold;
