@@ -240,10 +240,14 @@ Execução da action disponibilizada em: [github/workflows/main.yaml](.github/wo
 mvn clean test
 ````
 
-### 📊 Validações e Roteiros de Teste
+### 📊 Documentos
 A documentação detalhada das provas de conceito e histórico de qualidade encontra-se na pasta `/doc`:
+* 🛢️ **Justificativa para o uso do banco de dados PostegreSQL:** [JUSTIFICATIVA_BANCO_DE_DADOS.md](doc/JUSTIFICATIVA_BANCO_DE_DADOS.md)
+* 📦 **Diagrama de componentes:** [COMPONENTES.md](doc/COMPONENTES.md)
+* 📉 **Diagrama de sequência fluxo de criação de OS** [DIAGRAMA_SEQUENCIA.md](doc/DIAGRAMA_SEQUENCIA.md)
+* 📌 **RFCs** [RFCS.md](doc/RFCS.md)
+* 📍 **ADRs** [ADRS.md](doc/ADRS.md)
 * 🧪 **Roteiro de Homologação (MVP):** [HOMOLOGACAO.md](doc/HOMOLOGACAO.md)
-* 🛢️ **Justificativa para o uso do banco de dados PostegreSQL:**  [JUSTIFICATIVA_BANCO_DE_DADOS.md](doc/JUSTIFICATIVA_BANCO_DE_DADOS.md)
 * 📈 **Teste de Escalonamento Automático (HPA):** [TESTE_HPA.md](doc/TESTE_HPA.md)
 * 🛡️ **Qualidade e Cobertura (JaCoCo):** [QUALIDADE_SEGURANCA.md](doc/QUALIDADE_SEGURANCA.md)
 * 🔒 **Análise de Vulnerabilidades (OWASP):** [OWASP.md](doc/OWASP.md)
