@@ -1,23 +1,7 @@
 databaseChangeLog:
   - include:
-      file: db/changelog/migrations/001-create-table-customer.sql
-  - include:
-      file: db/changelog/migrations/002-create-table-vehicle.sql
-  - include:
       file: db/changelog/migrations/003-create-inventory-tables.sql
   - include:
       file: db/changelog/migrations/004-create-service-order-and-item.sql
   - include:
-      file: db/changelog/migrations/005-create-mechanics-table.sql
-  - include:
-      file: db/changelog/migrations/006-base-inserts-to-homologate.sql
-  - include:
-      file: db/changelog/migrations/007-alter-table-customer-add-email.sql
-  - include:
-      file: db/changelog/migrations/008-updated-email-in-customer.sql
-  - include:
-      file: db/changelog/migrations/009-update-email-other-base-customers.sql
-  - include:
-      file: db/changelog/migrations/010-alter-table-customer-add-status.sql
-  - include:
-      file: db/changelog/migrations/011-alter-table-service-order-add-fk-to-customer-id.sql
+      file: db/changelog/migrations/012-insert-inventory-data.sql
