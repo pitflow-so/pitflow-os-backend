@@ -1,36 +1,97 @@
 services:
-  db:
+  backend-db:
     image: postgres:16-alpine
-    container_name: pitflow-postgres
+    container_name: pitflow-backend-postgres
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: ${BACKEND_DB_NAME:-pitflow_os}
+      POSTGRES_USER: ${BACKEND_DB_USERNAME:-pitflow}
+      POSTGRES_PASSWORD: ${BACKEND_DB_PASSWORD:-pitflow_local}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - backend_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${BACKEND_DB_USERNAME:-pitflow} -d ${BACKEND_DB_NAME:-pitflow_os}
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  registry-db:
+    image: postgres:16-alpine
+    container_name: pitflow-registry-postgres
+    environment:
+      POSTGRES_DB: ${REGISTRY_DB_NAME:-pitflow_registry}
+      POSTGRES_USER: ${REGISTRY_DB_USERNAME:-pitflow_registry}
+      POSTGRES_PASSWORD: ${REGISTRY_DB_PASSWORD:-pitflow_registry_local}
+    volumes:
+      - registry_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${REGISTRY_DB_USERNAME:-pitflow_registry} -d ${REGISTRY_DB_NAME:-pitflow_registry}
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  registry:
+    build:
+      context: ../pitflow-registry
+    container_name: pitflow-registry
+    ports:
+      - "${REGISTRY_HTTP_PORT:-18081}:8080"
+    environment:
+      DB_HOST: registry-db
+      DB_PORT: 5432
+      DB_NAME: ${REGISTRY_DB_NAME:-pitflow_registry}
+      DB_USERNAME: ${REGISTRY_DB_USERNAME:-pitflow_registry}
+      DB_PASSWORD: ${REGISTRY_DB_PASSWORD:-pitflow_registry_local}
+      JWT_SECRET: ${JWT_SECRET:-364161b203a948480795c643b01859942a0094072f883b27b407a51801311099}
+      DATADOG_ENABLED: "false"
+    depends_on:
+      registry-db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q --spider http://localhost:8080/actuator/health || exit 1
       interval: 10s
       timeout: 5s
-      retries: 5
-  app:
-    build: .
-    container_name: pitflow-os-backend
+      retries: 18
+      start_period: 30s
+
+  backend:
+    build:
+      context: .
+    container_name: pitflow-os-backend-local
     ports:
-      - "8080:8080"
+      - "${BACKEND_HTTP_PORT:-18080}:8080"
     environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=${DB_NAME}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-      - API_URL=${API_URL}
+      DB_HOST: backend-db
+      DB_PORT: 5432
+      DB_NAME: ${BACKEND_DB_NAME:-pitflow_os}
+      DB_USERNAME: ${BACKEND_DB_USERNAME:-pitflow}
+      DB_PASSWORD: ${BACKEND_DB_PASSWORD:-pitflow_local}
+      JWT_SECRET: ${JWT_SECRET:-364161b203a948480795c643b01859942a0094072f883b27b407a51801311099}
+      API_URL: ${API_URL:-http://localhost:18080}
+      REGISTRY_SERVICE_URL: http://registry:8080
+      MOCK_MESSAGE: "true"
+      MAIL_PASSWORD: local-not-used
+      DATADOG_ENABLED: "false"
+      DATADOG_API_KEY: local-not-used
     depends_on:
-      db:
+      backend-db:
         condition: service_healthy
+      registry:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q --spider http://localhost:8080/actuator/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
 
 volumes:
-  postgres_data:
+  backend_postgres_data:
+  registry_postgres_data:
