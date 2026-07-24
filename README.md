@@ -160,8 +160,8 @@ processo em três jobs sequenciais:
 1. **Fetch Secrets:** Carrega as secrets necessárias para o projeto. Uliza `aws secretsmanager` para obter os dados do secret manager. Exporta como variáveis para outputs para serem utilizadas nos jobs seguintes.
 
 2. **Build and Push:** Executa `mvn clean package` (compila, testa e empacota),
-   autentica no Amazon ECR e envia a imagem Docker com duas tags: o SHA do commit
-   e `latest`.
+   autentica no Amazon ECR compartilhado e publica a imagem com a tag imutável
+   `backend-<commit-sha>`.
 
 3. **Deploy:** Atualiza o kubeconfig do EKS, instala o
    `metrics-server` (pré-requisito do HPA), substitui os placeholders dos
