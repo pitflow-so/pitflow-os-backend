@@ -118,12 +118,11 @@ jobs:
             exit 1
           fi
 
-          IMAGE_TAG="${{ github.sha }}"
+          IMAGE_TAG="backend-${GITHUB_SHA}"
           echo "🏗️ Construindo imagem: ${ECR_URL}:${IMAGE_TAG}"
 
-          docker build -t "${ECR_URL}:${IMAGE_TAG}" -t "${ECR_URL}:latest" .
+          docker build -t "${ECR_URL}:${IMAGE_TAG}" .
           docker push "${ECR_URL}:${IMAGE_TAG}"
-          docker push "${ECR_URL}:latest"
 
           echo "✅ Imagem publicada com sucesso"
 
@@ -203,7 +202,7 @@ jobs:
 
       - name: Deploy Application Manifests
         env:
-          CONTAINER_IMAGE: ${{ needs['fetch-secrets'].outputs.ecr_url }}:${{ github.sha }}
+          CONTAINER_IMAGE: ${{ needs['fetch-secrets'].outputs.ecr_url }}:backend-${{ github.sha }}
           DB_PASSWORD:     ${{ env.DB_PASSWORD }}
           DB_USERNAME:     ${{ env.DB_USERNAME }}
           DB_NAME:         ${{ env.DB_NAME }}
