@@ -33,6 +33,10 @@ api:
       expiration-hours: 3
   url: http://localhost:8080
 
+services:
+  registry:
+    base-url: http://localhost:8081
+
 mock:
   send-message: true
 

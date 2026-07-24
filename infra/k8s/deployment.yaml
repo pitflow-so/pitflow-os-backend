@@ -86,6 +86,11 @@ spec:
                 configMapKeyRef:
                   name: pitflow-config
                   key: MOCK_MESSAGE
+            - name: REGISTRY_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: pitflow-config
+                  key: REGISTRY_SERVICE_URL
             - name: MAIL_USERNAME
               valueFrom:
                 secretKeyRef:

@@ -26,13 +26,4 @@ public interface SpringServiceOrderRepository extends JpaRepository<ServiceOrder
             "AND finished_at IS NOT NULL", nativeQuery = true)
     Double getAverageExecutionTimeInSeconds();
 
-    @Query(
-            value = """
-                SELECT EMAIL
-                FROM SERVICE_ORDERS SO
-                    LEFT JOIN CUSTOMER C ON C.ID = SO.CUSTOMER_ID
-                WHERE SO.ID = ?1 
-            """,
-            nativeQuery = true)
-    String getEmail(UUID serviceOrderId);
 }

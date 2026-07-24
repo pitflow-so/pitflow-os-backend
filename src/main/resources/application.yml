@@ -46,6 +46,10 @@ api:
       expiration-hours: 3
   url: ${API_URL:http://localhost:8080}
 
+services:
+  registry:
+    base-url: ${REGISTRY_SERVICE_URL:http://localhost:8081}
+
 management:
   endpoints:
     web:
@@ -78,4 +82,3 @@ management:
 
 mock:
   send-message: ${MOCK_MESSAGE:true}
-

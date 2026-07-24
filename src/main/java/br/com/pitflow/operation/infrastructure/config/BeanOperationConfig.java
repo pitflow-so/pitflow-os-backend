@@ -7,6 +7,7 @@ import br.com.pitflow.inventory.core.gateway.ServiceGateway;
 import br.com.pitflow.operation.controller.ExternalDecisionController;
 import br.com.pitflow.operation.controller.ServiceOrderController;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
+import br.com.pitflow.operation.core.gateway.RegistryGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderMetricsGateway;
 import br.com.pitflow.operation.core.usecase.AddOrderItemImp;
@@ -42,15 +43,21 @@ import br.com.pitflow.operation.core.usecase.inputPort.StartDiagnosis;
 import br.com.pitflow.operation.infrastructure.metrics.MicrometerMetricsAdapter;
 import br.com.pitflow.operation.infrastructure.persistence.adapter.JpaServiceOrderGatewayAdapter;
 import br.com.pitflow.operation.infrastructure.persistence.repository.SpringServiceOrderRepository;
-import br.com.pitflow.registry.core.gateway.CustomerGateway;
-import br.com.pitflow.registry.core.gateway.VehicleGateway;
+import br.com.pitflow.operation.infrastructure.registry.HttpRegistryGatewayAdapter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
 
 @Configuration
 public class BeanOperationConfig {
+
+    @Bean
+    public RegistryGateway registryGateway(
+            @Value("${services.registry.base-url}") String registryBaseUrl) {
+        return new HttpRegistryGatewayAdapter(RestClient.builder().baseUrl(registryBaseUrl).build());
+    }
 
     @Bean
     public ServiceOrderGateway serviceOrderRepository(SpringServiceOrderRepository springRepository) {
@@ -81,18 +88,19 @@ public class BeanOperationConfig {
             NotificationGateway notificationGateway,
             ServiceOrderMetricsGateway metricsGateway,
             TokenGateway tokenGateway,
+            RegistryGateway registryGateway,
             @Value("${api.url}") String apiUrl) {
-        return new CompleteDiagnosisImp(repository, notificationGateway, metricsGateway, tokenGateway, apiUrl);
+        return new CompleteDiagnosisImp(
+                repository, notificationGateway, metricsGateway, tokenGateway, registryGateway, apiUrl);
     }
 
     @Bean
     public CreateServiceOrder createServiceOrder(
             ServiceOrderGateway repository,
-            CustomerGateway customerGateway,
-            VehicleGateway vehicleGateway,
+            RegistryGateway registryGateway,
             ServiceOrderMetricsGateway serviceOrderMetricsGateway
     ) {
-        return new CreateServiceOrderImp(repository, customerGateway, vehicleGateway, serviceOrderMetricsGateway);
+        return new CreateServiceOrderImp(repository, registryGateway, serviceOrderMetricsGateway);
     }
 
     @Bean
@@ -108,8 +116,9 @@ public class BeanOperationConfig {
     @Bean
     public FinishOrder finishOrder(NotificationGateway notificationGateway,
                                    ServiceOrderGateway repository,
-                                   ServiceOrderMetricsGateway metricsGateway) {
-        return new FinishOrderImp(notificationGateway, repository, metricsGateway);
+                                   ServiceOrderMetricsGateway metricsGateway,
+                                   RegistryGateway registryGateway) {
+        return new FinishOrderImp(notificationGateway, repository, metricsGateway, registryGateway);
     }
 
     @Bean
@@ -204,4 +213,3 @@ public class BeanOperationConfig {
         return new MicrometerMetricsAdapter(meterRegistry);
     }
 }
-
