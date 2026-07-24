@@ -1,11 +1,12 @@
 package br.com.pitflow.operation.core.usecase;
 
 import br.com.pitflow.operation.core.gateway.ServiceOrderMetricsGateway;
+import br.com.pitflow.operation.core.gateway.RegistryGateway;
 import br.com.pitflow.operation.core.gateway.dto.Notification;
+import br.com.pitflow.operation.core.valueobject.Email;
 import br.com.pitflow.operation.core.usecase.inputPort.FinishOrder;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
-import br.com.pitflow.registry.core.valueObject.Email;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -15,22 +16,25 @@ public class FinishOrderImp implements FinishOrder {
     private final NotificationGateway notificationGateway;
     private final ServiceOrderGateway repository;
     private final ServiceOrderMetricsGateway metricsGateway;
+    private final RegistryGateway registryGateway;
 
     public FinishOrderImp(
             NotificationGateway notificationGateway,
             ServiceOrderGateway repository,
-            ServiceOrderMetricsGateway metricsGateway
+            ServiceOrderMetricsGateway metricsGateway,
+            RegistryGateway registryGateway
     ) {
         this.notificationGateway = notificationGateway;
         this.repository = repository;
         this.metricsGateway = metricsGateway;
+        this.registryGateway = registryGateway;
     }
 
     @Override
     public void execute(UUID orderId) {
         var os = repository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Service Order not found with ID: " + orderId));
-        var emailAddress =  repository.findEmail(orderId)
+        var emailAddress = registryGateway.findCustomerEmail(os.getCustomerId())
                 .orElseThrow(() -> new IllegalArgumentException("Email address not found with OS ID: " + orderId));
 
         String previousStatus = os.getStatus().name();

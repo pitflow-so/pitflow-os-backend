@@ -1,6 +1,7 @@
 package br.com.pitflow.operation.core.usecase;
 
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
+import br.com.pitflow.operation.core.gateway.RegistryGateway;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderMetricsGateway;
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,13 +23,15 @@ class FinishOrderImpTest {
     private ServiceOrderGateway gateway;
     private FinishOrderImp finishOrder;
     private ServiceOrderMetricsGateway metricsGatewa;
+    private RegistryGateway registryGateway;
 
     @BeforeEach
     void setUp() {
         gateway = mock(ServiceOrderGateway.class);
         notificationGateway = mock(NotificationGateway.class);
         metricsGatewa = mock(ServiceOrderMetricsGateway.class);
-        finishOrder = new FinishOrderImp(notificationGateway, gateway, metricsGatewa);
+        registryGateway = mock(RegistryGateway.class);
+        finishOrder = new FinishOrderImp(notificationGateway, gateway, metricsGatewa, registryGateway);
     }
 
     @Test
@@ -46,7 +48,7 @@ class FinishOrderImpTest {
         var dummyEmail = "dummy@email.com";
 
         when(gateway.findById(osId)).thenReturn(Optional.of(os));
-        when(gateway.findEmail(osId)).thenReturn(Optional.of(dummyEmail));
+        when(registryGateway.findCustomerEmail(os.getCustomerId())).thenReturn(Optional.of(dummyEmail));
 
         // Act
         finishOrder.execute(osId);
@@ -70,7 +72,7 @@ class FinishOrderImpTest {
         os.reconstituteExecutionStartedAt(LocalDateTime.now().minusHours(1));
 
         when(gateway.findById(osId)).thenReturn(Optional.of(os));
-        when(gateway.findEmail(osId)).thenReturn(Optional.of(dummyEmail));
+        when(registryGateway.findCustomerEmail(os.getCustomerId())).thenReturn(Optional.of(dummyEmail));
 
         // Act & Assert
         assertThatThrownBy(() -> finishOrder.execute(osId))

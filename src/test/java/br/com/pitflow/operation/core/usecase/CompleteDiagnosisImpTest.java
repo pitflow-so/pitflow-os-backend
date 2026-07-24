@@ -2,6 +2,7 @@ package br.com.pitflow.operation.core.usecase;
 
 import br.com.pitflow.common.core.gateway.TokenGateway;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
+import br.com.pitflow.operation.core.gateway.RegistryGateway;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderMetricsGateway;
@@ -23,6 +24,7 @@ class CompleteDiagnosisImpTest {
     private TokenGateway tokenGateway;
     private CompleteDiagnosisImp completeDiagnosis;
     private ServiceOrderMetricsGateway metricsGateway;
+    private RegistryGateway registryGateway;
 
     @BeforeEach
     void setUp() {
@@ -30,7 +32,9 @@ class CompleteDiagnosisImpTest {
         notificationGateway = mock(NotificationGateway.class);
         metricsGateway = mock(ServiceOrderMetricsGateway.class);
         tokenGateway = mock(TokenGateway.class);
-        completeDiagnosis = new CompleteDiagnosisImp(gateway, notificationGateway, metricsGateway, tokenGateway, "dummyURL");
+        registryGateway = mock(RegistryGateway.class);
+        completeDiagnosis = new CompleteDiagnosisImp(
+                gateway, notificationGateway, metricsGateway, tokenGateway, registryGateway, "dummyURL");
     }
 
     @Test
@@ -46,7 +50,7 @@ class CompleteDiagnosisImpTest {
         var dummyEmail = "dummy@email.com";
 
         when(gateway.findById(osId)).thenReturn(Optional.of(os));
-        when(gateway.findEmail(osId)).thenReturn(Optional.of(dummyEmail));
+        when(registryGateway.findCustomerEmail(os.getCustomerId())).thenReturn(Optional.of(dummyEmail));
 
         // Act
         completeDiagnosis.execute(osId);
@@ -82,7 +86,7 @@ class CompleteDiagnosisImpTest {
         // Items not added
 
         when(gateway.findById(osId)).thenReturn(Optional.of(os));
-        when(gateway.findEmail(osId)).thenReturn(Optional.of(dummyEmail));
+        when(registryGateway.findCustomerEmail(os.getCustomerId())).thenReturn(Optional.of(dummyEmail));
 
         // Act & Assert
         assertThatThrownBy(() -> completeDiagnosis.execute(osId))
@@ -102,10 +106,11 @@ class CompleteDiagnosisImpTest {
         var dummyEmail = "dummy@email.com";
 
         when(gateway.findById(osId)).thenReturn(Optional.of(os));
-        when(gateway.findEmail(osId)).thenReturn(Optional.of(dummyEmail));
+        when(registryGateway.findCustomerEmail(os.getCustomerId())).thenReturn(Optional.of(dummyEmail));
 
         NotificationGateway notificationGateway = mock(NotificationGateway.class);
-        var interactor = new CompleteDiagnosisImp(gateway, notificationGateway, metricsGateway, tokenGateway, "dummyURL");
+        var interactor = new CompleteDiagnosisImp(
+                gateway, notificationGateway, metricsGateway, tokenGateway, registryGateway, "dummyURL");
 
         // Act
         interactor.execute(osId);

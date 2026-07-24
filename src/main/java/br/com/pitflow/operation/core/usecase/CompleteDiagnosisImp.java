@@ -5,9 +5,10 @@ import br.com.pitflow.operation.core.entity.ServiceOrder;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderMetricsGateway;
+import br.com.pitflow.operation.core.gateway.RegistryGateway;
 import br.com.pitflow.operation.core.gateway.dto.Notification;
+import br.com.pitflow.operation.core.valueobject.Email;
 import br.com.pitflow.operation.core.usecase.inputPort.CompleteDiagnosis;
-import br.com.pitflow.registry.core.valueObject.Email;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -20,6 +21,7 @@ public class CompleteDiagnosisImp implements CompleteDiagnosis {
     private final NotificationGateway notificationGateway;
     private final ServiceOrderMetricsGateway metricsGateway;
     private final TokenGateway tokenGateway;
+    private final RegistryGateway registryGateway;
     private static final String APPROVED_DECISION = "APPROVED";
     private static final String REJECTED_DECISION = "REJECTED";
     private static final String PATH_DECISION = "/external/events/service-orders/decision";
@@ -30,12 +32,14 @@ public class CompleteDiagnosisImp implements CompleteDiagnosis {
             NotificationGateway notificationGateway,
             ServiceOrderMetricsGateway metricsGateway,
             TokenGateway tokenGateway,
+            RegistryGateway registryGateway,
             String apiURL
     ) {
         this.repository = repository;
         this.notificationGateway = notificationGateway;
         this.metricsGateway = metricsGateway;
         this.tokenGateway = tokenGateway;
+        this.registryGateway = registryGateway;
         this.apiURL = apiURL;
     }
 
@@ -44,7 +48,7 @@ public class CompleteDiagnosisImp implements CompleteDiagnosis {
         var os = repository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Service Order not found with ID: " + orderId));
 
-        var emailAddress = repository.findEmail(orderId)
+        var emailAddress = registryGateway.findCustomerEmail(os.getCustomerId())
                 .orElseThrow(() -> new IllegalArgumentException("Email to notification not found with OS ID: " + orderId));
 
         String previousStatus = os.getStatus().name();
