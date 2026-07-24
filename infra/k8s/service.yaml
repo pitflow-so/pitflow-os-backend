@@ -6,7 +6,8 @@ spec:
   selector:
     app: pitflow-backend
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 8080
-  type: LoadBalancer
+  type: ClusterIP

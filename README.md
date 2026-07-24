@@ -93,7 +93,9 @@ Localizado na pasta `infra/terraform`, o IaC provisiona:
 ### Orquestração (Kubernetes)
 Localizado na pasta `infra/k8s`, os manifestos definem a topologia:
 * **Deployment:** Responsável por manter os pods da aplicação.
-* **Service:** Exposição da aplicação via Service do tipo LoadBalancer.
+* **Service:** Exposição interna da aplicação por `ClusterIP`.
+* **Ingress:** Registro da rota `/` no ALB compartilhado administrado pelo
+  `pitflow-cluster-kubernetes`.
 * **ConfigMaps e Secrets:** Injeção de variáveis de ambiente (`DB_HOST`, senhas e JWT) desacopladas da imagem da aplicação.
 * **Probes (Liveness/Readiness/Startup):** Garantem a autorrecuperação dos pods usando o Spring Actuator (`/actuator/health`).
 * **HPA (Horizontal Pod Autoscaler):** Escalonamento automático de 1 para até 3 réplicas com base no consumo de CPU (alvo: 70%).
@@ -163,8 +165,10 @@ processo em três jobs sequenciais:
 
 3. **Deploy:** Atualiza o kubeconfig do EKS, instala o
    `metrics-server` (pré-requisito do HPA), substitui os placeholders dos
-   manifestos via `envsubst` injetando secrets do GitHub, aplica todos os
-   manifestos e valida o rollout do deployment. No final é atualizado o secret manager com a URL do loadbalace (`LB_URL`).
+   manifestos via `envsubst`, aplica Service, Ingress, ConfigMap, Deployment e
+   HPA e valida o rollout. O workflow apenas lê `API_PUBLIC_URL`; a criação do
+   ALB e a atualização do Secrets Manager pertencem ao
+   `pitflow-cluster-kubernetes`.
 ```mermaid
 %%{init: {
   "theme": "base",
@@ -203,7 +207,7 @@ sequenceDiagram
         note over GH,EKS: Job 3 — Deploy
         GH->>EKS: update kubeconfig
         GH->>EKS: apply manifests (envsubst)
-        GH->>ASM: Atualiza loadbalance URL
+        GH->>EKS: registra rota no ALB compartilhado
         EKS-->>GH: rollout OK
     end
 ```

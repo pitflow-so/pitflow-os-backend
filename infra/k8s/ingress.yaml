@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pitflow-backend
+  annotations:
+    alb.ingress.kubernetes.io/group.name: pitflow
+    alb.ingress.kubernetes.io/group.order: "900"
+    alb.ingress.kubernetes.io/healthcheck-path: /actuator/health
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pitflow-service
+                port:
+                  name: http

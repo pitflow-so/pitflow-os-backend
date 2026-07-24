@@ -60,8 +60,8 @@ jobs:
             exit 1
           fi
           
-          echo "ecr_url=${ECR_URL}" >> $GITHUB_OUTPUT
-          echo "eks_cluster_name=${EKS_CLUSTER_NAME}" >> $GITHUB_OUTPUT
+          echo "ecr_url=${ECR_URL}" >> "$GITHUB_OUTPUT"
+          echo "eks_cluster_name=${EKS_CLUSTER_NAME}" >> "$GITHUB_OUTPUT"
           
           echo "✅ Secret de infraestrutura obtido e mascarado com sucesso."
 
@@ -176,8 +176,9 @@ jobs:
           MAIL_USERNAME=$(echo "$APP_JSON"  | jq -r '.MAIL_USERNAME')
           MAIL_PASSWORD=$(echo "$APP_JSON"  | jq -r '.MAIL_PASSWORD')
           DATADOG_API_KEY=$(echo "$APP_JSON"  | jq -r '.DATADOG_API_KEY')
+          API_PUBLIC_URL=$(echo "$APP_JSON" | jq -r '.API_PUBLIC_URL')
           
-          for VAR_NAME in DB_PASSWORD DB_USERNAME DB_NAME DB_HOST DB_PORT JWT_SECRET MOCK_MESSAGE MAIL_USERNAME MAIL_PASSWORD DATADOG_API_KEY; do
+          for VAR_NAME in DB_PASSWORD DB_USERNAME DB_NAME DB_HOST DB_PORT JWT_SECRET MOCK_MESSAGE MAIL_USERNAME MAIL_PASSWORD DATADOG_API_KEY API_PUBLIC_URL; do
             VAL="${!VAR_NAME}"
             if [ -z "$VAL" ] || [ "$VAL" = "null" ]; then
               echo "❌ Chave '$VAR_NAME' não encontrada ou vazia em 'pitflow/bootstrap'."
@@ -186,22 +187,19 @@ jobs:
             echo "::add-mask::$VAL"
           done
           
-          echo "DB_PASSWORD=$DB_PASSWORD"   >> $GITHUB_ENV
-          echo "DB_USERNAME=$DB_USERNAME"   >> $GITHUB_ENV
-          echo "DB_NAME=$DB_NAME"           >> $GITHUB_ENV
-          echo "DB_HOST=$DB_HOST"           >> $GITHUB_ENV
-          echo "DB_PORT=$DB_PORT"           >> $GITHUB_ENV
-          echo "JWT_SECRET=$JWT_SECRET"     >> $GITHUB_ENV
-          echo "MOCK_MESSAGE=$MOCK_MESSAGE" >> $GITHUB_ENV
-          echo "MAIL_USERNAME=$MAIL_USERNAME" >> $GITHUB_ENV
-          echo "MAIL_PASSWORD=$MAIL_PASSWORD" >> $GITHUB_ENV
-          echo "DATADOG_API_KEY=$DATADOG_API_KEY" >> $GITHUB_ENV
-          
-          # Lê API_PUBLIC_URL do Secret Manager (vazia no primeiro deploy)
-          API_PUBLIC_URL=$(echo "$APP_JSON" | jq -r '.API_PUBLIC_URL // empty')
-          
-          API_PUBLIC_URL="${API_PUBLIC_URL:-http://pending-first-deploy}"
-          echo "API_PUBLIC_URL=$API_PUBLIC_URL" >> $GITHUB_ENV
+          {
+            echo "DB_PASSWORD=$DB_PASSWORD"
+            echo "DB_USERNAME=$DB_USERNAME"
+            echo "DB_NAME=$DB_NAME"
+            echo "DB_HOST=$DB_HOST"
+            echo "DB_PORT=$DB_PORT"
+            echo "JWT_SECRET=$JWT_SECRET"
+            echo "MOCK_MESSAGE=$MOCK_MESSAGE"
+            echo "MAIL_USERNAME=$MAIL_USERNAME"
+            echo "MAIL_PASSWORD=$MAIL_PASSWORD"
+            echo "DATADOG_API_KEY=$DATADOG_API_KEY"
+            echo "API_PUBLIC_URL=$API_PUBLIC_URL"
+          } >> "$GITHUB_ENV"
 
       - name: Deploy Application Manifests
         env:
@@ -225,67 +223,23 @@ jobs:
           # 2. Aplica Service
           kubectl apply -f infra/k8s/service.yaml
 
-          # 3. Cria ConfigMap com a URL
+          # 3. Conecta o backend ao ALB compartilhado
+          kubectl apply -f infra/k8s/ingress.yaml
+
+          # 4. Cria ConfigMap com a URL
           export API_PUBLIC_URL
           echo "Criando ConfigMap com API_PUBLIC_URL=$API_PUBLIC_URL"
           envsubst < infra/k8s/configmap.yaml | kubectl apply -f -
 
-          # 4. Aplica Deployment
+          # 5. Aplica Deployment
           echo "Aplicando Deployment com ConfigMap pronto..."
           envsubst < infra/k8s/deployment.yaml | kubectl apply -f -
 
-          # 5. Aguarda Deployment ficar pronto
+          # 6. Aguarda Deployment ficar pronto
           kubectl rollout status deployment/pitflow-backend --timeout=300s || {
             kubectl rollout undo deployment/pitflow-backend
             exit 1
           }
 
-          # 6. Apply HPA
+          # 7. Apply HPA
           kubectl apply -f infra/k8s/hpa.yaml
-
-      - name: Update Secret Manager with LB_URL
-        run: |
-          set -eo pipefail
-
-          # 1. Aguarda e captura o DNS do LoadBalancer
-          echo "Aguardando DNS do LoadBalancer..."
-          ATTEMPTS=0
-          MAX_ATTEMPTS=30
-          LB_URL=""
-
-          while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-            LB_URL=$(kubectl get service pitflow-service \
-              -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-
-            if [ -n "$LB_URL" ]; then
-              echo "✅ LoadBalancer DNS obtido: $LB_URL"
-              break
-            fi
-
-            echo "⏳ Tentativa $((ATTEMPTS+1))/$MAX_ATTEMPTS - Aguardando LoadBalancer..."
-            sleep 10
-            ATTEMPTS=$((ATTEMPTS+1))
-          done
-
-          if [ -z "$LB_URL" ]; then
-            echo "❌ Erro: LoadBalancer não gerou DNS a tempo"
-            exit 1
-          fi
-
-          # 2. Atualiza o Secret Manager
-          SECRET_ID="pitflow/bootstrap"
-
-          CURRENT_SECRET=$(aws secretsmanager get-secret-value \
-            --secret-id "$SECRET_ID" \
-            --query 'SecretString' \
-            --output text)
-
-          UPDATED_SECRET=$(echo "$CURRENT_SECRET" | \
-            jq --arg LB_URL "http://$LB_URL" \
-               '.LB_URL = $LB_URL')
-
-          aws secretsmanager update-secret \
-            --secret-id "$SECRET_ID" \
-            --secret-string "$UPDATED_SECRET" > /dev/null
-
-          echo "✅ Secrets Manager atualizado com sucesso"
