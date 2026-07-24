@@ -18,11 +18,14 @@ Aplicação backend orientada a domínio (DDD), baseada em Clean Architecture, e
 A aplicação foi completamente refatorada seguindo os princípios da **[Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)** (Arquitetura Limpa), garantindo que as regras de negócio sejam o coração do sistema, independentes de frameworks, bancos de dados ou interfaces web.
 
 ### Organização em Módulos
-O código está estruturado em quatro Bounded Contexts principais:
+O código está estruturado em três Bounded Contexts principais:
 1. **`common`**: Elementos transversais (Filtros JWT, Gateways abstratos como `TransactionGateway`, Handlers de exceção).
-2. **`registry`**: Gestão de clientes, veículos e autenticação de mecânicos.
-3. **`inventory`**: Catálogo de peças e serviços.
-4. **`operation`**: Máquina de estados e ciclo de vida das Ordens de Serviço (Abertura, Diagnóstico, Aprovação, Execução e Finalização).
+2. **`inventory`**: Catálogo de peças e serviços.
+3. **`operation`**: Máquina de estados e ciclo de vida das Ordens de Serviço (Abertura, Diagnóstico, Aprovação, Execução e Finalização).
+
+O contexto de clientes, veículos e mecânicos foi extraído para o repositório
+`pitflow-registry`. O contexto `operation` acessa esse serviço por um gateway
+HTTP interno.
 
 ## 🧠 Decisões Arquiteturais
 
@@ -211,13 +214,47 @@ sequenceDiagram
 Para o histórico de testes de qualidade (JaCoCo, OWASP Dependency-Check) e o teste prático de escalabilidade do HPA, consulte a pasta `/doc`.
 
 ### Opção A: Execução Local (Docker Compose)
-A maneira mais rápida de rodar o ambiente de desenvolvimento:
-1. Renomeie o arquivo `.env.example` para `.env` (se aplicável) ou apenas utilize as variáveis padrão.
-2. Na raiz do projeto, execute:
+A maneira mais rápida de rodar o ambiente integrado de desenvolvimento:
+
+1. Mantenha os repositórios `pitflow-os-backend` e `pitflow-registry` no mesmo
+   diretório pai.
+2. Renomeie o arquivo `.env.example` para `.env`, se quiser sobrescrever os
+   valores locais. O Compose possui valores padrão para desenvolvimento.
+3. Na raiz do `pitflow-os-backend`, execute:
+
    ```bash
    docker-compose up --build
    ```
-3. O PostgreSQL e a aplicação subirão juntos. Siga o roteiro de testes disponível no arquivo [HOMOLOGACAO.md](doc/HOMOLOGACAO.md).
+
+O ambiente cria quatro containers:
+
+- backend em `http://localhost:18080`;
+- registry em `http://localhost:18081`;
+- PostgreSQL exclusivo do backend;
+- PostgreSQL exclusivo do registry.
+
+Os bancos não publicam portas no host. A comunicação do backend com o registry
+usa `http://registry:8080` dentro da rede do Compose, simulando o DNS
+`http://pitflow-registry` utilizado no Kubernetes.
+
+Health checks:
+
+```text
+http://localhost:18080/actuator/health
+http://localhost:18081/actuator/health
+```
+
+Para encerrar o ambiente preservando os bancos:
+
+```bash
+docker-compose down
+```
+
+Para recriar todo o ambiente e apagar os dados locais:
+
+```bash
+docker-compose down --volumes --remove-orphans
+```
 
 ### Opção B: Provisionamento Terraform Local
 O deploy principal é automatizado pela GitHub Action ao realizar um push na `main`. <br>
