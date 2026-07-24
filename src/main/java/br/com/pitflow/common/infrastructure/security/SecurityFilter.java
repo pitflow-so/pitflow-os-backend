@@ -1,7 +1,6 @@
 package br.com.pitflow.common.infrastructure.security;
 
 import br.com.pitflow.common.core.gateway.TokenGateway;
-import br.com.pitflow.registry.core.gateway.MechanicGateway;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,17 +15,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 public class SecurityFilter extends OncePerRequestFilter {
-    private final Logger logger = LoggerFactory.getLogger(SecurityFilter.class);
-    private final TokenGateway tokenGateway;
-    private final MechanicGateway mechanicGateway;
-
-    // Prefixo para identificar tokens de cliente (lambda)
+    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityFilter.class);
     private static final String CUSTOMER_SUBJECT_PREFIX = "customer:";
     private static final String CUSTOMER_ROLE = "ROLE_CUSTOMER";
+    private static final String MECHANIC_ROLE = "ROLE_MECHANIC";
 
-    public SecurityFilter(TokenGateway tokenGateway, MechanicGateway mechanicGateway) {
+    private final TokenGateway tokenGateway;
+
+    public SecurityFilter(TokenGateway tokenGateway) {
         this.tokenGateway = tokenGateway;
-        this.mechanicGateway = mechanicGateway;
     }
 
     @Override
@@ -35,18 +32,17 @@ public class SecurityFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        var token = this.recoverToken(request);
+        var token = recoverToken(request);
 
         if (token != null) {
             try {
                 var subject = tokenGateway.validateToken(token);
-
                 if (subject != null) {
                     authenticateUser(token, subject);
-                    logger.debug("Request URI: {}", request.getRequestURI());
+                    LOGGER.debug("Request URI: {}", request.getRequestURI());
                 }
-            } catch (Exception e) {
-                logger.error("Error in token validation: {}", e.getMessage());
+            } catch (Exception exception) {
+                LOGGER.error("Error in token validation: {}", exception.getMessage());
                 SecurityContextHolder.clearContext();
             }
         }
@@ -55,33 +51,21 @@ public class SecurityFilter extends OncePerRequestFilter {
     }
 
     private void authenticateUser(String token, String subject) {
-        // Estratégia 1: Verificar por prefixo no subject
-        if (subject.startsWith(CUSTOMER_SUBJECT_PREFIX)) {
-            authenticateAsCustomer(subject);
+        var role = (String) tokenGateway.getClaims(token).get("role");
+
+        if (!CUSTOMER_ROLE.equals(role) && !MECHANIC_ROLE.equals(role)) {
+            LOGGER.warn("Token with unsupported role for subject: {}", subject);
             return;
         }
 
-        // Estratégia 2: Verificar claims do token
-        var claims = tokenGateway.getClaims(token);
-        var role = (String) claims.get("role");
-
-        if (CUSTOMER_ROLE.equals(role)) {
-            authenticateAsCustomer(subject);
-            return;
-        }
-
-        // Estratégia 3: Assumir que é mecânico e buscar no banco (apenas se necessário)
-        authenticateAsMechanic(subject);
-    }
-
-    private void authenticateAsCustomer(String subject) {
-        // Remove o prefixo se existir
-        String customerId = subject.replace(CUSTOMER_SUBJECT_PREFIX, "");
+        String principal = subject.startsWith(CUSTOMER_SUBJECT_PREFIX)
+                ? subject.substring(CUSTOMER_SUBJECT_PREFIX.length())
+                : subject;
 
         var userDetails = User.builder()
-                .username(customerId)
+                .username(principal)
                 .password("")
-                .authorities(CUSTOMER_ROLE)
+                .authorities(role)
                 .build();
 
         var authentication = new UsernamePasswordAuthenticationToken(
@@ -91,31 +75,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        logger.debug("Authorized customer: {}", customerId);
-    }
-
-    private void authenticateAsMechanic(String username) {
-        var mechanic = mechanicGateway.findByUsername(username);
-
-        if (mechanic.isPresent()) {
-            var mechanicData = mechanic.get();
-            var userDetails = User.builder()
-                    .username(mechanicData.getUsername())
-                    .password(mechanicData.getPassword())
-                    .authorities(mechanicData.getRole())
-                    .build();
-
-            var authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails,
-                    null,
-                    userDetails.getAuthorities()
-            );
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            logger.debug("Authorized Mechanic: {}", username);
-        } else {
-            logger.warn("Mechanic not found: {}", username);
-        }
+        LOGGER.debug("Authorized subject {} with role {}", principal, role);
     }
 
     private String recoverToken(HttpServletRequest request) {
@@ -123,6 +83,6 @@ public class SecurityFilter extends OncePerRequestFilter {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return null;
         }
-        return authHeader.replace("Bearer ", "");
+        return authHeader.substring("Bearer ".length());
     }
 }
