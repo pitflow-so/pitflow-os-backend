@@ -10,6 +10,7 @@ import br.com.pitflow.operation.core.gateway.dto.Notification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,6 +33,8 @@ class CompleteDiagnosisImpTest {
         notificationGateway = mock(NotificationGateway.class);
         metricsGateway = mock(ServiceOrderMetricsGateway.class);
         tokenGateway = mock(TokenGateway.class);
+        when(tokenGateway.generateToken(anyString(), anyMap()))
+                .thenReturn("decision-token");
         registryGateway = mock(RegistryGateway.class);
         completeDiagnosis = new CompleteDiagnosisImp(
                 gateway, notificationGateway, metricsGateway, tokenGateway, registryGateway, "dummyURL");
@@ -116,9 +119,15 @@ class CompleteDiagnosisImpTest {
         interactor.execute(osId);
 
         // Assert
-        //TODO: fix erro from token
         assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.AWAITING_APPROVAL);
         verify(gateway).save(os);
-        verify(notificationGateway).send(eq(os.getId()), any(Notification.class));
+        var notificationCaptor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationGateway).send(
+                eq(os.getId()),
+                notificationCaptor.capture()
+        );
+        assertThat(notificationCaptor.getValue().message())
+                .contains("dummyURL/customer/budget?token=decision-token")
+                .doesNotContain("/external/events/service-orders/decision");
     }
 }
