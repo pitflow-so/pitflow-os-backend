@@ -220,9 +220,4 @@ public class ServiceOrderController {
                 )
         );
     }
-
-    //TODO: remove it
-    public String getURL(){
-        return completeDiagnosis.getApiURl();
-    }
 }

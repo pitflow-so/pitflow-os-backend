@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.UUID;
 
 public class ExternalDecisionController {
+    private static final String EXTERNAL_DECISION_SUBJECT = "external-decision";
+
     private final TokenGateway tokenGateway;
     private final ServiceOrderController serviceOrderController;
 
@@ -20,22 +22,32 @@ public class ExternalDecisionController {
         this.serviceOrderController = serviceOrderController;
     }
 
-    public void processDecision(String token) {
+    public void processDecision(String token, String suppliedReason) {
         if (token == null || token.isBlank()) {
             throw new InvalidTokenException("Token must not be null or empty");
         }
         var claims = tokenGateway.getClaims(token);
+        validateSubject(claims);
 
         var serviceOrderId = getServiceOrderIdFromClaim(claims);
         var event = getStatusFromClaim(claims);
 
-        var reasonValue = claims.get("reason");
-        String reason = reasonValue instanceof String r ? r : null;
+        String reason = suppliedReason;
+        if (reason == null || reason.isBlank()) {
+            var reasonValue = claims.get("reason");
+            reason = reasonValue instanceof String r ? r : null;
+        }
 
         validateReasonForEvent(reason, event);
 
         var command = new ExternalDecisionCommand(serviceOrderId, event, reason);
         serviceOrderController.processExternalDecision(command);
+    }
+
+    private void validateSubject(Map<String, Object> claims) {
+        if (!EXTERNAL_DECISION_SUBJECT.equals(claims.get("sub"))) {
+            throw new InvalidTokenException("Invalid token subject");
+        }
     }
 
     private UUID getServiceOrderIdFromClaim(Map<String, Object> claims){

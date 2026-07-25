@@ -9,8 +9,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.HttpMethod.PATCH;
+import static org.springframework.http.HttpMethod.POST;
 
 @Configuration
 @EnableWebSecurity
@@ -31,9 +30,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/actuator/metrics").permitAll()
-                        .requestMatchers(PATCH, "/external/events/service-orders/**").permitAll()
-                        .requestMatchers(GET, "/external/events/service-orders/decision").permitAll()
-                        .requestMatchers(GET, "/external/events/service-orders/api/url").permitAll()
+                        .requestMatchers(POST, "/external/events/service-orders/decision").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/swagger-ui.html").permitAll()

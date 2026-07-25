@@ -12,6 +12,8 @@ import br.com.pitflow.operation.core.usecase.inputPort.CompleteDiagnosis;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
 
@@ -24,7 +26,7 @@ public class CompleteDiagnosisImp implements CompleteDiagnosis {
     private final RegistryGateway registryGateway;
     private static final String APPROVED_DECISION = "APPROVED";
     private static final String REJECTED_DECISION = "REJECTED";
-    private static final String PATH_DECISION = "/external/events/service-orders/decision";
+    private static final String PATH_DECISION = "/customer/budget";
     private final String apiURL;
 
     public CompleteDiagnosisImp(
@@ -70,16 +72,18 @@ public class CompleteDiagnosisImp implements CompleteDiagnosis {
         notificationGateway.send(os.getId(), notification);
     }
 
-    @Override
-    public String getApiURl(){
-        return this.apiURL;
-    }
-
     private String makeMessage(String approveToken, String rejectToken, ServiceOrder os) {
-        String approveLink = this.apiURL + PATH_DECISION + "?token=" + approveToken;
-        String rejectLink  = this.apiURL + PATH_DECISION + "?token=" + rejectToken;
+        String approveLink = decisionLink(approveToken);
+        String rejectLink  = decisionLink(rejectToken);
 
         return layoutEmail(approveLink, rejectLink, os);
+    }
+
+    private String decisionLink(String token) {
+        return this.apiURL
+                + PATH_DECISION
+                + "?token="
+                + URLEncoder.encode(token, StandardCharsets.UTF_8);
     }
 
     private String getTokenToMessage(String osId, String decision){
