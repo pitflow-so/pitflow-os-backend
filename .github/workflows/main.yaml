@@ -203,6 +203,7 @@ jobs:
       - name: Deploy Application Manifests
         env:
           CONTAINER_IMAGE: ${{ needs['fetch-secrets'].outputs.ecr_url }}:backend-${{ github.sha }}
+          IMAGE_VERSION:   backend-${{ github.sha }}
           DB_PASSWORD:     ${{ env.DB_PASSWORD }}
           DB_USERNAME:     ${{ env.DB_USERNAME }}
           DB_NAME:         ${{ env.DB_NAME }}
@@ -235,8 +236,8 @@ jobs:
           envsubst < infra/k8s/deployment.yaml | kubectl apply -f -
 
           # 6. Aguarda Deployment ficar pronto
-          kubectl rollout status deployment/pitflow-backend --timeout=300s || {
-            kubectl rollout undo deployment/pitflow-backend
+          kubectl rollout status deployment/pitflow-backend --namespace pitflow --timeout=300s || {
+            kubectl rollout undo deployment/pitflow-backend --namespace pitflow
             exit 1
           }
 

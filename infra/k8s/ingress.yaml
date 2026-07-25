@@ -2,6 +2,13 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: pitflow-backend
+  namespace: pitflow
+  labels:
+    app.kubernetes.io/name: pitflow-backend
+    app.kubernetes.io/instance: pitflow-backend
+    app.kubernetes.io/component: operation
+    app.kubernetes.io/part-of: pitflow
+    app.kubernetes.io/managed-by: github-actions
   annotations:
     alb.ingress.kubernetes.io/group.name: pitflow
     alb.ingress.kubernetes.io/group.order: "900"
@@ -16,6 +23,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: pitflow-service
+                name: pitflow-backend
                 port:
                   name: http

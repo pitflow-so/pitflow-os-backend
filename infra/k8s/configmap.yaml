@@ -1,9 +1,14 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pitflow-config
+  name: pitflow-backend-config
+  namespace: pitflow
   labels:
-    app: pitflow-backend
+    app.kubernetes.io/name: pitflow-backend
+    app.kubernetes.io/instance: pitflow-backend
+    app.kubernetes.io/component: operation
+    app.kubernetes.io/part-of: pitflow
+    app.kubernetes.io/managed-by: github-actions
 data:
   DB_HOST: "${DB_HOST}"
   DB_PORT: "${DB_PORT}"

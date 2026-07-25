@@ -92,6 +92,7 @@ Localizado na pasta `infra/terraform`, o IaC provisiona:
 
 ### Orquestração (Kubernetes)
 Localizado na pasta `infra/k8s`, os manifestos definem a topologia:
+* **Namespace:** Recursos de negócio são implantados no namespace `pitflow`.
 * **Deployment:** Responsável por manter os pods da aplicação.
 * **Service:** Exposição interna da aplicação por `ClusterIP`.
 * **Ingress:** Registro da rota `/` no ALB compartilhado administrado pelo
