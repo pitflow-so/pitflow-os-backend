@@ -2,11 +2,10 @@ package br.com.pitflow.operation.infrastructure.config;
 
 import br.com.pitflow.common.core.gateway.TokenGateway;
 import br.com.pitflow.common.core.gateway.TransactionGateway;
-import br.com.pitflow.inventory.core.gateway.PartGateway;
-import br.com.pitflow.inventory.core.gateway.ServiceGateway;
 import br.com.pitflow.operation.controller.ExternalDecisionController;
 import br.com.pitflow.operation.controller.ServiceOrderController;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
+import br.com.pitflow.operation.core.gateway.InventoryGateway;
 import br.com.pitflow.operation.core.gateway.RegistryGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderMetricsGateway;
@@ -41,6 +40,7 @@ import br.com.pitflow.operation.core.usecase.inputPort.ListInExecutionOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.ListPrioritizedServiceOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.StartDiagnosis;
 import br.com.pitflow.operation.infrastructure.metrics.MicrometerMetricsAdapter;
+import br.com.pitflow.operation.infrastructure.inventory.HttpInventoryGatewayAdapter;
 import br.com.pitflow.operation.infrastructure.persistence.adapter.JpaServiceOrderGatewayAdapter;
 import br.com.pitflow.operation.infrastructure.persistence.repository.SpringServiceOrderRepository;
 import br.com.pitflow.operation.infrastructure.registry.HttpRegistryGatewayAdapter;
@@ -60,6 +60,12 @@ public class BeanOperationConfig {
     }
 
     @Bean
+    public InventoryGateway inventoryGateway(
+            @Value("${services.inventory.base-url}") String inventoryBaseUrl) {
+        return new HttpInventoryGatewayAdapter(RestClient.builder().baseUrl(inventoryBaseUrl).build());
+    }
+
+    @Bean
     public ServiceOrderGateway serviceOrderRepository(SpringServiceOrderRepository springRepository) {
         return new JpaServiceOrderGatewayAdapter(springRepository);
     }
@@ -67,9 +73,8 @@ public class BeanOperationConfig {
     @Bean
     public AddOrderItem addOrderItem(
             ServiceOrderGateway repository,
-            PartGateway partGateway,
-            ServiceGateway serviceGateway) {
-        return new AddOrderItemImp(repository, partGateway, serviceGateway);
+            InventoryGateway inventoryGateway) {
+        return new AddOrderItemImp(repository, inventoryGateway);
     }
 
     @Bean
