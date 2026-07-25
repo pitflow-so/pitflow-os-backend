@@ -33,6 +33,23 @@ services:
       timeout: 5s
       retries: 12
 
+  inventory-db:
+    image: postgres:16-alpine
+    container_name: pitflow-inventory-postgres
+    environment:
+      POSTGRES_DB: ${INVENTORY_DB_NAME:-pitflow_inventory}
+      POSTGRES_USER: ${INVENTORY_DB_USERNAME:-pitflow_inventory}
+      POSTGRES_PASSWORD: ${INVENTORY_DB_PASSWORD:-pitflow_inventory_local}
+    volumes:
+      - inventory_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${INVENTORY_DB_USERNAME:-pitflow_inventory} -d ${INVENTORY_DB_NAME:-pitflow_inventory}
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   registry:
     build:
       context: ../pitflow-registry
@@ -59,6 +76,32 @@ services:
       retries: 18
       start_period: 30s
 
+  inventory:
+    build:
+      context: ../pitflow-inventory
+    container_name: pitflow-inventory
+    ports:
+      - "${INVENTORY_HTTP_PORT:-18082}:8080"
+    environment:
+      DB_HOST: inventory-db
+      DB_PORT: 5432
+      DB_NAME: ${INVENTORY_DB_NAME:-pitflow_inventory}
+      DB_USERNAME: ${INVENTORY_DB_USERNAME:-pitflow_inventory}
+      DB_PASSWORD: ${INVENTORY_DB_PASSWORD:-pitflow_inventory_local}
+      JWT_SECRET: ${JWT_SECRET:-364161b203a948480795c643b01859942a0094072f883b27b407a51801311099}
+      DATADOG_ENABLED: "false"
+    depends_on:
+      inventory-db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q --spider http://localhost:8080/actuator/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
   backend:
     build:
       context: .
@@ -74,6 +117,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-364161b203a948480795c643b01859942a0094072f883b27b407a51801311099}
       API_URL: ${API_URL:-http://localhost:18080}
       REGISTRY_SERVICE_URL: http://registry:8080
+      INVENTORY_SERVICE_URL: http://inventory:8080
       MOCK_MESSAGE: "true"
       MAIL_PASSWORD: local-not-used
       DATADOG_ENABLED: "false"
@@ -82,6 +126,8 @@ services:
       backend-db:
         condition: service_healthy
       registry:
+        condition: service_healthy
+      inventory:
         condition: service_healthy
     healthcheck:
       test:
@@ -95,3 +141,4 @@ services:
 volumes:
   backend_postgres_data:
   registry_postgres_data:
+  inventory_postgres_data:

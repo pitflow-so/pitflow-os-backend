@@ -1,14 +1,10 @@
 package br.com.pitflow.operation.core.usecase;
 
-import br.com.pitflow.inventory.core.entity.Part;
-import br.com.pitflow.inventory.core.gateway.PartGateway;
-import br.com.pitflow.inventory.core.gateway.ServiceGateway;
 import br.com.pitflow.operation.controller.dto.AddOrderItemCommand;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
-import br.com.pitflow.operation.core.entity.ServiceOrder.ItemType;
+import br.com.pitflow.operation.core.gateway.InventoryGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -23,86 +19,70 @@ import static org.mockito.Mockito.when;
 
 class AddOrderItemImpTest {
     private ServiceOrderGateway serviceOrderGateway;
-    private PartGateway partGateway;
-    private ServiceGateway serviceGateway;
+    private InventoryGateway inventoryGateway;
     private AddOrderItemImp addOrderItem;
 
     @BeforeEach
     void setUp() {
         serviceOrderGateway = mock(ServiceOrderGateway.class);
-        partGateway = mock(PartGateway.class);
-        serviceGateway = mock(ServiceGateway.class);
-        addOrderItem = new AddOrderItemImp(serviceOrderGateway, partGateway, serviceGateway);
+        inventoryGateway = mock(InventoryGateway.class);
+        addOrderItem = new AddOrderItemImp(serviceOrderGateway, inventoryGateway);
     }
 
     @Test
-    @DisplayName("Should add part to order successfully")
-    void shouldAddPartToOrderSuccessfully() {
-        // Arrange
-        UUID osId = UUID.randomUUID();
-        UUID partId = UUID.randomUUID();
-        var os = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Problemas com o filtro de ar");
-        var part = new Part("SKU", "Filtro", "Filtro de ar automotivo",new BigDecimal("50.0"), 2);
-        part.setId(partId);
+    void shouldReservePartAndAddItToOrder() {
+        var orderId = UUID.randomUUID();
+        var partId = UUID.randomUUID();
+        var order = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Filtro de ar");
+        var part = new InventoryGateway.CatalogItem(partId, "Filtro", new BigDecimal("50.00"));
 
-        when(serviceOrderGateway.findById(osId)).thenReturn(Optional.of(os));
-        when(partGateway.findById(partId)).thenReturn(Optional.of(part));
+        when(serviceOrderGateway.findById(orderId)).thenReturn(Optional.of(order));
+        when(inventoryGateway.reservePart(partId, 2)).thenReturn(part);
 
-        // Act
-        addOrderItem.execute(new AddOrderItemCommand(osId, partId, 2, ItemType.PART.name()));
+        addOrderItem.execute(new AddOrderItemCommand(
+                orderId, partId, 2, ServiceOrder.ItemType.PART.name()));
 
-        // Assert
-        assertThat(os.getItems()).hasSize(1);
-        assertThat(os.getTotalAmount()).isEqualByComparingTo(new BigDecimal("100.0"));
-
-        // Verify
-        verify(serviceOrderGateway).save(os);
+        assertThat(order.getItems()).hasSize(1);
+        assertThat(order.getTotalAmount()).isEqualByComparingTo("100.00");
+        verify(inventoryGateway).reservePart(partId, 2);
+        verify(serviceOrderGateway).save(order);
     }
 
     @Test
-    @DisplayName("Should fail if stock is insufficient")
-    void shouldFailIfStockIsInsufficient() {
-        // Arrange
-        UUID osId = UUID.randomUUID();
-        UUID partId = UUID.randomUUID();
-        var part = new Part("SKU", "Pneu", "pneu pirelli 175 65 r14", new BigDecimal("500.0"), 2);
-        part.setId(partId);
+    void shouldAddServiceFromInventoryCatalog() {
+        var orderId = UUID.randomUUID();
+        var serviceId = UUID.randomUUID();
+        var order = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Alinhamento");
+        var service = new InventoryGateway.CatalogItem(
+                serviceId, "Alinhamento", new BigDecimal("150.00"));
 
-        when(serviceOrderGateway.findById(osId)).thenReturn(Optional.of(mock(ServiceOrder.class)));
-        when(partGateway.findById(partId)).thenReturn(Optional.of(part));
+        when(serviceOrderGateway.findById(orderId)).thenReturn(Optional.of(order));
+        when(inventoryGateway.findService(serviceId)).thenReturn(service);
 
-        //Act
-        // Tak 4 but there is only two in the inventory
-        var dto = new AddOrderItemCommand(osId, partId, 4, ItemType.PART.name());
+        addOrderItem.execute(new AddOrderItemCommand(
+                orderId, serviceId, 1, ServiceOrder.ItemType.SERVICE.name()));
 
-        // Assert
-        assertThatThrownBy(() -> addOrderItem.execute(dto))
+        assertThat(order.getItems()).hasSize(1);
+        assertThat(order.getTotalAmount()).isEqualByComparingTo("150.00");
+        verify(inventoryGateway).findService(serviceId);
+        verify(serviceOrderGateway).save(order);
+    }
+
+    @Test
+    void shouldNotSaveOrderWhenInventoryReservationFails() {
+        var orderId = UUID.randomUUID();
+        var partId = UUID.randomUUID();
+        var order = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Suspensão");
+
+        when(serviceOrderGateway.findById(orderId)).thenReturn(Optional.of(order));
+        when(inventoryGateway.reservePart(partId, 4))
+                .thenThrow(new IllegalStateException("Insufficient stock"));
+
+        var command = new AddOrderItemCommand(
+                orderId, partId, 4, ServiceOrder.ItemType.PART.name());
+
+        assertThatThrownBy(() -> addOrderItem.execute(command))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Insufficient stock");
-    }
-
-    @Test
-    @DisplayName("Should add part to order and decrement inventory successfully")
-    void shouldAddPartAndDecrementInventory() {
-        // Arrange
-        UUID osId = UUID.randomUUID();
-        UUID partId = UUID.randomUUID();
-        var os = new ServiceOrder(UUID.randomUUID(), UUID.randomUUID(), "Reparo suspensão");
-        var part = new Part("SKU-001", "Amortecedor", "Desc", new BigDecimal("500.0"), 10);
-        part.setId(partId);
-
-        when(serviceOrderGateway.findById(osId)).thenReturn(Optional.of(os));
-        when(partGateway.findById(partId)).thenReturn(Optional.of(part));
-
-        // Act
-        addOrderItem.execute(new AddOrderItemCommand(osId, partId, 2, ItemType.PART.name()));
-
-        // Assert
-        assertThat(os.getItems()).hasSize(1);
-        assertThat(part.getStockQuantity()).isEqualTo(8);
-
-        // Verify
-        verify(partGateway).save(part);
-        verify(serviceOrderGateway).save(os);
     }
 }

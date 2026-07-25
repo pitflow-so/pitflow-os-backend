@@ -36,6 +36,8 @@ api:
 services:
   registry:
     base-url: http://localhost:8081
+  inventory:
+    base-url: http://localhost:8082
 
 mock:
   send-message: true

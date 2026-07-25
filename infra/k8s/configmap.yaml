@@ -17,3 +17,4 @@ data:
   API_PUBLIC_URL: "${API_PUBLIC_URL}"
   MOCK_MESSAGE: "${MOCK_MESSAGE}"
   REGISTRY_SERVICE_URL: "http://pitflow-registry"
+  INVENTORY_SERVICE_URL: "http://pitflow-inventory"

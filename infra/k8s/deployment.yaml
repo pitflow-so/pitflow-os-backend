@@ -101,6 +101,11 @@ spec:
                 configMapKeyRef:
                   name: pitflow-backend-config
                   key: REGISTRY_SERVICE_URL
+            - name: INVENTORY_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: pitflow-backend-config
+                  key: INVENTORY_SERVICE_URL
             - name: MAIL_USERNAME
               valueFrom:
                 secretKeyRef:
