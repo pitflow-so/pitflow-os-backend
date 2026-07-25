@@ -2,8 +2,13 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: pitflow-backend
+  namespace: pitflow
   labels:
-    app: pitflow-backend
+    app.kubernetes.io/name: pitflow-backend
+    app.kubernetes.io/instance: pitflow-backend
+    app.kubernetes.io/component: operation
+    app.kubernetes.io/part-of: pitflow
+    app.kubernetes.io/managed-by: github-actions
     tags.datadoghq.com/env: "producao"
     tags.datadoghq.com/service: "pitflow-os-backend"
     tags.datadoghq.com/version: "1.0.0"
@@ -16,14 +21,19 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: pitflow-backend
+      app.kubernetes.io/name: pitflow-backend
+      app.kubernetes.io/instance: pitflow-backend
   template:
     metadata:
       labels:
-        app: pitflow-backend
+        app.kubernetes.io/name: pitflow-backend
+        app.kubernetes.io/instance: pitflow-backend
+        app.kubernetes.io/component: operation
+        app.kubernetes.io/part-of: pitflow
+        app.kubernetes.io/managed-by: github-actions
         tags.datadoghq.com/env: "producao"
         tags.datadoghq.com/service: "pitflow-os-backend"
-        tags.datadoghq.com/version: "1.0.0"
+        tags.datadoghq.com/version: "${IMAGE_VERSION}"
       annotations:
         # Injeção do agente do datadag
         admission.datadoghq.com/java-lib.version: "latest"
@@ -48,63 +58,63 @@ spec:
             - name: DB_HOST
               valueFrom:
                 configMapKeyRef:
-                  name: pitflow-config
+                  name: pitflow-backend-config
                   key: DB_HOST
             - name: DB_NAME
               valueFrom:
                 configMapKeyRef:
-                  name: pitflow-config
+                  name: pitflow-backend-config
                   key: DB_NAME
             - name: DB_USERNAME
               valueFrom:
                 configMapKeyRef:
-                  name: pitflow-config
+                  name: pitflow-backend-config
                   key: DB_USERNAME
             - name: DB_PORT
               valueFrom:
                 configMapKeyRef:
-                  name: pitflow-config
+                  name: pitflow-backend-config
                   key: DB_PORT
             # Mantendo os Secrets para dados sensíveis
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: pitflow-secrets
+                  name: pitflow-backend-secrets
                   key: db-password
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: pitflow-secrets
+                  name: pitflow-backend-secrets
                   key: jwt-secret
             - name: API_URL
               valueFrom:
                 configMapKeyRef:
-                  name: pitflow-config
+                  name: pitflow-backend-config
                   key: API_PUBLIC_URL
             - name: MOCK_MESSAGE
               valueFrom:
                 configMapKeyRef:
-                  name: pitflow-config
+                  name: pitflow-backend-config
                   key: MOCK_MESSAGE
             - name: REGISTRY_SERVICE_URL
               valueFrom:
                 configMapKeyRef:
-                  name: pitflow-config
+                  name: pitflow-backend-config
                   key: REGISTRY_SERVICE_URL
             - name: MAIL_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: pitflow-secrets
+                  name: pitflow-backend-secrets
                   key: mail-username
             - name: MAIL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: pitflow-secrets
+                  name: pitflow-backend-secrets
                   key: mail-password
             - name: DATADOG_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: pitflow-secrets
+                  name: pitflow-backend-secrets
                   key: datadog-api-key
             - name: DATADOG_ENABLED
               value: "true"
