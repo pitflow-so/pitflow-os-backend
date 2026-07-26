@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/operation/service-orders")
+@RequestMapping("/service-orders")
 @Tag(name = "Operation - Service Orders", description = "Endpoints para gestão do ciclo de vida das Ordens de Serviço")
 public class ServiceOrderRestAdapter {
 
@@ -153,7 +153,7 @@ public class ServiceOrderRestAdapter {
     @Operation(
             security = @SecurityRequirement(name = "bearerAuth"),
             summary = "Recebe decisão do cliente sobre o orçamento, aceitar ou recusar",
-            description = "Para integrações externas, utilize /external/events"
+            description = "Para integrações externas, utilize /operation/external/events"
     )
     public ResponseEntity<Void> budgetDecision(@PathVariable UUID id, @RequestBody BudgetApprovalRequest request) {
         controller.processBudgetDecision(id, request);
