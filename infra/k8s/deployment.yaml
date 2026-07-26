@@ -53,7 +53,7 @@ spec:
               memory: "1Gi"
           env:
             - name: JAVA_TOOL_OPTIONS
-              value: "-XX:MaxRAMPercentage=75 -XX:InitialRAMPercentage=50"
+              value: "-XX:MaxRAMPercentage=75 -XX:InitialRAMPercentage=25"
             # Agora lendo o Host dinâmico do ConfigMap
             - name: DB_HOST
               valueFrom:
