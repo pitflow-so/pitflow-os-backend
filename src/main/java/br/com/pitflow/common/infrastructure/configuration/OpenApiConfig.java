@@ -10,22 +10,23 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
+    public static final String SECURITY_SCHEME_NAME = "bearerAuth";
+
     @Bean
     public OpenAPI customOpenAPI() {
-        final String securitySchemeName = "bearerAuth";
-
         return new OpenAPI()
                 .info(new Info()
-                        .title("PitFlow OS API")
+                        .title("PitFlow Operation API")
                         .version("1.0")
-                        .description("Sistema de Gestão de Oficina Mecânica - Tech Challenge Fase 1"))
-                //.addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
+                        .description("Microsserviço responsável pelo ciclo de vida das ordens de serviço da oficina."))
                 .components(new Components()
-                        .addSecuritySchemes(securitySchemeName,
+                        .addSecuritySchemes(
+                                SECURITY_SCHEME_NAME,
                                 new SecurityScheme()
-                                        .name(securitySchemeName)
+                                        .name(SECURITY_SCHEME_NAME)
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
-                                        .bearerFormat("JWT")));
+                                        .bearerFormat("JWT")
+                        ));
     }
 }
