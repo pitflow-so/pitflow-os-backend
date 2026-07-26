@@ -68,19 +68,6 @@ public class ServiceOrderRestAdapter {
         return ResponseEntity.noContent().build();
     }
 
-    @Deprecated
-    @PatchMapping("/{id}/approve")
-    @Operation(
-            security = @SecurityRequirement(name = "bearerAuth"),
-            summary = "Aprova o orçamento - Endpoint deprecado, utilizar ** /{id}/budget-decision **",
-            description = "Muda status para IN_EXECUTION ",
-            deprecated = true
-    )
-    public ResponseEntity<Void> approve(@PathVariable UUID id) {
-        controller.approve(id);
-        return ResponseEntity.noContent().build();
-    }
-
     @PatchMapping("/{id}/finish")
     @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Finaliza a execução dos serviços (Mão de Obra)", description = "Muda status para FINISHED")
     public ResponseEntity<Void> finish(@PathVariable UUID id) {

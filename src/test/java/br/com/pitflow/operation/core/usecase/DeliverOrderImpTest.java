@@ -35,6 +35,9 @@ class DeliverOrderImpTest {
         os.addService(UUID.randomUUID(), "Serviço", new BigDecimal("100"));
         os.completeDiagnosis();
         os.approve();
+        os.markAwaitingPayment();
+        os.markReadyForExecution();
+        os.startExecution();
         os.finish();
 
         when(gateway.findById(osId)).thenReturn(Optional.of(os));

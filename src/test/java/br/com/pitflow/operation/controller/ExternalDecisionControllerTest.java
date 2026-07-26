@@ -82,7 +82,7 @@ class ExternalDecisionControllerTest {
     @Test
     void acceptsReplayOfApprovedDecisionWithoutRepeatingEffect() {
         UUID orderId = UUID.randomUUID();
-        givenDecisionToken(orderId, "APPROVED", "IN_EXECUTION");
+        givenDecisionToken(orderId, "APPROVED", "PAYMENT_PROCESSING");
 
         controller.processDecision("token", null);
 
@@ -106,7 +106,7 @@ class ExternalDecisionControllerTest {
     @Test
     void rejectsOppositeDecisionAfterApproval() {
         UUID orderId = UUID.randomUUID();
-        givenDecisionToken(orderId, "REJECTED", "IN_EXECUTION");
+        givenDecisionToken(orderId, "REJECTED", "PAYMENT_PROCESSING");
 
         assertThatThrownBy(
                 () -> controller.processDecision("token", "Mudei de ideia")

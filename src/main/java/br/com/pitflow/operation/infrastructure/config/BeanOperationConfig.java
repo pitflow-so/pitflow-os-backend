@@ -5,6 +5,7 @@ import br.com.pitflow.common.core.gateway.TransactionGateway;
 import br.com.pitflow.operation.controller.ExternalDecisionController;
 import br.com.pitflow.operation.controller.ServiceOrderController;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
+import br.com.pitflow.operation.core.gateway.OperationEventGateway;
 import br.com.pitflow.operation.core.gateway.InventoryGateway;
 import br.com.pitflow.operation.core.gateway.RegistryGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
@@ -43,7 +44,11 @@ import br.com.pitflow.operation.infrastructure.metrics.MicrometerMetricsAdapter;
 import br.com.pitflow.operation.infrastructure.inventory.HttpInventoryGatewayAdapter;
 import br.com.pitflow.operation.infrastructure.persistence.adapter.JpaServiceOrderGatewayAdapter;
 import br.com.pitflow.operation.infrastructure.persistence.repository.SpringServiceOrderRepository;
+import br.com.pitflow.operation.infrastructure.outbox.JpaOperationEventGatewayAdapter;
+import br.com.pitflow.operation.infrastructure.outbox.SpringOutboxRepository;
 import br.com.pitflow.operation.infrastructure.registry.HttpRegistryGatewayAdapter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -52,6 +57,13 @@ import org.springframework.web.client.RestClient;
 
 @Configuration
 public class BeanOperationConfig {
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return JsonMapper.builder()
+                .findAndAddModules()
+                .build();
+    }
 
     @Bean
     public RegistryGateway registryGateway(
@@ -78,8 +90,24 @@ public class BeanOperationConfig {
     }
 
     @Bean
-    public ApproveOrder approveOrder(ServiceOrderGateway repository) {
-        return new ApproveOrderImp(repository);
+    public OperationEventGateway operationEventGateway(
+            SpringOutboxRepository repository,
+            ObjectMapper objectMapper
+    ) {
+        return new JpaOperationEventGatewayAdapter(repository, objectMapper);
+    }
+
+    @Bean
+    public ApproveOrder approveOrder(
+            ServiceOrderGateway repository,
+            OperationEventGateway eventGateway,
+            TransactionGateway transactionGateway
+    ) {
+        return new ApproveOrderImp(
+                repository,
+                eventGateway,
+                transactionGateway
+        );
     }
 
     @Bean

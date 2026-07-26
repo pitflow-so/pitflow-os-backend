@@ -1,3 +1,5 @@
 databaseChangeLog:
   - include:
-      file: db/changelog/migrations/004-create-service-order-and-item.sql
+      file: db/changelog/migrations/001-create-service-order-and-item.sql
+  - include:
+      file: db/changelog/migrations/002-create-operation-outbox.sql

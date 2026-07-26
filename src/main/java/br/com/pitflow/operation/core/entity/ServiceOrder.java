@@ -48,7 +48,16 @@ public class ServiceOrder {
 
 
     public enum Status {
-        RECEIVED, IN_DIAGNOSIS, AWAITING_APPROVAL, IN_EXECUTION, FINISHED, DELIVERED, CANCELLED
+        RECEIVED,
+        IN_DIAGNOSIS,
+        AWAITING_APPROVAL,
+        PAYMENT_PROCESSING,
+        AWAITING_PAYMENT,
+        READY_FOR_EXECUTION,
+        IN_EXECUTION,
+        FINISHED,
+        DELIVERED,
+        CANCELLED
     }
 
     public enum ItemType {PART, SERVICE}
@@ -79,6 +88,33 @@ public class ServiceOrder {
     public void approve() {
         if (this.status != Status.AWAITING_APPROVAL) {
             throw new IllegalStateException("Order must be AWAITING_APPROVAL to be approved.");
+        }
+        this.status = Status.PAYMENT_PROCESSING;
+    }
+
+    public void markAwaitingPayment() {
+        if (this.status != Status.PAYMENT_PROCESSING) {
+            throw new IllegalStateException(
+                    "Order must be PAYMENT_PROCESSING to await payment."
+            );
+        }
+        this.status = Status.AWAITING_PAYMENT;
+    }
+
+    public void markReadyForExecution() {
+        if (this.status != Status.AWAITING_PAYMENT) {
+            throw new IllegalStateException(
+                    "Order must be AWAITING_PAYMENT to be ready for execution."
+            );
+        }
+        this.status = Status.READY_FOR_EXECUTION;
+    }
+
+    public void startExecution() {
+        if (this.status != Status.READY_FOR_EXECUTION) {
+            throw new IllegalStateException(
+                    "Order must be READY_FOR_EXECUTION to start execution."
+            );
         }
         this.status = Status.IN_EXECUTION;
         this.executionStartedAt = LocalDateTime.now();

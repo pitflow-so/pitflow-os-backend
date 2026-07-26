@@ -106,10 +106,6 @@ public class ServiceOrderController {
         completeDiagnosis.execute(id);
     }
 
-    public void approve(UUID id){
-        approveOrder.execute(id);
-    }
-
     public void finish(UUID id){
         finishOrder.execute(id);
     }

@@ -60,6 +60,9 @@ class CancelOrderImpTest {
         os.addService(UUID.randomUUID(), "Limpeza de tanque", new BigDecimal("500.00"));
         os.completeDiagnosis();
         os.approve();
+        os.markAwaitingPayment();
+        os.markReadyForExecution();
+        os.startExecution();
         os.finish();
         os.deliver();
 

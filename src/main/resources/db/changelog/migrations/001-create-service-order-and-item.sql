@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset rafael:004-create-service-order-and-item
+--changeset rafael:001-create-service-order-and-item
 
 CREATE TABLE IF NOT EXISTS service_orders (
     id UUID PRIMARY KEY,
