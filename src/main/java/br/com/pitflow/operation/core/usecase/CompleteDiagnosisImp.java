@@ -61,8 +61,8 @@ public class CompleteDiagnosisImp implements CompleteDiagnosis {
 
         metricsGateway.recordTimeInStatus(previousStatus, timeSpentToCompleteDiagnosis);
 
-        var approveToken = getTokenToMessage(os.getId().toString(), APPROVED_DECISION);
-        var rejectToken = getTokenToMessage(os.getId().toString(), REJECTED_DECISION);
+        var approveToken = getTokenToMessage(os, APPROVED_DECISION);
+        var rejectToken = getTokenToMessage(os, REJECTED_DECISION);
 
 
         String message = makeMessage(approveToken, rejectToken, os);
@@ -86,10 +86,11 @@ public class CompleteDiagnosisImp implements CompleteDiagnosis {
                 + URLEncoder.encode(token, StandardCharsets.UTF_8);
     }
 
-    private String getTokenToMessage(String osId, String decision){
+    private String getTokenToMessage(ServiceOrder serviceOrder, String decision){
         Map<String, Object> claims = Map.of(
-            "serviceOrderId",osId,
-            "status", decision
+            "serviceOrderId", serviceOrder.getId().toString(),
+            "status", decision,
+            "amount", serviceOrder.getTotalAmount().toPlainString()
         );
 
         return tokenGateway.generateToken("external-decision", claims);

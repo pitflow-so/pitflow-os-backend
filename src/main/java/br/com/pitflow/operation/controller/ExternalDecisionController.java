@@ -39,9 +39,37 @@ public class ExternalDecisionController {
         }
 
         validateReasonForEvent(reason, event);
+        if (isReplay(serviceOrderId, event)) {
+            return;
+        }
 
         var command = new ExternalDecisionCommand(serviceOrderId, event, reason);
         serviceOrderController.processExternalDecision(command);
+    }
+
+    private boolean isReplay(
+            UUID serviceOrderId,
+            ExternalStatusEvent event
+    ) {
+        var currentStatus = serviceOrderController.getServiceOrderStatus(
+                serviceOrderId
+        );
+
+        if (event == ExternalStatusEvent.APPROVED
+                && "IN_EXECUTION".equals(currentStatus)) {
+            return true;
+        }
+        if (event == ExternalStatusEvent.REJECTED
+                && "CANCELLED".equals(currentStatus)) {
+            return true;
+        }
+        if (!"AWAITING_APPROVAL".equals(currentStatus)) {
+            throw new IllegalStateException(
+                    "Budget decision was already recorded for service order "
+                            + serviceOrderId
+            );
+        }
+        return false;
     }
 
     private void validateSubject(Map<String, Object> claims) {
