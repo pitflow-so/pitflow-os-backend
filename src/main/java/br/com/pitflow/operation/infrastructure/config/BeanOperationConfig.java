@@ -2,6 +2,7 @@ package br.com.pitflow.operation.infrastructure.config;
 
 import br.com.pitflow.common.core.gateway.TokenGateway;
 import br.com.pitflow.common.core.gateway.TransactionGateway;
+import br.com.pitflow.common.core.gateway.MessagePublisherGateway;
 import br.com.pitflow.operation.controller.ExternalDecisionController;
 import br.com.pitflow.operation.controller.ServiceOrderController;
 import br.com.pitflow.operation.core.gateway.NotificationGateway;
@@ -45,17 +46,30 @@ import br.com.pitflow.operation.infrastructure.inventory.HttpInventoryGatewayAda
 import br.com.pitflow.operation.infrastructure.persistence.adapter.JpaServiceOrderGatewayAdapter;
 import br.com.pitflow.operation.infrastructure.persistence.repository.SpringServiceOrderRepository;
 import br.com.pitflow.operation.infrastructure.outbox.JpaOperationEventGatewayAdapter;
+import br.com.pitflow.operation.infrastructure.outbox.OutboxClaimService;
+import br.com.pitflow.operation.infrastructure.outbox.OutboxPublicationService;
+import br.com.pitflow.operation.infrastructure.outbox.OutboxPublisherScheduler;
+import br.com.pitflow.operation.infrastructure.outbox.OutboxStateService;
 import br.com.pitflow.operation.infrastructure.outbox.SpringOutboxRepository;
+import br.com.pitflow.operation.infrastructure.messaging.sqs.SqsMessagePublisherAdapter;
 import br.com.pitflow.operation.infrastructure.registry.HttpRegistryGatewayAdapter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestClient;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.sqs.SqsClient;
+
+import java.time.Clock;
+import java.time.Duration;
 
 @Configuration
+@EnableScheduling
 public class BeanOperationConfig {
 
     @Bean
@@ -63,6 +77,78 @@ public class BeanOperationConfig {
         return JsonMapper.builder()
                 .findAndAddModules()
                 .build();
+    }
+
+    @Bean
+    public Clock clock() {
+        return Clock.systemUTC();
+    }
+
+    @Bean
+    public SqsClient sqsClient(
+            @Value("${AWS_REGION:us-east-1}") String awsRegion
+    ) {
+        return SqsClient.builder()
+                .region(Region.of(awsRegion))
+                .build();
+    }
+
+    @Bean
+    public MessagePublisherGateway messagePublisherGateway(
+            SqsClient sqsClient
+    ) {
+        return new SqsMessagePublisherAdapter(sqsClient);
+    }
+
+    @Bean
+    public OutboxClaimService outboxClaimService(
+            SpringOutboxRepository repository,
+            Clock clock
+    ) {
+        return new OutboxClaimService(repository, clock);
+    }
+
+    @Bean
+    public OutboxStateService outboxStateService(
+            SpringOutboxRepository repository,
+            Clock clock
+    ) {
+        return new OutboxStateService(repository, clock);
+    }
+
+    @Bean
+    public OutboxPublicationService outboxPublicationService(
+            MessagePublisherGateway publisherGateway,
+            OutboxStateService stateService,
+            @Value("${outbox.publisher.max-backoff-seconds:300}")
+            int maxBackoffSeconds
+    ) {
+        return new OutboxPublicationService(
+                publisherGateway,
+                stateService,
+                maxBackoffSeconds
+        );
+    }
+
+    @Bean
+    @ConditionalOnProperty(
+            name = "outbox.publisher.enabled",
+            havingValue = "true",
+            matchIfMissing = true
+    )
+    public OutboxPublisherScheduler outboxPublisherScheduler(
+            OutboxClaimService claimService,
+            OutboxPublicationService publicationService,
+            @Value("${outbox.publisher.batch-size:10}") int batchSize,
+            @Value("${outbox.publisher.lease-seconds:60}")
+            long leaseSeconds
+    ) {
+        return new OutboxPublisherScheduler(
+                claimService,
+                publicationService,
+                batchSize,
+                Duration.ofSeconds(leaseSeconds)
+        );
     }
 
     @Bean

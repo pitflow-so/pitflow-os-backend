@@ -42,6 +42,10 @@ services:
 mock:
   send-message: true
 
+outbox:
+  publisher:
+    enabled: false
+
 management:
   datadog:
     metrics:
