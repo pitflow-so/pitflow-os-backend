@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -27,7 +29,8 @@ public class OutboxMessageJpa {
     @Column(name = "destination", nullable = false, length = 255)
     private String destination;
 
-    @Column(name = "payload", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "payload", nullable = false)
     private String payload;
 
     @Column(name = "status", nullable = false, length = 20)
@@ -41,6 +44,18 @@ public class OutboxMessageJpa {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    @Column(name = "locked_until")
+    private Instant lockedUntil;
+
+    @Column(name = "lock_id")
+    private UUID lockId;
+
+    @Column(name = "published_at")
+    private Instant publishedAt;
+
+    @Column(name = "last_error", columnDefinition = "TEXT")
+    private String lastError;
 
     protected OutboxMessageJpa() {
     }
@@ -84,5 +99,67 @@ public class OutboxMessageJpa {
 
     public String getStatus() {
         return status;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
+    public int getAttempts() {
+        return attempts;
+    }
+
+    public Instant getLockedUntil() {
+        return lockedUntil;
+    }
+
+    public UUID getLockId() {
+        return lockId;
+    }
+
+    public void claim(UUID newLockId, Instant leaseUntil) {
+        status = "PROCESSING";
+        attempts++;
+        lockId = newLockId;
+        lockedUntil = leaseUntil;
+        lastError = null;
+    }
+
+    public void markPublished(UUID expectedLockId, Instant now) {
+        validateLock(expectedLockId);
+        status = "PUBLISHED";
+        publishedAt = now;
+        lockId = null;
+        lockedUntil = null;
+        lastError = null;
+    }
+
+    public void releaseForRetry(
+            UUID expectedLockId,
+            Instant nextAttempt,
+            String error
+    ) {
+        validateLock(expectedLockId);
+        status = "PENDING";
+        availableAt = nextAttempt;
+        lockId = null;
+        lockedUntil = null;
+        lastError = truncate(error);
+    }
+
+    private void validateLock(UUID expectedLockId) {
+        if (!"PROCESSING".equals(status)
+                || !expectedLockId.equals(lockId)) {
+            throw new IllegalStateException(
+                    "Outbox message is not owned by the expected lease"
+            );
+        }
+    }
+
+    private String truncate(String error) {
+        if (error == null) {
+            return null;
+        }
+        return error.substring(0, Math.min(error.length(), 1000));
     }
 }

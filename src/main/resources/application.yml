@@ -86,3 +86,11 @@ management:
 
 mock:
   send-message: ${MOCK_MESSAGE:true}
+
+outbox:
+  publisher:
+    enabled: ${OUTBOX_PUBLISHER_ENABLED:true}
+    delay-ms: ${OUTBOX_PUBLISHER_DELAY_MS:5000}
+    batch-size: ${OUTBOX_PUBLISHER_BATCH_SIZE:10}
+    lease-seconds: ${OUTBOX_PUBLISHER_LEASE_SECONDS:60}
+    max-backoff-seconds: ${OUTBOX_PUBLISHER_MAX_BACKOFF_SECONDS:300}

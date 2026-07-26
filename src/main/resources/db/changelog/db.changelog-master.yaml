@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/migrations/001-create-service-order-and-item.sql
   - include:
       file: db/changelog/migrations/002-create-operation-outbox.sql
+  - include:
+      file: db/changelog/migrations/003-alter-outbox-payload-to-jsonb.sql
