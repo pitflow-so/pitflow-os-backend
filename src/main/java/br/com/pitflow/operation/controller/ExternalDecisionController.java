@@ -56,7 +56,7 @@ public class ExternalDecisionController {
         );
 
         if (event == ExternalStatusEvent.APPROVED
-                && "IN_EXECUTION".equals(currentStatus)) {
+                && "PAYMENT_PROCESSING".equals(currentStatus)) {
             return true;
         }
         if (event == ExternalStatusEvent.REJECTED

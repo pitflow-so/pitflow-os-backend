@@ -88,6 +88,12 @@ class ServiceOrderTest {
 
             // 3. Approve
             os.approve();
+            assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.PAYMENT_PROCESSING);
+            os.markAwaitingPayment();
+            assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.AWAITING_PAYMENT);
+            os.markReadyForExecution();
+            assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.READY_FOR_EXECUTION);
+            os.startExecution();
             assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.IN_EXECUTION);
             assertThat(os.getExecutionStartedAt()).isNotNull();
 
@@ -135,6 +141,9 @@ class ServiceOrderTest {
             os.startDiagnosis();
             os.completeDiagnosis();
             os.approve();
+            os.markAwaitingPayment();
+            os.markReadyForExecution();
+            os.startExecution();
             os.finish();
 
             // Act & Assert

@@ -44,6 +44,9 @@ class FinishOrderImpTest {
         os.addService(UUID.randomUUID(), "Troca de freios", new BigDecimal("300.0"));
         os.completeDiagnosis();
         os.approve();
+        os.markAwaitingPayment();
+        os.markReadyForExecution();
+        os.startExecution();
 
         var dummyEmail = "dummy@email.com";
 

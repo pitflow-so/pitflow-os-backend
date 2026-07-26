@@ -1,6 +1,9 @@
 package br.com.pitflow.operation.core.usecase;
 
+import br.com.pitflow.common.core.gateway.TransactionGateway;
 import br.com.pitflow.operation.core.entity.ServiceOrder;
+import br.com.pitflow.operation.core.event.ServiceOrderBudgetApproved;
+import br.com.pitflow.operation.core.gateway.OperationEventGateway;
 import br.com.pitflow.operation.core.gateway.ServiceOrderGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,16 +18,28 @@ import static org.mockito.Mockito.*;
 class ApproveOrderImpTest {
 
     private ServiceOrderGateway gateway;
+    private OperationEventGateway eventGateway;
     private ApproveOrderImp approveOrder;
 
     @BeforeEach
     void setUp() {
         gateway = mock(ServiceOrderGateway.class);
-        approveOrder = new ApproveOrderImp(gateway);
+        eventGateway = mock(OperationEventGateway.class);
+        TransactionGateway transactionGateway =
+                mock(TransactionGateway.class);
+        doAnswer(invocation -> {
+            invocation.getArgument(0, Runnable.class).run();
+            return null;
+        }).when(transactionGateway).execute(any(Runnable.class));
+        approveOrder = new ApproveOrderImp(
+                gateway,
+                eventGateway,
+                transactionGateway
+        );
     }
 
     @Test
-    @DisplayName("Should approve order and start execution timestamp successfully")
+    @DisplayName("Should approve budget and register outbox event")
     void shouldApproveOrderSuccessfully() {
         // Arrange
         UUID osId = UUID.randomUUID();
@@ -39,9 +54,11 @@ class ApproveOrderImpTest {
         approveOrder.execute(osId);
 
         // Assert
-        assertThat(os.getStatus()).isEqualTo(ServiceOrder.Status.IN_EXECUTION);
-        assertThat(os.getExecutionStartedAt()).isNotNull(); // Essencial para o Requisito 40
+        assertThat(os.getStatus())
+                .isEqualTo(ServiceOrder.Status.PAYMENT_PROCESSING);
+        assertThat(os.getExecutionStartedAt()).isNull();
         verify(gateway).save(os);
+        verify(eventGateway).save(any(ServiceOrderBudgetApproved.class));
     }
 
     @Test
@@ -57,5 +74,6 @@ class ApproveOrderImpTest {
         assertThatThrownBy(() -> approveOrder.execute(osId))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Order must be AWAITING_APPROVAL to be approved.");
+        verify(eventGateway, never()).save(any());
     }
 }
