@@ -165,11 +165,11 @@ jobs:
               exit 1
             }
           
-          DB_PASSWORD=$(echo "$APP_JSON"    | jq -r '.DB_PASSWORD')
-          DB_USERNAME=$(echo "$APP_JSON"    | jq -r '.DB_USERNAME')
-          DB_NAME=$(echo "$APP_JSON"        | jq -r '.DB_NAME')
-          DB_HOST=$(echo "$APP_JSON"        | jq -r '.DB_HOST')
-          DB_PORT=$(echo "$APP_JSON"        | jq -r '.DB_PORT')
+          DB_PASSWORD=$(echo "$APP_JSON"    | jq -r '.PITFLOW_OPERATION_DB_PASSWORD')
+          DB_USERNAME=$(echo "$APP_JSON"    | jq -r '.PITFLOW_OPERATION_DB_USERNAME')
+          DB_NAME=$(echo "$APP_JSON"        | jq -r '.PITFLOW_OPERATION_DB_NAME')
+          DB_HOST=$(echo "$APP_JSON"        | jq -r '.PITFLOW_OPERATION_DB_HOST')
+          DB_PORT=$(echo "$APP_JSON"        | jq -r '.PITFLOW_OPERATION_DB_PORT')
           JWT_SECRET=$(echo "$APP_JSON"     | jq -r '.JWT_SECRET')
           MOCK_MESSAGE=$(echo "$APP_JSON"   | jq -r '.MOCK_MESSAGE')
           MAIL_USERNAME=$(echo "$APP_JSON"  | jq -r '.MAIL_USERNAME')
