@@ -12,14 +12,14 @@ metadata:
   annotations:
     alb.ingress.kubernetes.io/group.name: pitflow
     alb.ingress.kubernetes.io/group.order: "900"
-    alb.ingress.kubernetes.io/healthcheck-path: /actuator/health
+    alb.ingress.kubernetes.io/healthcheck-path: /operation/actuator/health
     alb.ingress.kubernetes.io/target-type: ip
 spec:
   ingressClassName: alb
   rules:
     - http:
         paths:
-          - path: /
+          - path: /operation
             pathType: Prefix
             backend:
               service:
