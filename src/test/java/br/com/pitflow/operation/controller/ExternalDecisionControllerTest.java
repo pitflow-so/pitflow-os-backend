@@ -14,6 +14,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -31,9 +32,7 @@ class ExternalDecisionControllerTest {
     @Test
     void processesApprovedDecisionToken() {
         UUID orderId = UUID.randomUUID();
-        when(tokenGateway.getClaims("token")).thenReturn(
-                claims(orderId, "APPROVED")
-        );
+        givenDecisionToken(orderId, "APPROVED", "AWAITING_APPROVAL");
 
         controller.processDecision("token", null);
 
@@ -46,9 +45,7 @@ class ExternalDecisionControllerTest {
     @Test
     void usesReasonProvidedByRejectionForm() {
         UUID orderId = UUID.randomUUID();
-        when(tokenGateway.getClaims("token")).thenReturn(
-                claims(orderId, "REJECTED")
-        );
+        givenDecisionToken(orderId, "REJECTED", "AWAITING_APPROVAL");
 
         controller.processDecision("token", "Valor acima do esperado");
 
@@ -82,12 +79,63 @@ class ExternalDecisionControllerTest {
                 .hasMessageContaining("subject");
     }
 
+    @Test
+    void acceptsReplayOfApprovedDecisionWithoutRepeatingEffect() {
+        UUID orderId = UUID.randomUUID();
+        givenDecisionToken(orderId, "APPROVED", "IN_EXECUTION");
+
+        controller.processDecision("token", null);
+
+        verify(serviceOrderController, never()).processExternalDecision(
+                org.mockito.ArgumentMatchers.any()
+        );
+    }
+
+    @Test
+    void acceptsReplayOfRejectedDecisionWithoutRepeatingEffect() {
+        UUID orderId = UUID.randomUUID();
+        givenDecisionToken(orderId, "REJECTED", "CANCELLED");
+
+        controller.processDecision("token", "Mesmo motivo");
+
+        verify(serviceOrderController, never()).processExternalDecision(
+                org.mockito.ArgumentMatchers.any()
+        );
+    }
+
+    @Test
+    void rejectsOppositeDecisionAfterApproval() {
+        UUID orderId = UUID.randomUUID();
+        givenDecisionToken(orderId, "REJECTED", "IN_EXECUTION");
+
+        assertThatThrownBy(
+                () -> controller.processDecision("token", "Mudei de ideia")
+        )
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("already recorded");
+
+        verify(serviceOrderController, never()).processExternalDecision(
+                org.mockito.ArgumentMatchers.any()
+        );
+    }
+
     private Map<String, Object> claims(UUID orderId, String status) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("sub", "external-decision");
         claims.put("serviceOrderId", orderId.toString());
         claims.put("status", status);
         return claims;
+    }
+
+    private void givenDecisionToken(
+            UUID orderId,
+            String decision,
+            String currentStatus
+    ) {
+        when(tokenGateway.getClaims("token"))
+                .thenReturn(claims(orderId, decision));
+        when(serviceOrderController.getServiceOrderStatus(orderId))
+                .thenReturn(currentStatus);
     }
 
     private ExternalDecisionCommand capturedCommand() {
