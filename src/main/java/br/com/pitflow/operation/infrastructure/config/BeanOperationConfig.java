@@ -25,6 +25,7 @@ import br.com.pitflow.operation.core.usecase.GetServiceOrderByIdImp;
 import br.com.pitflow.operation.core.usecase.GetServiceOrderDurationImp;
 import br.com.pitflow.operation.core.usecase.ListInExecutionOrdersImp;
 import br.com.pitflow.operation.core.usecase.ListPrioritizedServiceOrdersImp;
+import br.com.pitflow.operation.core.usecase.MarkServiceOrderAwaitingPaymentImp;
 import br.com.pitflow.operation.core.usecase.StartDiagnosisImp;
 import br.com.pitflow.operation.core.usecase.inputPort.AddOrderItem;
 import br.com.pitflow.operation.core.usecase.inputPort.ApproveOrder;
@@ -40,7 +41,9 @@ import br.com.pitflow.operation.core.usecase.inputPort.GetServiceOrderById;
 import br.com.pitflow.operation.core.usecase.inputPort.GetServiceOrderDuration;
 import br.com.pitflow.operation.core.usecase.inputPort.ListInExecutionOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.ListPrioritizedServiceOrders;
+import br.com.pitflow.operation.core.usecase.inputPort.MarkServiceOrderAwaitingPayment;
 import br.com.pitflow.operation.core.usecase.inputPort.StartDiagnosis;
+import br.com.pitflow.operation.infrastructure.consumer.sqs.OperationCommandConsumer;
 import br.com.pitflow.operation.infrastructure.metrics.MicrometerMetricsAdapter;
 import br.com.pitflow.operation.infrastructure.inventory.HttpInventoryGatewayAdapter;
 import br.com.pitflow.operation.infrastructure.persistence.adapter.JpaServiceOrderGatewayAdapter;
@@ -193,6 +196,49 @@ public class BeanOperationConfig {
                 repository,
                 eventGateway,
                 transactionGateway
+        );
+    }
+
+    @Bean
+    public MarkServiceOrderAwaitingPayment markServiceOrderAwaitingPayment(
+            ServiceOrderGateway repository,
+            OperationEventGateway eventGateway,
+            RegistryGateway registryGateway,
+            NotificationGateway notificationGateway,
+            TransactionGateway transactionGateway,
+            Clock clock
+    ) {
+        return new MarkServiceOrderAwaitingPaymentImp(
+                repository,
+                eventGateway,
+                registryGateway,
+                notificationGateway,
+                transactionGateway,
+                clock
+        );
+    }
+
+    @Bean
+    @ConditionalOnProperty(
+            name = "operation.consumer.enabled",
+            havingValue = "true",
+            matchIfMissing = true
+    )
+    public OperationCommandConsumer operationCommandConsumer(
+            SqsClient sqsClient,
+            ObjectMapper objectMapper,
+            MarkServiceOrderAwaitingPayment markAwaitingPayment,
+            @Value("${operation.consumer.queue-name:operation-command-queue}")
+            String queueName,
+            @Value("${operation.consumer.wait-time-seconds:20}")
+            int waitTimeSeconds
+    ) {
+        return new OperationCommandConsumer(
+                sqsClient,
+                objectMapper,
+                markAwaitingPayment,
+                queueName,
+                waitTimeSeconds
         );
     }
 

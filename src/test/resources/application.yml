@@ -46,6 +46,10 @@ outbox:
   publisher:
     enabled: false
 
+operation:
+  consumer:
+    enabled: false
+
 management:
   datadog:
     metrics:

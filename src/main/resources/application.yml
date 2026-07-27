@@ -94,3 +94,10 @@ outbox:
     batch-size: ${OUTBOX_PUBLISHER_BATCH_SIZE:10}
     lease-seconds: ${OUTBOX_PUBLISHER_LEASE_SECONDS:60}
     max-backoff-seconds: ${OUTBOX_PUBLISHER_MAX_BACKOFF_SECONDS:300}
+
+operation:
+  consumer:
+    enabled: ${OPERATION_CONSUMER_ENABLED:true}
+    queue-name: ${OPERATION_COMMAND_QUEUE_NAME:operation-command-queue}
+    delay-ms: ${OPERATION_CONSUMER_DELAY_MS:1000}
+    wait-time-seconds: ${OPERATION_CONSUMER_WAIT_SECONDS:20}
