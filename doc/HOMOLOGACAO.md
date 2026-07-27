@@ -285,3 +285,55 @@ curl -fsS "$API_URL/operation/service-orders/metrics/average-execution-time" \
 curl -fsS "$API_URL/operation/service-orders/$ORDER_ID/duration" \
   -H "Authorization: Bearer $MECHANIC_TOKEN"
 ```
+
+## 11. Demonstrar compensação da SAGA
+
+Este cenário usa um endpoint acadêmico protegido por JWT de mecânico. Não exige
+alterar variável nem refazer deploy.
+
+1. Criar uma nova OS e aprovar o orçamento normalmente.
+2. Aguardar a OS chegar a `AWAITING_PAYMENT`. Não realizar o pagamento no
+   Checkout Pro.
+3. Abrir:
+
+```text
+https://<API_ID>.execute-api.us-east-1.amazonaws.com/payment/swagger-ui/index.html
+```
+
+4. Clicar em `Authorize` e informar `Bearer <MECHANIC_TOKEN>`.
+5. Executar:
+
+```text
+POST /payment/homologation/service-orders/{serviceOrderId}/reject
+```
+
+Alternativa por terminal:
+
+```bash
+curl -fsS -X POST \
+  "$API_URL/payment/homologation/service-orders/$ORDER_ID/reject" \
+  -H "Authorization: Bearer $MECHANIC_TOKEN"
+```
+
+Resultado esperado:
+
+```text
+Payment REJECTED
+  -> outbox PaymentRejected
+  -> SAGA COMPENSATING
+  -> outbox CancelServiceOrder
+  -> Operation CANCELLED
+  -> outbox ServiceOrderCancelled
+  -> SAGA FAILED
+```
+
+Validar a OS:
+
+```bash
+curl -fsS "$API_URL/operation/service-orders/$ORDER_ID" \
+  -H "Authorization: Bearer $MECHANIC_TOKEN" |
+jq '{id,status}'
+```
+
+A chamada repetida é idempotente. Se o pagamento já estiver `APPROVED` ou em
+outro estado final, o endpoint retorna HTTP 409 e não inicia compensação.

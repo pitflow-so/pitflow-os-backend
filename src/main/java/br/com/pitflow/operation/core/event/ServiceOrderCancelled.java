@@ -1,0 +1,8 @@
+package br.com.pitflow.operation.core.event;
+
+import java.time.Instant;
+import java.util.UUID;
+
+public record ServiceOrderCancelled(UUID messageId, UUID correlationId, UUID causationId,
+                                    UUID sagaId, UUID serviceOrderId, UUID paymentId,
+                                    String reason, Instant occurredAt) {}

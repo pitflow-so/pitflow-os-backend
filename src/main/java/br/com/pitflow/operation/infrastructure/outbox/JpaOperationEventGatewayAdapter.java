@@ -3,6 +3,7 @@ package br.com.pitflow.operation.infrastructure.outbox;
 import br.com.pitflow.operation.core.event.ServiceOrderBudgetApproved;
 import br.com.pitflow.operation.core.event.ServiceOrderAwaitingPayment;
 import br.com.pitflow.operation.core.event.ServiceOrderReadyForExecution;
+import br.com.pitflow.operation.core.event.ServiceOrderCancelled;
 import br.com.pitflow.operation.core.gateway.OperationEventGateway;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,6 +65,12 @@ public class JpaOperationEventGatewayAdapter implements OperationEventGateway {
                 serialize(event),
                 event.occurredAt()
         ));
+    }
+
+    @Override
+    public void saveCancelled(ServiceOrderCancelled event) {
+        repository.save(new OutboxMessageJpa(event.messageId(), event.serviceOrderId(),
+                "ServiceOrderCancelled", SCHEMA_VERSION, DESTINATION, serialize(event), event.occurredAt()));
     }
 
     private String serialize(ServiceOrderBudgetApproved event) {
@@ -136,6 +143,24 @@ public class JpaOperationEventGatewayAdapter implements OperationEventGateway {
                     "Could not serialize ServiceOrderReadyForExecution",
                     exception
             );
+        }
+    }
+
+    private String serialize(ServiceOrderCancelled event) {
+        Map<String, Object> envelope = new LinkedHashMap<>();
+        envelope.put("schemaVersion", SCHEMA_VERSION);
+        envelope.put("messageId", event.messageId());
+        envelope.put("type", "ServiceOrderCancelled");
+        envelope.put("occurredAt", event.occurredAt().toString());
+        envelope.put("correlationId", event.correlationId());
+        envelope.put("causationId", event.causationId());
+        envelope.put("sagaId", event.sagaId());
+        envelope.put("serviceOrderId", event.serviceOrderId());
+        envelope.put("payload", Map.of("paymentId", event.paymentId(), "reason", event.reason()));
+        try {
+            return objectMapper.writeValueAsString(envelope);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Could not serialize ServiceOrderCancelled", exception);
         }
     }
 }

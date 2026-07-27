@@ -2,6 +2,7 @@ package br.com.pitflow.operation.infrastructure.consumer.sqs;
 
 import br.com.pitflow.operation.core.usecase.inputPort.MarkServiceOrderAwaitingPayment;
 import br.com.pitflow.operation.core.usecase.inputPort.MarkServiceOrderReadyForExecution;
+import br.com.pitflow.operation.core.usecase.inputPort.CancelServiceOrderForPaymentFailure;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ public class OperationCommandConsumer {
     private final ObjectMapper objectMapper;
     private final MarkServiceOrderAwaitingPayment markAwaitingPayment;
     private final MarkServiceOrderReadyForExecution markReadyForExecution;
+    private final CancelServiceOrderForPaymentFailure cancelForPaymentFailure;
     private final String queueUrl;
     private final int waitTimeSeconds;
 
@@ -29,6 +31,7 @@ public class OperationCommandConsumer {
             ObjectMapper objectMapper,
             MarkServiceOrderAwaitingPayment markAwaitingPayment,
             MarkServiceOrderReadyForExecution markReadyForExecution,
+            CancelServiceOrderForPaymentFailure cancelForPaymentFailure,
             String queueName,
             int waitTimeSeconds
     ) {
@@ -36,6 +39,7 @@ public class OperationCommandConsumer {
         this.objectMapper = objectMapper;
         this.markAwaitingPayment = markAwaitingPayment;
         this.markReadyForExecution = markReadyForExecution;
+        this.cancelForPaymentFailure = cancelForPaymentFailure;
         this.waitTimeSeconds = waitTimeSeconds;
         this.queueUrl = sqs.getQueueUrl(GetQueueUrlRequest.builder()
                 .queueName(queueName)
@@ -88,11 +92,20 @@ public class OperationCommandConsumer {
         return switch (root.path("type").asText()) {
             case "MarkServiceOrderAwaitingPayment" -> awaitingPayment(root);
             case "MarkServiceOrderReadyForExecution" -> readyForExecution(root);
+            case "CancelServiceOrder" -> cancelServiceOrder(root);
             default -> throw new java.lang.UnsupportedOperationException(
                     "Unsupported operation command: "
                             + root.path("type").asText()
             );
         };
+    }
+
+    private Object cancelServiceOrder(JsonNode root) {
+        var payload = root.path("payload");
+        return cancelForPaymentFailure.execute(new CancelServiceOrderForPaymentFailure.Command(
+                uuid(root, "messageId"), uuid(root, "correlationId"), uuid(root, "sagaId"),
+                uuid(root, "serviceOrderId"), uuid(payload, "paymentId"),
+                requiredText(payload, "reason"), instant(root, "occurredAt")));
     }
 
     private Object awaitingPayment(JsonNode root) {
