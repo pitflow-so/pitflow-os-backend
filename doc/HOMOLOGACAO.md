@@ -326,3 +326,28 @@ curl -fsS "$API_URL/operation/service-orders/$ORDER_ID/duration" \
    para falhas técnicas.
 7. Melhoria visual não bloqueante: substituir o título genérico "Algo deu
    errado" por "Decisão já registrada" na página de conflito.
+
+## Evidência da SAGA até AWAITING_PAYMENT — 27/07/2026
+
+| Verificação | Resultado |
+|---|---|
+| OS | `11136e83-72c7-4681-8c41-3e7044fcacc9` |
+| Total | R$ 250,99 |
+| Aprovação pelo formulário | Aprovada |
+| Evento inicial | `ServiceOrderBudgetApproved` publicado pela outbox |
+| Incidente encontrado | `occurredAt` numérico em notação científica incompatível com consumidor ISO-8601 |
+| Correção do produtor | Operation publica novos timestamps como string ISO-8601 |
+| Compatibilidade do consumidor | Orchestrator aceita ISO-8601 e epoch legado |
+| Recuperação | Uma mensagem redirecionada da DLQ para a fila principal |
+| SAGA | `6601b319-4904-4e64-861f-8fae9718dd78` |
+| Payment | `27ce6ae9-fe83-42ae-921b-371888e58242` |
+| Estado final da OS | `AWAITING_PAYMENT` |
+| Estado final da SAGA | `AWAITING_PAYMENT` |
+| Inbox do Orchestrator | Três mensagens correlacionadas persistidas |
+| Filas e DLQs ao final | Todas vazias |
+| E-mail com Checkout Pro | Enviado para `rafaelsmoreiras@gmail.com` |
+
+O redrive reutilizou a mensagem real que havia falhado e comprovou a
+retrocompatibilidade. Não foi criada uma segunda aprovação nem uma segunda
+SAGA. O próximo teste manual é abrir o e-mail de pagamento e concluir uma
+compra com a conta compradora de teste em janela anônima.
