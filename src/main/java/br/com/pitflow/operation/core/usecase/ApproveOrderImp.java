@@ -35,6 +35,6 @@ public class ApproveOrderImp implements ApproveOrder {
 
         os.approve();
         repository.save(os);
-        eventGateway.save(ServiceOrderBudgetApproved.from(os));
+        eventGateway.saveBudgetApproved(ServiceOrderBudgetApproved.from(os));
     }
 }

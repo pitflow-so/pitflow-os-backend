@@ -58,7 +58,9 @@ class ApproveOrderImpTest {
                 .isEqualTo(ServiceOrder.Status.PAYMENT_PROCESSING);
         assertThat(os.getExecutionStartedAt()).isNull();
         verify(gateway).save(os);
-        verify(eventGateway).save(any(ServiceOrderBudgetApproved.class));
+        verify(eventGateway).saveBudgetApproved(
+                any(ServiceOrderBudgetApproved.class)
+        );
     }
 
     @Test
@@ -74,6 +76,6 @@ class ApproveOrderImpTest {
         assertThatThrownBy(() -> approveOrder.execute(osId))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Order must be AWAITING_APPROVAL to be approved.");
-        verify(eventGateway, never()).save(any());
+        verify(eventGateway, never()).saveBudgetApproved(any());
     }
 }

@@ -1,6 +1,7 @@
 package br.com.pitflow.operation.infrastructure.outbox;
 
 import br.com.pitflow.operation.core.event.ServiceOrderBudgetApproved;
+import br.com.pitflow.operation.core.event.ServiceOrderAwaitingPayment;
 import br.com.pitflow.operation.core.gateway.OperationEventGateway;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,11 +27,24 @@ public class JpaOperationEventGatewayAdapter implements OperationEventGateway {
     }
 
     @Override
-    public void save(ServiceOrderBudgetApproved event) {
+    public void saveBudgetApproved(ServiceOrderBudgetApproved event) {
         repository.save(new OutboxMessageJpa(
                 event.messageId(),
                 event.serviceOrderId(),
                 TYPE,
+                SCHEMA_VERSION,
+                DESTINATION,
+                serialize(event),
+                event.occurredAt()
+        ));
+    }
+
+    @Override
+    public void saveAwaitingPayment(ServiceOrderAwaitingPayment event) {
+        repository.save(new OutboxMessageJpa(
+                event.messageId(),
+                event.serviceOrderId(),
+                "ServiceOrderAwaitingPayment",
                 SCHEMA_VERSION,
                 DESTINATION,
                 serialize(event),
@@ -60,6 +74,29 @@ public class JpaOperationEventGatewayAdapter implements OperationEventGateway {
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException(
                     "Could not serialize ServiceOrderBudgetApproved",
+                    exception
+            );
+        }
+    }
+
+    private String serialize(ServiceOrderAwaitingPayment event) {
+        Map<String, Object> envelope = new LinkedHashMap<>();
+        envelope.put("schemaVersion", SCHEMA_VERSION);
+        envelope.put("messageId", event.messageId());
+        envelope.put("type", "ServiceOrderAwaitingPayment");
+        envelope.put("occurredAt", event.occurredAt());
+        envelope.put("correlationId", event.correlationId());
+        envelope.put("causationId", event.causationId());
+        envelope.put("sagaId", event.sagaId());
+        envelope.put("serviceOrderId", event.serviceOrderId());
+        envelope.put("payload", Map.of(
+                "paymentId", event.paymentId()
+        ));
+        try {
+            return objectMapper.writeValueAsString(envelope);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException(
+                    "Could not serialize ServiceOrderAwaitingPayment",
                     exception
             );
         }
