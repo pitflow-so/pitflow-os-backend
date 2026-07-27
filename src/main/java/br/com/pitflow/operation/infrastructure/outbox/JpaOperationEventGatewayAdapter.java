@@ -57,7 +57,7 @@ public class JpaOperationEventGatewayAdapter implements OperationEventGateway {
         envelope.put("schemaVersion", SCHEMA_VERSION);
         envelope.put("messageId", event.messageId());
         envelope.put("type", TYPE);
-        envelope.put("occurredAt", event.occurredAt());
+        envelope.put("occurredAt", event.occurredAt().toString());
         envelope.put("correlationId", event.correlationId());
         envelope.put("causationId", null);
         envelope.put("sagaId", null);
@@ -84,7 +84,7 @@ public class JpaOperationEventGatewayAdapter implements OperationEventGateway {
         envelope.put("schemaVersion", SCHEMA_VERSION);
         envelope.put("messageId", event.messageId());
         envelope.put("type", "ServiceOrderAwaitingPayment");
-        envelope.put("occurredAt", event.occurredAt());
+        envelope.put("occurredAt", event.occurredAt().toString());
         envelope.put("correlationId", event.correlationId());
         envelope.put("causationId", event.causationId());
         envelope.put("sagaId", event.sagaId());
