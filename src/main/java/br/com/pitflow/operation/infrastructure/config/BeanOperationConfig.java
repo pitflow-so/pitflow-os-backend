@@ -26,6 +26,7 @@ import br.com.pitflow.operation.core.usecase.GetServiceOrderDurationImp;
 import br.com.pitflow.operation.core.usecase.ListInExecutionOrdersImp;
 import br.com.pitflow.operation.core.usecase.ListPrioritizedServiceOrdersImp;
 import br.com.pitflow.operation.core.usecase.MarkServiceOrderAwaitingPaymentImp;
+import br.com.pitflow.operation.core.usecase.MarkServiceOrderReadyForExecutionImp;
 import br.com.pitflow.operation.core.usecase.StartDiagnosisImp;
 import br.com.pitflow.operation.core.usecase.inputPort.AddOrderItem;
 import br.com.pitflow.operation.core.usecase.inputPort.ApproveOrder;
@@ -42,6 +43,7 @@ import br.com.pitflow.operation.core.usecase.inputPort.GetServiceOrderDuration;
 import br.com.pitflow.operation.core.usecase.inputPort.ListInExecutionOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.ListPrioritizedServiceOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.MarkServiceOrderAwaitingPayment;
+import br.com.pitflow.operation.core.usecase.inputPort.MarkServiceOrderReadyForExecution;
 import br.com.pitflow.operation.core.usecase.inputPort.StartDiagnosis;
 import br.com.pitflow.operation.infrastructure.consumer.sqs.OperationCommandConsumer;
 import br.com.pitflow.operation.infrastructure.metrics.MicrometerMetricsAdapter;
@@ -219,6 +221,21 @@ public class BeanOperationConfig {
     }
 
     @Bean
+    public MarkServiceOrderReadyForExecution markServiceOrderReadyForExecution(
+            ServiceOrderGateway repository,
+            OperationEventGateway eventGateway,
+            TransactionGateway transactionGateway,
+            Clock clock
+    ) {
+        return new MarkServiceOrderReadyForExecutionImp(
+                repository,
+                eventGateway,
+                transactionGateway,
+                clock
+        );
+    }
+
+    @Bean
     @ConditionalOnProperty(
             name = "operation.consumer.enabled",
             havingValue = "true",
@@ -228,6 +245,7 @@ public class BeanOperationConfig {
             SqsClient sqsClient,
             ObjectMapper objectMapper,
             MarkServiceOrderAwaitingPayment markAwaitingPayment,
+            MarkServiceOrderReadyForExecution markReadyForExecution,
             @Value("${operation.consumer.queue-name:operation-command-queue}")
             String queueName,
             @Value("${operation.consumer.wait-time-seconds:20}")
@@ -237,6 +255,7 @@ public class BeanOperationConfig {
                 sqsClient,
                 objectMapper,
                 markAwaitingPayment,
+                markReadyForExecution,
                 queueName,
                 waitTimeSeconds
         );

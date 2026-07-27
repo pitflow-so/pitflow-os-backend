@@ -1,6 +1,7 @@
 package br.com.pitflow.operation.infrastructure.consumer.sqs;
 
 import br.com.pitflow.operation.core.usecase.inputPort.MarkServiceOrderAwaitingPayment;
+import br.com.pitflow.operation.core.usecase.inputPort.MarkServiceOrderReadyForExecution;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ public class OperationCommandConsumer {
     private final SqsClient sqs;
     private final ObjectMapper objectMapper;
     private final MarkServiceOrderAwaitingPayment markAwaitingPayment;
+    private final MarkServiceOrderReadyForExecution markReadyForExecution;
     private final String queueUrl;
     private final int waitTimeSeconds;
 
@@ -26,12 +28,14 @@ public class OperationCommandConsumer {
             SqsClient sqs,
             ObjectMapper objectMapper,
             MarkServiceOrderAwaitingPayment markAwaitingPayment,
+            MarkServiceOrderReadyForExecution markReadyForExecution,
             String queueName,
             int waitTimeSeconds
     ) {
         this.sqs = sqs;
         this.objectMapper = objectMapper;
         this.markAwaitingPayment = markAwaitingPayment;
+        this.markReadyForExecution = markReadyForExecution;
         this.waitTimeSeconds = waitTimeSeconds;
         this.queueUrl = sqs.getQueueUrl(GetQueueUrlRequest.builder()
                 .queueName(queueName)
@@ -54,28 +58,7 @@ public class OperationCommandConsumer {
         try {
             var root = objectMapper.readTree(message.body());
             validateEnvelope(root);
-            if (!"MarkServiceOrderAwaitingPayment".equals(
-                    root.path("type").asText()
-            )) {
-                throw new java.lang.UnsupportedOperationException(
-                        "Unsupported operation command: "
-                                + root.path("type").asText()
-                );
-            }
-            var payload = root.path("payload");
-            var result = markAwaitingPayment.execute(
-                    new MarkServiceOrderAwaitingPayment.Command(
-                            uuid(root, "messageId"),
-                            uuid(root, "correlationId"),
-                            uuid(root, "sagaId"),
-                            uuid(root, "serviceOrderId"),
-                            uuid(payload, "paymentId"),
-                            requiredText(payload, "preferenceId"),
-                            requiredText(payload, "checkoutUrl"),
-                            instant(payload, "expiresAt"),
-                            instant(root, "occurredAt")
-                    )
-            );
+            var result = dispatch(root);
             sqs.deleteMessage(DeleteMessageRequest.builder()
                     .queueUrl(queueUrl)
                     .receiptHandle(message.receiptHandle())
@@ -99,6 +82,49 @@ public class OperationCommandConsumer {
                     exception
             );
         }
+    }
+
+    private Object dispatch(JsonNode root) {
+        return switch (root.path("type").asText()) {
+            case "MarkServiceOrderAwaitingPayment" -> awaitingPayment(root);
+            case "MarkServiceOrderReadyForExecution" -> readyForExecution(root);
+            default -> throw new java.lang.UnsupportedOperationException(
+                    "Unsupported operation command: "
+                            + root.path("type").asText()
+            );
+        };
+    }
+
+    private Object awaitingPayment(JsonNode root) {
+        var payload = root.path("payload");
+        return markAwaitingPayment.execute(
+                    new MarkServiceOrderAwaitingPayment.Command(
+                            uuid(root, "messageId"),
+                            uuid(root, "correlationId"),
+                            uuid(root, "sagaId"),
+                            uuid(root, "serviceOrderId"),
+                            uuid(payload, "paymentId"),
+                            requiredText(payload, "preferenceId"),
+                            requiredText(payload, "checkoutUrl"),
+                            instant(payload, "expiresAt"),
+                            instant(root, "occurredAt")
+                    )
+            );
+    }
+
+    private Object readyForExecution(JsonNode root) {
+        var payload = root.path("payload");
+        return markReadyForExecution.execute(
+                new MarkServiceOrderReadyForExecution.Command(
+                        uuid(root, "messageId"),
+                        uuid(root, "correlationId"),
+                        uuid(root, "sagaId"),
+                        uuid(root, "serviceOrderId"),
+                        uuid(payload, "paymentId"),
+                        requiredText(payload, "externalPaymentId"),
+                        instant(root, "occurredAt")
+                )
+        );
     }
 
     private void validateEnvelope(JsonNode root) {

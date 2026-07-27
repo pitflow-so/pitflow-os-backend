@@ -1,6 +1,7 @@
 package br.com.pitflow.operation.infrastructure.consumer.sqs;
 
 import br.com.pitflow.operation.core.usecase.inputPort.MarkServiceOrderAwaitingPayment;
+import br.com.pitflow.operation.core.usecase.inputPort.MarkServiceOrderReadyForExecution;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,8 @@ class OperationCommandConsumerTest {
     private final SqsClient sqs = mock(SqsClient.class);
     private final MarkServiceOrderAwaitingPayment useCase =
             mock(MarkServiceOrderAwaitingPayment.class);
+    private final MarkServiceOrderReadyForExecution readyUseCase =
+            mock(MarkServiceOrderReadyForExecution.class);
     private OperationCommandConsumer consumer;
 
     @BeforeEach
@@ -26,6 +29,7 @@ class OperationCommandConsumerTest {
                 sqs,
                 new ObjectMapper().findAndRegisterModules(),
                 useCase,
+                readyUseCase,
                 "operation-command-queue",
                 1
         );
