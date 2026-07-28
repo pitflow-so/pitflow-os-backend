@@ -8,14 +8,17 @@ import br.com.pitflow.operation.core.gateway.OperationEventGateway;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class JpaOperationEventGatewayAdapter implements OperationEventGateway {
     private static final int SCHEMA_VERSION = 1;
     private static final String TYPE = "ServiceOrderBudgetApproved";
     private static final String DESTINATION =
             "service-order-orchestrator-queue";
+    private static final String PAYMENT_ID_FIELD = "paymentId";
 
     private final SpringOutboxRepository repository;
     private final ObjectMapper objectMapper;
@@ -74,93 +77,50 @@ public class JpaOperationEventGatewayAdapter implements OperationEventGateway {
     }
 
     private String serialize(ServiceOrderBudgetApproved event) {
-        Map<String, Object> envelope = new LinkedHashMap<>();
-        envelope.put("schemaVersion", SCHEMA_VERSION);
-        envelope.put("messageId", event.messageId());
-        envelope.put("type", TYPE);
-        envelope.put("occurredAt", event.occurredAt().toString());
-        envelope.put("correlationId", event.correlationId());
-        envelope.put("causationId", null);
-        envelope.put("sagaId", null);
-        envelope.put("serviceOrderId", event.serviceOrderId());
-        envelope.put("payload", Map.of(
+        return serialize(event.messageId(), TYPE, event.occurredAt(), event.correlationId(),
+                null, null, event.serviceOrderId(), Map.of(
                 "amount", Map.of(
                         "amount", event.amount().toPlainString(),
                         "currency", "BRL"
                 )
         ));
-
-        try {
-            return objectMapper.writeValueAsString(envelope);
-        } catch (JsonProcessingException exception) {
-            throw new IllegalStateException(
-                    "Could not serialize ServiceOrderBudgetApproved",
-                    exception
-            );
-        }
     }
 
     private String serialize(ServiceOrderAwaitingPayment event) {
-        Map<String, Object> envelope = new LinkedHashMap<>();
-        envelope.put("schemaVersion", SCHEMA_VERSION);
-        envelope.put("messageId", event.messageId());
-        envelope.put("type", "ServiceOrderAwaitingPayment");
-        envelope.put("occurredAt", event.occurredAt().toString());
-        envelope.put("correlationId", event.correlationId());
-        envelope.put("causationId", event.causationId());
-        envelope.put("sagaId", event.sagaId());
-        envelope.put("serviceOrderId", event.serviceOrderId());
-        envelope.put("payload", Map.of(
-                "paymentId", event.paymentId()
-        ));
-        try {
-            return objectMapper.writeValueAsString(envelope);
-        } catch (JsonProcessingException exception) {
-            throw new IllegalStateException(
-                    "Could not serialize ServiceOrderAwaitingPayment",
-                    exception
-            );
-        }
+        return serialize(event.messageId(), "ServiceOrderAwaitingPayment", event.occurredAt(),
+                event.correlationId(), event.causationId(), event.sagaId(), event.serviceOrderId(),
+                Map.of(PAYMENT_ID_FIELD, event.paymentId()));
     }
 
     private String serialize(ServiceOrderReadyForExecution event) {
-        Map<String, Object> envelope = new LinkedHashMap<>();
-        envelope.put("schemaVersion", SCHEMA_VERSION);
-        envelope.put("messageId", event.messageId());
-        envelope.put("type", "ServiceOrderReadyForExecution");
-        envelope.put("occurredAt", event.occurredAt().toString());
-        envelope.put("correlationId", event.correlationId());
-        envelope.put("causationId", event.causationId());
-        envelope.put("sagaId", event.sagaId());
-        envelope.put("serviceOrderId", event.serviceOrderId());
-        envelope.put("payload", Map.of(
-                "paymentId", event.paymentId()
-        ));
-        try {
-            return objectMapper.writeValueAsString(envelope);
-        } catch (JsonProcessingException exception) {
-            throw new IllegalStateException(
-                    "Could not serialize ServiceOrderReadyForExecution",
-                    exception
-            );
-        }
+        return serialize(event.messageId(), "ServiceOrderReadyForExecution", event.occurredAt(),
+                event.correlationId(), event.causationId(), event.sagaId(), event.serviceOrderId(),
+                Map.of(PAYMENT_ID_FIELD, event.paymentId()));
     }
 
     private String serialize(ServiceOrderCancelled event) {
+        return serialize(event.messageId(), "ServiceOrderCancelled", event.occurredAt(),
+                event.correlationId(), event.causationId(), event.sagaId(), event.serviceOrderId(),
+                Map.of(PAYMENT_ID_FIELD, event.paymentId(), "reason", event.reason()));
+    }
+
+    @SuppressWarnings("java:S107") // Mirrors the versioned integration-event envelope contract.
+    private String serialize(UUID messageId, String type, Instant occurredAt, UUID correlationId,
+                             UUID causationId, UUID sagaId, UUID serviceOrderId, Map<String, ?> payload) {
         Map<String, Object> envelope = new LinkedHashMap<>();
         envelope.put("schemaVersion", SCHEMA_VERSION);
-        envelope.put("messageId", event.messageId());
-        envelope.put("type", "ServiceOrderCancelled");
-        envelope.put("occurredAt", event.occurredAt().toString());
-        envelope.put("correlationId", event.correlationId());
-        envelope.put("causationId", event.causationId());
-        envelope.put("sagaId", event.sagaId());
-        envelope.put("serviceOrderId", event.serviceOrderId());
-        envelope.put("payload", Map.of("paymentId", event.paymentId(), "reason", event.reason()));
+        envelope.put("messageId", messageId);
+        envelope.put("type", type);
+        envelope.put("occurredAt", occurredAt.toString());
+        envelope.put("correlationId", correlationId);
+        envelope.put("causationId", causationId);
+        envelope.put("sagaId", sagaId);
+        envelope.put("serviceOrderId", serviceOrderId);
+        envelope.put("payload", payload);
         try {
             return objectMapper.writeValueAsString(envelope);
         } catch (JsonProcessingException exception) {
-            throw new IllegalStateException("Could not serialize ServiceOrderCancelled", exception);
+            throw new IllegalStateException("Could not serialize " + type, exception);
         }
     }
 }
