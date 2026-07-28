@@ -1,295 +1,176 @@
-# PitFlow OS - Backend 🛠️ (Fase 3)
+# PitFlow Operation
 
-Aplicação backend orientada a domínio (DDD), baseada em Clean Architecture, executando em ambiente cloud-native (Kubernetes), com infraestrutura como código (Terraform) e pipeline CI/CD automatizado.
+Microsserviço responsável pelo ciclo de vida das ordens de serviço do PitFlow.
+O nome histórico do repositório é `pitflow-os-backend`, mas seu único domínio de
+negócio atual é **Operation**.
 
-📌 **Links Importantes:**
-* 🎬 **Vídeo Demonstrativo:** [Link do Vídeo](**https://drive.google.com/drive/folders/1rKD-R3Cbbh3VkMbq_KHJeAC3ShDwRWPx?usp=sharing**).
-* 📚 **Collection / Swagger API:** A documentação interativa (OpenAPI) fica disponível em `http://localhost:8080/swagger-ui.html` quando a aplicação está em execução, localmente.
+## Responsabilidades
 
----
-## ⚒️ Requisitos
-* **Java 21** (openjdk 21.0.2)
-* **Docker/Docker-compose** ( version 29.1.4-rd)
-* **aws cli** (aws-cli/2.34.11)
-* **Terraform** (v1.14.7)
+- abrir e consultar ordens de serviço;
+- controlar diagnóstico, orçamento, execução, finalização e entrega;
+- validar cliente e veículo no Registry;
+- reservar peças e consultar serviços no Inventory;
+- publicar eventos de domínio por transactional outbox e SQS;
+- consumir comandos da SAGA enviados pelo Orchestrator;
+- notificar o cliente sobre o link de pagamento.
 
-## 🏗️ 1. Arquitetura (Clean Architecture)
+Não pertencem a este serviço: cadastro de clientes/veículos, catálogo e estoque,
+pagamentos ou estado global da SAGA.
 
-A aplicação foi completamente refatorada seguindo os princípios da **[Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)** (Arquitetura Limpa), garantindo que as regras de negócio sejam o coração do sistema, independentes de frameworks, bancos de dados ou interfaces web.
+## Arquitetura
 
-### Organização em Módulos
-O código está estruturado em três Bounded Contexts principais:
-1. **`common`**: Elementos transversais (Filtros JWT, Gateways abstratos como `TransactionGateway`, Handlers de exceção).
-2. **`inventory`**: Catálogo de peças e serviços.
-3. **`operation`**: Máquina de estados e ciclo de vida das Ordens de Serviço (Abertura, Diagnóstico, Aprovação, Execução e Finalização).
+O código aplica Clean Architecture:
 
-O contexto de clientes, veículos e mecânicos foi extraído para o repositório
-`pitflow-registry`. O contexto `operation` acessa esse serviço por um gateway
-HTTP interno.
-
-## 🧠 Decisões Arquiteturais
-
-- Separação entre Controller (Application) e REST Adapter (Infrastructure)
-- Uso de Gateways para inversão de dependência.
-- DTOs para isolamento e controle de contexto no transporte de dados.
-- Kubernetes para escalabilidade horizontal.
-
-### O Fluxo de Dependência
-A regra de dependência aponta sempre para o centro (`core`):
-* **Core:** Contém *Entities*, *Value Objects* e *Use Cases* puros (Java puro, sem anotações de Spring).
-* **Infrastructure:** Contém os *Adapters* que implementam as interfaces (Gateways) do Core. Aqui residem a implementação de Frameworks e Drivers, como as lógicas de JPA, Security, Webhooks, REST e mapeamento relacional.
-* **Controllers:** Responsáveis por receber a entrada, transformar em comandos e delegar aos casos de uso.
-* **Presenters:** Responsáveis por formatar a saída (DTOs) para o mundo externo. <br>
-
-![img.png](doc/img/components_aplicacao.png)
-
-**Exemplo de caso de uso:**
-
-```mermaid
-%%{init: { "theme": "base" }}%%
-flowchart LR
-    subgraph Frameworks ["Frameworks / Drivers Layer"]
-        REST[ServiceOrderRestAdapter]
-    end
-
-    subgraph Interfaces ["Interfaces Adapters Layer"]
-        CTRL[ServiceOrderController]
-    end
-
-    subgraph Core ["Core Layer"]
-        USECASE["Use Cases<br/>Create / Approve / Cancel / etc"]
-        ENTITY[ServiceOrder Entity]
-        GATEWAY["ServiceOrderGateway (interface)"]
-    end
-
-    subgraph Infrastructure ["Infrastructure Layer"]
-        JPA[JpaServiceOrderGatewayAdapter]
-        REPO["Spring Data Repository"]
-        DB[(PostgreSQL)]
-    end
-
-    REST --> CTRL
-    CTRL --> USECASE
-    USECASE --> ENTITY
-    USECASE --> GATEWAY
-    GATEWAY --> JPA
-    JPA --> REPO
-    REPO --> DB
+```text
+REST/SQS adapters → controllers/use cases → entities e gateways
+                                      ↓
+                  JPA, HTTP, e-mail, outbox e SQS adapters
 ```
 
----
+- `operation/core`: entidade, casos de uso, eventos e contratos;
+- `operation/controller`: tradução de requests em comandos;
+- `operation/infrastructure`: REST, JPA, integrações HTTP, SQS e outbox;
+- `operation/presenter`: respostas da API;
+- `common`: segurança, transação, exceções e notificação.
 
-## ☁️ 2. Infraestrutura e Orquestração (Cloud & IaC)
+O PostgreSQL é exclusivo do Operation. Registry e Inventory são acessados
+somente por HTTP. Eventos destinados à SAGA são gravados na mesma transação da
+ordem e publicados posteriormente pelo outbox. Consulte [ADRS.md](doc/ADRS.md).
 
-O projeto foi modernizado para rodar em um ambiente escalável na **AWS**.
+## Tecnologias e pré-requisitos
 
-### Infraestrutura como Código (Terraform)
-Localizado na pasta `infra/terraform`, o IaC provisiona:
-* **Amazon EKS:** Cluster Kubernetes e Node Group (capacidade SPOT).
-* **Amazon RDS:** Banco PostgreSQL 16 gerenciado.
-* **Amazon ECR:** Repositório privado de imagens Docker.
-* **Amazon S3:** Backend remoto para guardar o estado do Terraform (`tfstate`).
+- Java 21 e Maven 3.9+;
+- PostgreSQL 16;
+- Docker com Compose para o ambiente integrado;
+- AWS CLI e `kubectl` apenas para operação no EKS.
 
-### Orquestração (Kubernetes)
-Localizado na pasta `infra/k8s`, os manifestos definem a topologia:
-* **Namespace:** Recursos de negócio são implantados no namespace `pitflow`.
-* **Deployment:** Responsável por manter os pods da aplicação.
-* **Service:** Exposição interna da aplicação por `ClusterIP`.
-* **Ingress:** Registro da rota `/` no ALB compartilhado administrado pelo
-  `pitflow-cluster-kubernetes`.
-* **ConfigMaps e Secrets:** Injeção de variáveis de ambiente (`DB_HOST`, senhas e JWT) desacopladas da imagem da aplicação.
-* **Probes (Liveness/Readiness/Startup):** Garantem a autorrecuperação dos pods usando o Spring Actuator (`/actuator/health`).
-* **HPA (Horizontal Pod Autoscaler):** Escalonamento automático de 1 para até 3 réplicas com base no consumo de CPU (alvo: 70%).
+## Configuração
 
-Segue a representação da estrutura:
-```mermaid
-%%{init: { "theme": "base" }}%%
-flowchart TB
+| Variável | Default | Obrigatória |
+|---|---|---:|
+| `DB_HOST` | `localhost` | não |
+| `DB_PORT` | `5432` | não |
+| `DB_NAME` | `pitflow_os` | não |
+| `DB_USERNAME` | `pitflow` | não |
+| `DB_PASSWORD` | — | sim |
+| `JWT_SECRET` | — | sim |
+| `MAIL_USERNAME` | `pitflow.notifications@gmail.com` | não |
+| `MAIL_PASSWORD` | — | sim quando e-mail real estiver ativo |
+| `REGISTRY_SERVICE_URL` | `http://localhost:8081` | não |
+| `INVENTORY_SERVICE_URL` | `http://localhost:8082` | não |
+| `MOCK_MESSAGE` | `true` | não |
+| `DATADOG_ENABLED` | `false` | não |
+| `DATADOG_API_KEY` | — | sim quando Datadog estiver ativo |
+| `OPERATION_COMMAND_QUEUE_NAME` | `operation-command-queue` | não |
+| `OPERATION_CONSUMER_ENABLED` | `true` | não |
+| `OUTBOX_PUBLISHER_ENABLED` | `true` | não |
 
-    %% ===== AWS =====
-    subgraph AWS["AWS Cloud"]
-        S3[(S3 - Terraform State)]
-        ECR[(ECR - Docker Images)]
-        EKS[(EKS - Kubernetes Cluster)]
-        RDS[(RDS - PostgreSQL)]
-    end
+Em execução fora da AWS, desative consumidor e publisher SQS ou disponibilize
+credenciais/filas compatíveis.
 
-    %% ===== KUBERNETES =====
-    subgraph Kubernetes["Kubernetes Cluster (EKS)"]
-        POD[Spring Boot Pod]
-        SVC[Service]
-        HPA[Horizontal Pod Autoscaler]
-        CM[ConfigMap]
-        SECRET[Secrets]
-    end
+## Execução local com Docker Compose
 
-    %% ===== RELAÇÕES =====
-    ECR --> POD
-    POD --> RDS
+Mantenha estes repositórios no mesmo diretório pai:
 
-    CM --> POD
-    SECRET --> POD
-
-    POD --> SVC
-    SVC --> HPA
-
-    EKS --> POD
-
-    %% ===== ESTILOS =====
-    
-    %% AWS
-    style S3 fill:#4CAF50,stroke:#2E7D32,color:#ffffff
-    style ECR fill:#9E9E9E,stroke:#616161,color:#ffffff
-    style EKS fill:#607D8B,stroke:#37474F,color:#ffffff
-    style RDS fill:#FF9800,stroke:#E65100,color:#ffffff
-
-    %% Kubernetes
-    style POD fill:#2196F3,stroke:#0D47A1,color:#ffffff
-    style SVC fill:#64B5F6,stroke:#1976D2,color:#000000
-    style HPA fill:#BBDEFB,stroke:#1976D2,color:#000000
-    style CM fill:#FFF176,stroke:#FBC02D,color:#000000
-    style SECRET fill:#F06292,stroke:#AD1457,color:#ffffff
+```text
+pitflow-os-backend
+pitflow-registry
+pitflow-inventory
 ```
 
----
+Na raiz deste repositório:
 
-## 🚀 3. Pipeline CI/CD (GitHub Actions)
-
-A esteira de entrega contínua (`.github/workflows/main.yaml`) automatiza todo o
-processo em três jobs sequenciais:
-
-1. **Fetch Secrets:** Carrega as secrets necessárias para o projeto. Uliza `aws secretsmanager` para obter os dados do secret manager. Exporta como variáveis para outputs para serem utilizadas nos jobs seguintes.
-
-2. **Build and Push:** Executa `mvn clean package` (compila, testa e empacota),
-   autentica no Amazon ECR compartilhado e publica a imagem com a tag imutável
-   `backend-<commit-sha>`.
-
-3. **Deploy:** Atualiza o kubeconfig do EKS, instala o
-   `metrics-server` (pré-requisito do HPA), substitui os placeholders dos
-   manifestos via `envsubst`, aplica Service, Ingress, ConfigMap, Deployment e
-   HPA e valida o rollout. O workflow apenas lê `API_PUBLIC_URL`; a criação do
-   ALB e a atualização do Secrets Manager pertencem ao
-   `pitflow-cluster-kubernetes`.
-```mermaid
-%%{init: {
-  "theme": "base",
-  "themeVariables": {
-    "primaryTextColor": "#000000",
-    "secondaryTextColor": "#000000",
-    "tertiaryTextColor": "#000000",
-    "lineColor": "#333333",
-    "fontSize": "14px"
-  }
-}}%%
-sequenceDiagram
-    participant Dev as Developer
-    participant GH as GitHub Actions
-    participant ASM as Amazon Secret Manager
-    participant ECR as Amazon ECR
-    participant EKS as Amazon EKS
-
-    Dev->>GH: push na main
-
-    rect rgb(220, 235, 255)
-        note over GH,ASM: Job 1 — Fetch Secrets
-        GH->>GH: Configure AWS Credentials
-        GH->>GH: Install jq
-        GH->>ASM: Busca secrets e enviar para GITHUB_OUTPUT
-        GH->>GH: E enviar para GITHUB_OUTPUT
-    end
-
-    rect rgb(220, 255, 220)
-        note over GH,ECR: Job 2 — Build and Push
-        GH->>GH: mvn clean package
-        GH->>ECR: docker build + push
-    end
-
-    rect rgb(255, 235, 220)
-        note over GH,EKS: Job 3 — Deploy
-        GH->>EKS: update kubeconfig
-        GH->>EKS: apply manifests (envsubst)
-        GH->>EKS: registra rota no ALB compartilhado
-        EKS-->>GH: rollout OK
-    end
+```bash
+docker compose up --build
 ```
----
 
-## 📦 4. Como Executar o Projeto
+Serviços:
 
-Para o histórico de testes de qualidade (JaCoCo, OWASP Dependency-Check) e o teste prático de escalabilidade do HPA, consulte a pasta `/doc`.
-
-### Opção A: Execução Local (Docker Compose)
-A maneira mais rápida de rodar o ambiente integrado de desenvolvimento:
-
-1. Mantenha os repositórios `pitflow-os-backend` e `pitflow-registry` no mesmo
-   diretório pai.
-2. Renomeie o arquivo `.env.example` para `.env`, se quiser sobrescrever os
-   valores locais. O Compose possui valores padrão para desenvolvimento.
-3. Na raiz do `pitflow-os-backend`, execute:
-
-   ```bash
-   docker-compose up --build
-   ```
-
-O ambiente cria quatro containers:
-
-- backend em `http://localhost:18080`;
-- registry em `http://localhost:18081`;
-- PostgreSQL exclusivo do backend;
-- PostgreSQL exclusivo do registry.
-
-Os bancos não publicam portas no host. A comunicação do backend com o registry
-usa `http://registry:8080` dentro da rede do Compose, simulando o DNS
-`http://pitflow-registry` utilizado no Kubernetes.
+- Operation: `http://localhost:18080/operation`;
+- Registry: `http://localhost:18081/registry`;
+- Inventory: `http://localhost:18082/inventory`.
 
 Health checks:
 
 ```text
-http://localhost:18080/actuator/health
-http://localhost:18081/actuator/health
+http://localhost:18080/operation/actuator/health
+http://localhost:18081/registry/actuator/health
+http://localhost:18082/inventory/actuator/health
 ```
 
-Para encerrar o ambiente preservando os bancos:
+Para encerrar preservando os volumes:
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
-Para recriar todo o ambiente e apagar os dados locais:
+Use `docker compose down -v` somente quando quiser apagar os bancos locais.
+
+## Execução pela JVM
+
+Com PostgreSQL, Registry e Inventory disponíveis:
 
 ```bash
-docker-compose down --volumes --remove-orphans
+export DB_PASSWORD="local-password"
+export JWT_SECRET="local-jwt-secret-with-at-least-32-bytes"
+export MAIL_PASSWORD="local-not-used"
+export DATADOG_API_KEY="local-not-used"
+export OPERATION_CONSUMER_ENABLED="false"
+export OUTBOX_PUBLISHER_ENABLED="false"
+mvn spring-boot:run
 ```
 
-### Opção B: Provisionamento Terraform Local
-O deploy principal é automatizado pela GitHub Action ao realizar um push na `main`. <br>
-Código da action disponível em: <br>
+## API e observabilidade
 
-👉 doc/[EXECUCAO_TERRAFORM_LOCAL.md](doc/EXECUCAO_TERRAFORM_LOCAL.md).
+- [Swagger publicado](https://85ufbygqvi.execute-api.us-east-1.amazonaws.com/operation/swagger-ui/index.html)
+- [OpenAPI publicado](https://85ufbygqvi.execute-api.us-east-1.amazonaws.com/operation/v3/api-docs)
+- Swagger local: `http://localhost:8080/operation/swagger-ui/index.html`
+- OpenAPI local: `http://localhost:8080/operation/v3/api-docs`
+- Health local: `http://localhost:8080/operation/actuator/health`
 
-### Opção C: Deploy no Kubernetes
-⚠️ **Atenção:** Para o correto funcionamento do fluxo de CI/CD no GitHub Actions, é estritamente necessário configurar as seguintes *Secrets* no repositório:
-* AWS_ACCESS_KEY_ID
-* AWS_SECRET_ACCESS_KEY
-* AWS_SESSION_TOKEN
-* DB_PASSWORD
-* JWT_SECRET
+Actuator expõe health e métricas. No EKS, logs estruturados, métricas e traces
+são coletados pelo Datadog configurado pela plataforma.
 
-Execução da action disponibilizada em: [github/workflows/main.yaml](.github/workflows/main.yaml). <br>
+## Qualidade
 
-### Testes unitários
-````bash
-mvn clean test
-````
+Execute:
 
-### 📊 Documentos
-A documentação detalhada das provas de conceito e histórico de qualidade encontra-se na pasta `/doc`:
-* 🛢️ **Justificativa para o uso do banco de dados PostegreSQL:** [JUSTIFICATIVA_BANCO_DE_DADOS.md](doc/JUSTIFICATIVA_BANCO_DE_DADOS.md)
-* 📦 **Diagrama de componentes:** [COMPONENTES.md](doc/COMPONENTES.md)
-* 📉 **Diagrama de sequência fluxo de criação de OS** [DIAGRAMA_SEQUENCIA.md](doc/DIAGRAMA_SEQUENCIA.md)
-* 📌 **RFCs** [RFCS.md](doc/RFCS.md)
-* 📍 **ADRs** [ADRS.md](doc/ADRS.md)
-* 🧪 **Roteiro de Homologação (MVP):** [HOMOLOGACAO.md](doc/HOMOLOGACAO.md)
-* 📈 **Teste de Escalonamento Automático (HPA):** [TESTE_HPA.md](doc/TESTE_HPA.md)
-* 🛡️ **Qualidade e Cobertura (JaCoCo):** [QUALIDADE_SEGURANCA.md](doc/QUALIDADE_SEGURANCA.md)
-* 🔒 **Análise de Vulnerabilidades (OWASP):** [OWASP.md](doc/OWASP.md)
+```bash
+mvn -B clean verify
+```
+
+O build executa **92 testes** e aplica `jacoco:check` sobre a cobertura total de
+linhas, com mínimo obrigatório de 80%. O relatório é gerado em
+`target/site/jacoco/index.html`.
+
+| Métrica JaCoCo | Resultado |
+|---|---:|
+| Linhas | **80,60%** |
+| Instruções | **78,85%** |
+| Branches | **68,86%** |
+
+A pipeline publica relatório e testes no artefato
+`operation-jacoco-<commit-sha>`, retido por 14 dias. O Sonar será complementar
+ao gate de cobertura total.
+
+![Cobertura JaCoCo do Operation](doc/evidencias/cobertura-jacoco.png)
+
+## CI/CD e Kubernetes
+
+O workflow `.github/workflows/main.yaml` executa testes/gate, publica a imagem
+imutável `backend-<commit-sha>` no ECR e aplica os manifests de `infra/k8s`.
+Credenciais AWS são GitHub Secrets; configuração da aplicação vem do segredo
+`pitflow/bootstrap`.
+
+O projeto contém apenas seus manifests Kubernetes. Terraform, EKS, ALB, API
+Gateway, bancos e filas pertencem aos repositórios de infraestrutura.
+
+## Documentação
+
+- [Decisões arquiteturais](doc/ADRS.md)
+- [Homologação ponta a ponta](doc/HOMOLOGACAO.md)
+- [Análise OWASP de dependências](doc/OWASP.md)
+- [Teste do HPA](doc/TESTE_HPA.md)
+
+O fluxo global da solução é documentado no `pitflow-orchestrator`; contratos
+assíncronos e a decisão canônica da SAGA ficam no `pitflow-bootstrap`.

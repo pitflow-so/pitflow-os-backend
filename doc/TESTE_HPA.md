@@ -1,29 +1,56 @@
-### Para o teste do Horizontal Pod Autoscale (HPA)
-Necessário ter `kubectl` e `aws cli`
+# Teste do Horizontal Pod Autoscaler do Operation
 
-#### 0. Garantir que o kubectl esteja devidamente configurado
-`pitflow-eks` é o nome do cluster.
+O HPA do Operation é definido em `infra/k8s/hpa.yaml`. O cluster, Metrics Server
+e demais componentes pertencem ao `pitflow-cluster-kubernetes`.
+
+## Pré-requisitos
+
+- AWS CLI autenticada;
+- `kubectl` configurado para o EKS;
+- Operation implantado no namespace `pitflow`;
+- Metrics Server saudável.
+
 ```bash
 aws eks update-kubeconfig --name pitflow-eks --region us-east-1
-```
-#### 01. Monitorar o consumo de CPU
-```bash
-  kubectl get hpa pitflow-hpa -w
-```
-#### 02. Monitarar a criação de novos Pods e shutdown quando reduzir o consumo de recursos:
-```bash
-  kubectl get pods -l app=pitflow-backend -w
+kubectl top pods -n pitflow
+kubectl get hpa -n pitflow
 ```
 
-#### 03. Obter o URL do loadbalance:
+## Acompanhamento
+
+Em terminais separados:
+
 ```bash
- kubectl get svc
+kubectl get hpa -n pitflow -w
+kubectl get pods -n pitflow -l app.kubernetes.io/name=pitflow-backend -w
 ```
 
-#### 04. Executar script para realizar requests:
-OBS: a placa passado como query parameter `"ODA1234"` existe cadastrada pela migrations, por isso foi passada no teste
-```bash
-for i in {1..30}; do while true; do curl -s -o /dev/null -X GET "http://<URL_DO_LOAD_BALANCER>/registry/vehicles/plate/ODA1234" -H "accept: */*"; done & done
+Confirme os labels reais antes do teste:
 
+```bash
+kubectl get deployment pitflow-backend -n pitflow --show-labels
 ```
-#### 05. Observar os pods subindo
+
+## Geração de carga
+
+Use uma rota GET do próprio Operation e um JWT válido. Ajuste a concorrência
+para o ambiente acadêmico:
+
+```bash
+API_URL="https://85ufbygqvi.execute-api.us-east-1.amazonaws.com"
+SERVICE_ORDER_ID="<uuid-de-uma-os>"
+TOKEN="<jwt>"
+
+seq 1 500 | xargs -n1 -P20 -I{} curl -fsS -o /dev/null \
+  -H "Authorization: Bearer $TOKEN" \
+  "$API_URL/operation/service-orders/$SERVICE_ORDER_ID"
+```
+
+Durante e após a carga, registre:
+
+- réplicas atuais/desejadas no HPA;
+- CPU observada;
+- criação e remoção dos pods;
+- ausência de erros no rollout e nos logs.
+
+O teste valida escalabilidade do deployment, não a lógica funcional da API.

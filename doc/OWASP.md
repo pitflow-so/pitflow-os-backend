@@ -1,27 +1,32 @@
+# Análise de dependências com OWASP
 
-### Análise de Vulnerabilidades (OWASP Dependency-Check)
+O OWASP Dependency-Check complementa JaCoCo e Sonar ao realizar análise de
+composição de software (SCA) sobre dependências conhecidas por CVEs.
 
-Utilizamos a ferramenta **OWASP Dependency-Check** integrada ao Maven para análise estática de dependências (SCA).
-Para executar o scan, é necessário obter uma **API KEY**, pelo site: https://nvd.nist.gov/developers/request-an-api-key
+## Execução
+
+Solicite uma chave da NVD e forneça-a sem versionar seu valor:
+
 ```bash
-mvn org.owasp:dependency-check-maven:check -Dnvd.api.key=<API_KEY>
+mvn org.owasp:dependency-check-maven:check \
+  -Dnvd.api.key="$NVD_API_KEY"
 ```
-#### Durante a primeira execução foi observados alguns pontos de atenão:
 
-**Pontos identificados e mitigados:**
-1.  **Spring Boot DevTools (CRITICAL)**: Vulnerabilidade relacionada ao `SnakeYAML`.
-    * **Mitigação**: A dependência foi configurada com `<optional>true</optional>` e escopo `test`. Além disso, utilizamos **Multi-stage Build** no Dockerfile para garantir que o JAR final de produção contenha apenas o JRE e o código necessário, removendo o DevTools completamente da imagem final.
-2.  **Swagger UI (MEDIUM)**: Relacionada à biblioteca `DOMPurify` nos assets estáticos.
-    * **Mitigação**: Atualização do starter `springdoc-openapi` para a versão mais recente e recomendação de desativação do endpoint em ambientes produtivos críticos.
+O relatório é gerado em `target/dependency-check-report.html`. Uma falha de
+download da base NVD não equivale a ausência de vulnerabilidades; a execução
+somente serve como evidência quando termina com a base atualizada.
 
-![first_owasp_execution.png](doc/img/first_owasp_execution.png)
+## Evidências históricas
 
-Após a mitigação dos pontos acima, uma nova análise foi realizada, não sendo mais identificadas vulnerabilidades. <br>
-![second_owasp_execution.png](doc/img/second_owasp_execution.png)
+As imagens abaixo registram a análise realizada na fase anterior. Elas não
+substituem uma nova execução para a entrega atual.
 
----
+![Primeira execução](img/first_owasp_execution.png)
 
-## 🗺️ Entregas de Design (DDD)
+![Execução após mitigação](img/second_owasp_execution.png)
 
-A documentação completa contendo o **Event Storming** (Criação de OS e Gestão de Peças), o **Dicionário de Linguagem Ubíqua** e os diagramas de contexto podem ser acessados no [Miro](https://miro.com/app/board/uXjVID97lew=/?share_link_id=974727696482).
-
+Na análise histórica, os principais pontos estavam relacionados ao DevTools e
+aos assets do Swagger UI. O DevTools permanece restrito ao escopo de teste e a
+imagem de produção é construída em múltiplos estágios. Novos resultados devem
+ser avaliados conforme o relatório corrente, sem assumir que a evidência antiga
+continua válida.
