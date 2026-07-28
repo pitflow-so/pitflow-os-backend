@@ -16,6 +16,15 @@ public class JpaOperationEventGatewayAdapter implements OperationEventGateway {
     private static final String TYPE = "ServiceOrderBudgetApproved";
     private static final String DESTINATION =
             "service-order-orchestrator-queue";
+    private static final String SCHEMA_VERSION_FIELD = "schemaVersion";
+    private static final String MESSAGE_ID_FIELD = "messageId";
+    private static final String OCCURRED_AT_FIELD = "occurredAt";
+    private static final String CORRELATION_ID_FIELD = "correlationId";
+    private static final String CAUSATION_ID_FIELD = "causationId";
+    private static final String SAGA_ID_FIELD = "sagaId";
+    private static final String SERVICE_ORDER_ID_FIELD = "serviceOrderId";
+    private static final String PAYLOAD_FIELD = "payload";
+    private static final String PAYMENT_ID_FIELD = "paymentId";
 
     private final SpringOutboxRepository repository;
     private final ObjectMapper objectMapper;
@@ -75,15 +84,15 @@ public class JpaOperationEventGatewayAdapter implements OperationEventGateway {
 
     private String serialize(ServiceOrderBudgetApproved event) {
         Map<String, Object> envelope = new LinkedHashMap<>();
-        envelope.put("schemaVersion", SCHEMA_VERSION);
-        envelope.put("messageId", event.messageId());
+        envelope.put(SCHEMA_VERSION_FIELD, SCHEMA_VERSION);
+        envelope.put(MESSAGE_ID_FIELD, event.messageId());
         envelope.put("type", TYPE);
-        envelope.put("occurredAt", event.occurredAt().toString());
-        envelope.put("correlationId", event.correlationId());
-        envelope.put("causationId", null);
-        envelope.put("sagaId", null);
-        envelope.put("serviceOrderId", event.serviceOrderId());
-        envelope.put("payload", Map.of(
+        envelope.put(OCCURRED_AT_FIELD, event.occurredAt().toString());
+        envelope.put(CORRELATION_ID_FIELD, event.correlationId());
+        envelope.put(CAUSATION_ID_FIELD, null);
+        envelope.put(SAGA_ID_FIELD, null);
+        envelope.put(SERVICE_ORDER_ID_FIELD, event.serviceOrderId());
+        envelope.put(PAYLOAD_FIELD, Map.of(
                 "amount", Map.of(
                         "amount", event.amount().toPlainString(),
                         "currency", "BRL"
@@ -102,16 +111,16 @@ public class JpaOperationEventGatewayAdapter implements OperationEventGateway {
 
     private String serialize(ServiceOrderAwaitingPayment event) {
         Map<String, Object> envelope = new LinkedHashMap<>();
-        envelope.put("schemaVersion", SCHEMA_VERSION);
-        envelope.put("messageId", event.messageId());
+        envelope.put(SCHEMA_VERSION_FIELD, SCHEMA_VERSION);
+        envelope.put(MESSAGE_ID_FIELD, event.messageId());
         envelope.put("type", "ServiceOrderAwaitingPayment");
-        envelope.put("occurredAt", event.occurredAt().toString());
-        envelope.put("correlationId", event.correlationId());
-        envelope.put("causationId", event.causationId());
-        envelope.put("sagaId", event.sagaId());
-        envelope.put("serviceOrderId", event.serviceOrderId());
-        envelope.put("payload", Map.of(
-                "paymentId", event.paymentId()
+        envelope.put(OCCURRED_AT_FIELD, event.occurredAt().toString());
+        envelope.put(CORRELATION_ID_FIELD, event.correlationId());
+        envelope.put(CAUSATION_ID_FIELD, event.causationId());
+        envelope.put(SAGA_ID_FIELD, event.sagaId());
+        envelope.put(SERVICE_ORDER_ID_FIELD, event.serviceOrderId());
+        envelope.put(PAYLOAD_FIELD, Map.of(
+                PAYMENT_ID_FIELD, event.paymentId()
         ));
         try {
             return objectMapper.writeValueAsString(envelope);
@@ -125,16 +134,16 @@ public class JpaOperationEventGatewayAdapter implements OperationEventGateway {
 
     private String serialize(ServiceOrderReadyForExecution event) {
         Map<String, Object> envelope = new LinkedHashMap<>();
-        envelope.put("schemaVersion", SCHEMA_VERSION);
-        envelope.put("messageId", event.messageId());
+        envelope.put(SCHEMA_VERSION_FIELD, SCHEMA_VERSION);
+        envelope.put(MESSAGE_ID_FIELD, event.messageId());
         envelope.put("type", "ServiceOrderReadyForExecution");
-        envelope.put("occurredAt", event.occurredAt().toString());
-        envelope.put("correlationId", event.correlationId());
-        envelope.put("causationId", event.causationId());
-        envelope.put("sagaId", event.sagaId());
-        envelope.put("serviceOrderId", event.serviceOrderId());
-        envelope.put("payload", Map.of(
-                "paymentId", event.paymentId()
+        envelope.put(OCCURRED_AT_FIELD, event.occurredAt().toString());
+        envelope.put(CORRELATION_ID_FIELD, event.correlationId());
+        envelope.put(CAUSATION_ID_FIELD, event.causationId());
+        envelope.put(SAGA_ID_FIELD, event.sagaId());
+        envelope.put(SERVICE_ORDER_ID_FIELD, event.serviceOrderId());
+        envelope.put(PAYLOAD_FIELD, Map.of(
+                PAYMENT_ID_FIELD, event.paymentId()
         ));
         try {
             return objectMapper.writeValueAsString(envelope);
@@ -148,15 +157,15 @@ public class JpaOperationEventGatewayAdapter implements OperationEventGateway {
 
     private String serialize(ServiceOrderCancelled event) {
         Map<String, Object> envelope = new LinkedHashMap<>();
-        envelope.put("schemaVersion", SCHEMA_VERSION);
-        envelope.put("messageId", event.messageId());
+        envelope.put(SCHEMA_VERSION_FIELD, SCHEMA_VERSION);
+        envelope.put(MESSAGE_ID_FIELD, event.messageId());
         envelope.put("type", "ServiceOrderCancelled");
-        envelope.put("occurredAt", event.occurredAt().toString());
-        envelope.put("correlationId", event.correlationId());
-        envelope.put("causationId", event.causationId());
-        envelope.put("sagaId", event.sagaId());
-        envelope.put("serviceOrderId", event.serviceOrderId());
-        envelope.put("payload", Map.of("paymentId", event.paymentId(), "reason", event.reason()));
+        envelope.put(OCCURRED_AT_FIELD, event.occurredAt().toString());
+        envelope.put(CORRELATION_ID_FIELD, event.correlationId());
+        envelope.put(CAUSATION_ID_FIELD, event.causationId());
+        envelope.put(SAGA_ID_FIELD, event.sagaId());
+        envelope.put(SERVICE_ORDER_ID_FIELD, event.serviceOrderId());
+        envelope.put(PAYLOAD_FIELD, Map.of(PAYMENT_ID_FIELD, event.paymentId(), "reason", event.reason()));
         try {
             return objectMapper.writeValueAsString(envelope);
         } catch (JsonProcessingException exception) {

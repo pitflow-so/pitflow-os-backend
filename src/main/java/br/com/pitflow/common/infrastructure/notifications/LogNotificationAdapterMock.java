@@ -10,8 +10,6 @@ import java.util.UUID;
 public class LogNotificationAdapterMock implements NotificationGateway {
     private static final Logger logger = LoggerFactory.getLogger(LogNotificationAdapterMock.class);
 
-    public LogNotificationAdapterMock() {
-    }
     @Override
     public void send(UUID serviceOrderId, Notification notification) {
         logger.info("[NOTIFICATION] - OS ID: {} - Message: {}", serviceOrderId, notification.message());

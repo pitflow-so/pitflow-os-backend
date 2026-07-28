@@ -17,6 +17,13 @@ import java.util.UUID;
 public class OperationCommandConsumer {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(OperationCommandConsumer.class);
+    private static final String MESSAGE_ID = "messageId";
+    private static final String PAYLOAD = "payload";
+    private static final String SAGA_ID = "sagaId";
+    private static final String CORRELATION_ID = "correlationId";
+    private static final String PAYMENT_ID = "paymentId";
+    private static final String SERVICE_ORDER_ID = "serviceOrderId";
+    private static final String OCCURRED_AT = "occurredAt";
 
     private final SqsClient sqs;
     private final ObjectMapper objectMapper;
@@ -70,7 +77,7 @@ public class OperationCommandConsumer {
             LOGGER.info(
                     "Operation command handled type={} messageId={} result={}",
                     root.path("type").asText(),
-                    root.path("messageId").asText(),
+                    root.path(MESSAGE_ID).asText(),
                     result
             );
         } catch (RuntimeException exception) {
@@ -101,41 +108,41 @@ public class OperationCommandConsumer {
     }
 
     private Object cancelServiceOrder(JsonNode root) {
-        var payload = root.path("payload");
+        var payload = root.path(PAYLOAD);
         return cancelForPaymentFailure.execute(new CancelServiceOrderForPaymentFailure.Command(
-                uuid(root, "messageId"), uuid(root, "correlationId"), uuid(root, "sagaId"),
-                uuid(root, "serviceOrderId"), uuid(payload, "paymentId"),
-                requiredText(payload, "reason"), instant(root, "occurredAt")));
+                uuid(root, MESSAGE_ID), uuid(root, CORRELATION_ID), uuid(root, SAGA_ID),
+                uuid(root, SERVICE_ORDER_ID), uuid(payload, PAYMENT_ID),
+                requiredText(payload, "reason"), instant(root, OCCURRED_AT)));
     }
 
     private Object awaitingPayment(JsonNode root) {
-        var payload = root.path("payload");
+        var payload = root.path(PAYLOAD);
         return markAwaitingPayment.execute(
                     new MarkServiceOrderAwaitingPayment.Command(
-                            uuid(root, "messageId"),
-                            uuid(root, "correlationId"),
-                            uuid(root, "sagaId"),
-                            uuid(root, "serviceOrderId"),
-                            uuid(payload, "paymentId"),
+                            uuid(root, MESSAGE_ID),
+                            uuid(root, CORRELATION_ID),
+                            uuid(root, SAGA_ID),
+                            uuid(root, SERVICE_ORDER_ID),
+                            uuid(payload, PAYMENT_ID),
                             requiredText(payload, "preferenceId"),
                             requiredText(payload, "checkoutUrl"),
                             instant(payload, "expiresAt"),
-                            instant(root, "occurredAt")
+                            instant(root, OCCURRED_AT)
                     )
             );
     }
 
     private Object readyForExecution(JsonNode root) {
-        var payload = root.path("payload");
+        var payload = root.path(PAYLOAD);
         return markReadyForExecution.execute(
                 new MarkServiceOrderReadyForExecution.Command(
-                        uuid(root, "messageId"),
-                        uuid(root, "correlationId"),
-                        uuid(root, "sagaId"),
-                        uuid(root, "serviceOrderId"),
-                        uuid(payload, "paymentId"),
+                        uuid(root, MESSAGE_ID),
+                        uuid(root, CORRELATION_ID),
+                        uuid(root, SAGA_ID),
+                        uuid(root, SERVICE_ORDER_ID),
+                        uuid(payload, PAYMENT_ID),
                         requiredText(payload, "externalPaymentId"),
-                        instant(root, "occurredAt")
+                        instant(root, OCCURRED_AT)
                 )
         );
     }
@@ -146,11 +153,11 @@ public class OperationCommandConsumer {
                     "Unsupported schema version"
             );
         }
-        requiredText(root, "messageId");
-        requiredText(root, "correlationId");
-        requiredText(root, "sagaId");
-        requiredText(root, "serviceOrderId");
-        requiredText(root, "occurredAt");
+        requiredText(root, MESSAGE_ID);
+        requiredText(root, CORRELATION_ID);
+        requiredText(root, SAGA_ID);
+        requiredText(root, SERVICE_ORDER_ID);
+        requiredText(root, OCCURRED_AT);
         requiredText(root, "type");
     }
 
