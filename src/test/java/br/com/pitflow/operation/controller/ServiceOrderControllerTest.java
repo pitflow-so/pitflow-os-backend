@@ -20,6 +20,7 @@ class ServiceOrderControllerTest {
     private final CreateServiceOrder create = mock(CreateServiceOrder.class);
     private final AddOrderItem add = mock(AddOrderItem.class);
     private final StartDiagnosis start = mock(StartDiagnosis.class);
+    private final StartExecution startExecution = mock(StartExecution.class);
     private final CompleteDiagnosis complete = mock(CompleteDiagnosis.class);
     private final ApproveOrder approve = mock(ApproveOrder.class);
     private final FinishOrder finish = mock(FinishOrder.class);
@@ -33,7 +34,7 @@ class ServiceOrderControllerTest {
     private final CreateServiceOrderWithAllData createAll = mock(CreateServiceOrderWithAllData.class);
     private final ListPrioritizedServiceOrders prioritized = mock(ListPrioritizedServiceOrders.class);
     private final ServiceOrderController controller = new ServiceOrderController(
-            create, add, start, complete, approve, finish, deliver, cancel, get, all,
+            create, add, start, startExecution, complete, approve, finish, deliver, cancel, get, all,
             executing, average, duration, createAll, prioritized);
 
     @Test
@@ -63,6 +64,7 @@ class ServiceOrderControllerTest {
         var id = UUID.randomUUID();
         controller.addOrderItem(id, new AddOrderItemRequest(id, UUID.randomUUID(), 2, "PART"));
         controller.startDiagnosis(id);
+        controller.startExecution(id);
         controller.completeDiagnosis(id);
         controller.finish(id);
         controller.deliver(id);
@@ -72,6 +74,7 @@ class ServiceOrderControllerTest {
 
         verify(add).execute(any());
         verify(start).execute(id);
+        verify(startExecution).execute(id);
         verify(complete).execute(id);
         verify(finish).execute(id);
         verify(deliver).execute(id);

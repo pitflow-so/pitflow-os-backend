@@ -68,6 +68,17 @@ public class ServiceOrderRestAdapter {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{id}/start-execution")
+    @Operation(
+            security = @SecurityRequirement(name = "bearerAuth"),
+            summary = "Inicia a execução dos serviços",
+            description = "Muda status de READY_FOR_EXECUTION para IN_EXECUTION"
+    )
+    public ResponseEntity<Void> startExecution(@PathVariable UUID id) {
+        controller.startExecution(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PatchMapping("/{id}/finish")
     @Operation(security = @SecurityRequirement(name = "bearerAuth"), summary = "Finaliza a execução dos serviços (Mão de Obra)", description = "Muda status para FINISHED")
     public ResponseEntity<Void> finish(@PathVariable UUID id) {

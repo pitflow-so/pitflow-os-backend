@@ -20,6 +20,7 @@ import br.com.pitflow.operation.core.usecase.inputPort.GetServiceOrderDuration;
 import br.com.pitflow.operation.core.usecase.inputPort.ListInExecutionOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.ListPrioritizedServiceOrders;
 import br.com.pitflow.operation.core.usecase.inputPort.StartDiagnosis;
+import br.com.pitflow.operation.core.usecase.inputPort.StartExecution;
 import br.com.pitflow.operation.infrastructure.web.dto.AddOrderItemRequest;
 import br.com.pitflow.operation.infrastructure.web.dto.BudgetApprovalRequest;
 import br.com.pitflow.operation.infrastructure.web.dto.CreateServiceOrderAllDataRequest;
@@ -47,6 +48,7 @@ public class ServiceOrderController {
     private final FinishOrder finishOrder;
     private final GetServiceOrderById getServiceOrderById;
     private final StartDiagnosis startDiagnosis;
+    private final StartExecution startExecution;
     private final ListInExecutionOrders listInExecutionOrders;
     private final GetAverageExecutionTime getAverageExecutionTime;
     private final GetServiceOrderDuration getServiceOrderDuration;
@@ -57,6 +59,7 @@ public class ServiceOrderController {
             CreateServiceOrder createServiceOrder,
             AddOrderItem addOrderItem,
             StartDiagnosis startDiagnosis,
+            StartExecution startExecution,
             CompleteDiagnosis completeDiagnosis,
             ApproveOrder approveOrder,
             FinishOrder finishOrder,
@@ -73,6 +76,7 @@ public class ServiceOrderController {
         this.createServiceOrder = createServiceOrder;
         this.addOrderItem = addOrderItem;
         this.startDiagnosis = startDiagnosis;
+        this.startExecution = startExecution;
         this.completeDiagnosis = completeDiagnosis;
         this.approveOrder = approveOrder;
         this.finishOrder = finishOrder;
@@ -104,6 +108,10 @@ public class ServiceOrderController {
 
     public void completeDiagnosis(UUID id){
         completeDiagnosis.execute(id);
+    }
+
+    public void startExecution(UUID id){
+        startExecution.execute(id);
     }
 
     public void finish(UUID id){
