@@ -29,6 +29,7 @@ import br.com.pitflow.operation.core.usecase.MarkServiceOrderAwaitingPaymentImp;
 import br.com.pitflow.operation.core.usecase.MarkServiceOrderReadyForExecutionImp;
 import br.com.pitflow.operation.core.usecase.CancelServiceOrderForPaymentFailureImp;
 import br.com.pitflow.operation.core.usecase.StartDiagnosisImp;
+import br.com.pitflow.operation.core.usecase.StartExecutionImp;
 import br.com.pitflow.operation.core.usecase.inputPort.AddOrderItem;
 import br.com.pitflow.operation.core.usecase.inputPort.ApproveOrder;
 import br.com.pitflow.operation.core.usecase.inputPort.CancelOrder;
@@ -47,6 +48,7 @@ import br.com.pitflow.operation.core.usecase.inputPort.MarkServiceOrderAwaitingP
 import br.com.pitflow.operation.core.usecase.inputPort.MarkServiceOrderReadyForExecution;
 import br.com.pitflow.operation.core.usecase.inputPort.CancelServiceOrderForPaymentFailure;
 import br.com.pitflow.operation.core.usecase.inputPort.StartDiagnosis;
+import br.com.pitflow.operation.core.usecase.inputPort.StartExecution;
 import br.com.pitflow.operation.infrastructure.consumer.sqs.OperationCommandConsumer;
 import br.com.pitflow.operation.infrastructure.metrics.MicrometerMetricsAdapter;
 import br.com.pitflow.operation.infrastructure.inventory.HttpInventoryGatewayAdapter;
@@ -327,6 +329,11 @@ public class BeanOperationConfig {
     }
 
     @Bean
+    public StartExecution startExecution(ServiceOrderGateway repository) {
+        return new StartExecutionImp(repository);
+    }
+
+    @Bean
     public ListInExecutionOrders listInExecutionOrders(ServiceOrderGateway repository) {
         return new ListInExecutionOrdersImp(repository);
     }
@@ -366,6 +373,7 @@ public class BeanOperationConfig {
             CreateServiceOrder createServiceOrder,
             AddOrderItem addOrderItem,
             StartDiagnosis startDiagnosis,
+            StartExecution startExecution,
             CompleteDiagnosis completeDiagnosis,
             ApproveOrder approveOrder,
             FinishOrder finishOrder,
@@ -383,6 +391,7 @@ public class BeanOperationConfig {
                 createServiceOrder,
                 addOrderItem,
                 startDiagnosis,
+                startExecution,
                 completeDiagnosis,
                 approveOrder,
                 finishOrder,

@@ -41,6 +41,7 @@ class ServiceOrderRestAdapterTest {
         assertEquals(HttpStatus.NO_CONTENT, adapter.addItem(id, item).getStatusCode());
         assertEquals(HttpStatus.NO_CONTENT, adapter.startDiagnosis(id).getStatusCode());
         assertEquals(HttpStatus.NO_CONTENT, adapter.completeDiagnosis(id).getStatusCode());
+        assertEquals(HttpStatus.NO_CONTENT, adapter.startExecution(id).getStatusCode());
         assertEquals(HttpStatus.NO_CONTENT, adapter.finish(id).getStatusCode());
         assertEquals(HttpStatus.NO_CONTENT, adapter.deliver(id).getStatusCode());
         assertEquals(HttpStatus.NO_CONTENT, adapter.cancel(id, "motivo").getStatusCode());
@@ -53,5 +54,6 @@ class ServiceOrderRestAdapterTest {
         assertEquals(1, adapter.getPrioritized().getBody().size());
         assertEquals(HttpStatus.NO_CONTENT,
                 adapter.budgetDecision(id, new BudgetApprovalRequest(true, null)).getStatusCode());
+        verify(controller).startExecution(id);
     }
 }
