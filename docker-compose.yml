@@ -70,7 +70,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - wget -q --spider http://localhost:8080/actuator/health || exit 1
+        - wget -q --spider http://localhost:8080/registry/actuator/health || exit 1
       interval: 10s
       timeout: 5s
       retries: 18
@@ -96,7 +96,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - wget -q --spider http://localhost:8080/actuator/health || exit 1
+        - wget -q --spider http://localhost:8080/inventory/actuator/health || exit 1
       interval: 10s
       timeout: 5s
       retries: 18
@@ -132,7 +132,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - wget -q --spider http://localhost:8080/actuator/health || exit 1
+        - wget -q --spider http://localhost:8080/operation/actuator/health || exit 1
       interval: 10s
       timeout: 5s
       retries: 18
